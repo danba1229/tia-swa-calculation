@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TIA Research Builder</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero-card">
+      <div>
+        <p class="eyebrow">TIA Research Builder</p>
+        <h1>교통영향평가 조사 초안 작성 도구</h1>
+        <p class="hero-copy">
+          주소지를 중심으로 조사 범위를 설정하고, 가로망 조사, 사전조사지점 정리, 토지이용 및 용도지역 정리,
+          교통관련 계획 정리까지 한 화면에서 이어서 작성할 수 있습니다.
+        </p>
+      </div>
+      <div class="hero-actions">
+        <button type="button" id="render-map">지도 범위 표시</button>
+        <button type="button" id="fill-sample" class="secondary">샘플 채우기</button>
+        <button type="button" id="clear-all" class="ghost">전체 초기화</button>
+      </div>
+    </section>
+
+    <section class="panel project-panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Project Basics</p>
+          <h2>기본 정보 및 조사 범위</h2>
+        </div>
+        <p class="panel-copy">
+          주소지를 중심점으로 하고, 입력한 가로·세로 길이만큼 직사각형 조사 범위를 설정합니다.
+          범위는 카카오 지도에 바로 시각화됩니다.
+        </p>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          <span>도시명</span>
+          <input id="city-name" type="text" placeholder="예: 수원시">
+        </label>
+        <label>
+          <span>관할명</span>
+          <input id="jurisdiction-name" type="text" placeholder="예: 경기도 수원시청">
+        </label>
+        <label class="full">
+          <span>주소지</span>
+          <input id="site-address" type="text" placeholder="예: 경기도 수원시 팔달구 효원로 241">
+        </label>
+        <label>
+          <span>가로 범위(m)</span>
+          <input id="rect-width" type="number" min="1" step="1" placeholder="예: 1200">
+        </label>
+        <label>
+          <span>세로 범위(m)</span>
+          <input id="rect-height" type="number" min="1" step="1" placeholder="예: 800">
+        </label>
+        <label>
+          <span>기준일</span>
+          <input id="base-date" type="date">
+        </label>
+        <label>
+          <span>카카오 지도 JavaScript 키</span>
+          <input id="kakao-js-key" type="password" placeholder="Kakao Maps JavaScript App Key" autocomplete="new-password" spellcheck="false">
+        </label>
+        <label class="full">
+          <span>작성 메모</span>
+          <input id="project-note" type="text" placeholder="예: 통계연보 2025년 기준">
+        </label>
+      </div>
+
+      <div class="scope-card">
+        <div class="scope-copy">
+          <p class="eyebrow">Survey Scope</p>
+          <h3>직사각형 조사 영역</h3>
+          <p id="scope-summary" class="scope-summary">
+            주소지와 가로·세로 범위를 입력하면 조사 범위 요약이 여기에 표시됩니다.
+          </p>
+          <div id="scope-meta" class="scope-meta"></div>
+        </div>
+
+        <div class="map-card">
+          <div class="map-header">
+            <h3>카카오 지도</h3>
+            <p id="map-status" class="chart-caption">
+              카카오 지도 JavaScript 키와 주소지를 입력한 뒤 "지도 범위 표시" 버튼을 눌러 주세요.
+            </p>
+          </div>
+          <div id="map" class="map-view" aria-label="조사 범위 지도"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Step 1</p>
+          <h2>가로망 조사</h2>
+        </div>
+        <p class="panel-copy">
+          조사 대상 도로는 고속도로, 대로, 로를 기본 구분으로 두고, 직사각형 조사 범위 안의 도로를 정리합니다.
+        </p>
+      </div>
+
+      <div class="tag-strip">
+        <span class="tag">고속도로</span>
+        <span class="tag">대로</span>
+        <span class="tag">로</span>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" id="add-road" class="secondary">도로 추가</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>도로 구분</th>
+              <th>도로명</th>
+              <th>기점 주소</th>
+              <th>종점 주소</th>
+              <th>출처</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="road-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="output-block">
+        <div class="output-header">
+          <h3>가로망 조사 요약</h3>
+          <button type="button" data-copy-target="road-summary">복사</button>
+        </div>
+        <textarea id="road-summary" rows="7" readonly></textarea>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Step 2</p>
+          <h2>가까운 사전조사지점</h2>
+        </div>
+        <p class="panel-copy">
+          1순위는 요일별 시간대별 교통량, 2순위는 요일별 평균 교통량이며, 둘 다 없으면 미확보로 표시합니다.
+        </p>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" id="add-survey-point" class="secondary">조사지점 추가</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>조사지점명</th>
+              <th>관할</th>
+              <th>거리(km)</th>
+              <th>자료 유형</th>
+              <th>설명</th>
+              <th>출처</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="survey-rows"></tbody>
+        </table>
+      </div>
+
+      <div class="priority-card">
+        <div>
+          <p class="priority-label">최종 판정</p>
+          <p id="survey-priority-result" class="priority-result">아직 조사지점이 없습니다.</p>
+        </div>
+        <p id="survey-priority-note" class="priority-note">
+          자료 유형과 거리를 입력하면 우선순위에 따라 자동으로 판정합니다.
+        </p>
+      </div>
+
+      <div class="output-block">
+        <div class="output-header">
+          <h3>사전조사지점 요약</h3>
+          <button type="button" data-copy-target="survey-summary">복사</button>
+        </div>
+        <textarea id="survey-summary" rows="7" readonly></textarea>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Step 3</p>
+          <h2>토지이용 현황 및 계획</h2>
+        </div>
+        <p class="panel-copy">
+          지목별 토지이용현황과 용도지역 현황의 면적과 구성비를 계산하고 원형 그래프로 정리합니다.
+        </p>
+      </div>
+
+      <div class="form-grid compact-grid">
+        <label>
+          <span>토지이용 출처</span>
+          <input id="landuse-source" type="text" placeholder="예: 수원시 통계연보 2025">
+        </label>
+        <label>
+          <span>용도지역 출처</span>
+          <input id="zoning-source" type="text" placeholder="예: 수원시 도시계획 자료 2025">
+        </label>
+      </div>
+
+      <div class="subpanel-grid">
+        <section class="subpanel">
+          <div class="subpanel-header">
+            <h3>지목별 토지이용현황</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>지목</th>
+                  <th>면적(㎡)</th>
+                  <th>구성비(%)</th>
+                </tr>
+              </thead>
+              <tbody id="landuse-rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="subpanel">
+          <div class="subpanel-header">
+            <h3>용도지역 현황</h3>
+            <button type="button" id="add-zoning-row" class="secondary">용도지역 추가</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>용도지역</th>
+                  <th>면적(㎡)</th>
+                  <th>구성비(%)</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="zoning-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="chart-grid">
+        <section class="chart-card">
+          <div class="chart-header">
+            <h3>지목별 토지이용 원형 그래프</h3>
+            <p id="landuse-total-text" class="chart-caption"></p>
+          </div>
+          <div class="chart-layout">
+            <div id="landuse-chart" class="pie-chart" aria-label="지목별 토지이용 그래프"></div>
+            <div id="landuse-legend" class="legend"></div>
+          </div>
+        </section>
+
+        <section class="chart-card">
+          <div class="chart-header">
+            <h3>용도지역 원형 그래프</h3>
+            <p id="zoning-total-text" class="chart-caption"></p>
+          </div>
+          <div class="chart-layout">
+            <div id="zoning-chart" class="pie-chart" aria-label="용도지역 그래프"></div>
+            <div id="zoning-legend" class="legend"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="output-block">
+        <div class="output-header">
+          <h3>토지이용 및 용도지역 요약</h3>
+          <button type="button" data-copy-target="landuse-summary">복사</button>
+        </div>
+        <textarea id="landuse-summary" rows="8" readonly></textarea>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Step 4</p>
+          <h2>교통관련 계획</h2>
+        </div>
+        <p class="panel-copy">
+          도시계획과 연계된 교통계획과 공사 중인 시설계획을 구분해서 정리합니다.
+        </p>
+      </div>
+
+      <div class="subpanel-grid">
+        <section class="subpanel">
+          <div class="subpanel-header">
+            <h3>교통계획</h3>
+            <button type="button" id="add-traffic-plan" class="secondary">계획 추가</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>계획명</th>
+                  <th>연계 도시계획</th>
+                  <th>내용</th>
+                  <th>출처</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="traffic-plan-rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="subpanel">
+          <div class="subpanel-header">
+            <h3>공사 중인 시설계획</h3>
+            <button type="button" id="add-construction-plan" class="secondary">시설계획 추가</button>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>시설명</th>
+                  <th>위치/구간</th>
+                  <th>진행상태</th>
+                  <th>출처</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="construction-plan-rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="output-block">
+        <div class="output-header">
+          <h3>교통관련 계획 요약</h3>
+          <button type="button" data-copy-target="plan-summary">복사</button>
+        </div>
+        <textarea id="plan-summary" rows="8" readonly></textarea>
+      </div>
+    </section>
+
+    <section class="panel status-panel">
+      <div>
+        <p class="eyebrow">Status</p>
+        <h2>작업 상태</h2>
+      </div>
+      <p id="status-text">초기화 중...</p>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
