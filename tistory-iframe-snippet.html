@@ -1,11 +1,45 @@
-<!-- 티스토리 HTML 모드에 붙여넣는 예시 -->
-<div style="width:100%; margin:24px 0;">
+<!-- 티스토리 HTML 모드 또는 스킨 HTML에 넣는 권장 예시 -->
+<div
+  id="tia-embed-wrap"
+  style="
+    width:min(100vw - 24px, 1400px);
+    margin:24px calc(50% - 50vw + 12px);
+    padding:0;
+  "
+>
   <iframe
-    src="https://your-domain.com/embed"
+    id="tia-embed-frame"
+    src="https://tia-support.vercel.app/embed"
     title="TIA Research Builder"
     loading="lazy"
-    style="width:100%; min-height:2200px; border:0; border-radius:20px; background:#f8f4ec; overflow:hidden;"
+    style="
+      width:100%;
+      min-height:1400px;
+      border:0;
+      border-radius:20px;
+      background:#f8f4ec;
+      overflow:hidden;
+      display:block;
+    "
     referrerpolicy="strict-origin-when-cross-origin"
     allowfullscreen>
   </iframe>
 </div>
+
+<script>
+  (function () {
+    var iframe = document.getElementById("tia-embed-frame");
+    if (!iframe) return;
+
+    function applyHeight(height) {
+      var nextHeight = Math.max(1100, Number(height || 0));
+      iframe.style.height = nextHeight + "px";
+    }
+
+    window.addEventListener("message", function (event) {
+      if (event.origin !== "https://tia-support.vercel.app") return;
+      if (!event.data || event.data.type !== "tia-embed-height") return;
+      applyHeight(event.data.height);
+    });
+  })();
+</script>

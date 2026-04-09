@@ -248,6 +248,35 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
   }, [form]);
 
+  useEffect(() => {
+    if (!embedded || typeof window === "undefined") return undefined;
+
+    const emitHeight = () => {
+      window.parent.postMessage(
+        {
+          type: "tia-embed-height",
+          height: document.documentElement.scrollHeight,
+        },
+        "*",
+      );
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(emitHeight);
+    });
+
+    resizeObserver.observe(document.body);
+    window.addEventListener("load", emitHeight);
+    window.addEventListener("resize", emitHeight);
+    window.setTimeout(emitHeight, 120);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("load", emitHeight);
+      window.removeEventListener("resize", emitHeight);
+    };
+  }, [embedded]);
+
   const landuseStats = computeLanduseStats(form);
   const zoningStats = computeZoningStats(form);
   const selectedSurveyPoint = selectSurveyPoint(form.surveyPoints);
