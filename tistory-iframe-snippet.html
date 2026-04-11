@@ -1,10 +1,12 @@
-<!-- 티스토리 HTML 모드 또는 스킨 HTML에 넣는 권장 예시 -->
+<!-- 티스토리 HTML 모드에 넣는 안전한 반응형 예시 -->
 <div
   id="tia-embed-wrap"
   style="
-    width:min(100vw - 24px, 1400px);
-    margin:24px calc(50% - 50vw + 12px);
+    width:100%;
+    max-width:100%;
+    margin:24px 0;
     padding:0;
+    box-sizing:border-box;
   "
 >
   <iframe
@@ -15,6 +17,7 @@
     style="
       width:100%;
       min-height:1400px;
+      height:1400px;
       border:0;
       border-radius:20px;
       background:#f8f4ec;

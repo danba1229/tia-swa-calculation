@@ -48,14 +48,15 @@ a {
 }
 
 .app-shell {
-  width: min(1200px, calc(100% - 28px));
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 26px 0 60px;
+  padding: 26px 14px 60px;
 }
 
 .embedded-shell {
-  width: min(100% - 12px, 1280px);
-  padding: 8px 0 24px;
+  max-width: 100%;
+  padding: 8px 8px 24px;
 }
 
 .hero-card,
@@ -72,6 +73,7 @@ a {
 .hero-card {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 24px;
   padding: 30px;
 }
@@ -120,15 +122,17 @@ h3 {
 }
 
 .hero-copy {
-  max-width: 760px;
+  max-width: 62ch;
   margin-top: 14px;
 }
 
 .hero-actions {
   display: flex;
   align-items: flex-start;
+  justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: min(320px, 100%);
 }
 
 .panel {
@@ -151,7 +155,11 @@ h3 {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  align-items: flex-end;
+  align-items: flex-start;
+}
+
+.panel-copy {
+  max-width: 60ch;
 }
 
 .form-grid {
@@ -481,21 +489,53 @@ button.mini-button {
     grid-template-columns: 1fr;
   }
 
+  .hero-actions {
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
   .pie-chart {
     width: min(220px, 100%);
     height: min(220px, 100vw - 120px);
   }
 }
 
+@media (max-width: 860px) {
+  h1 {
+    font-size: clamp(28px, 7vw, 40px);
+  }
+
+  .hero-actions,
+  .panel-header,
+  .subpanel-header,
+  .output-header,
+  .chart-header,
+  .priority-card,
+  .status-panel,
+  .map-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-actions button,
+  .subpanel-header button,
+  .output-header button,
+  .chart-header button,
+  .map-header button,
+  .priority-card button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 720px) {
   .app-shell {
-    width: min(100% - 18px, 1200px);
     padding-top: 18px;
+    padding-inline: 9px;
   }
 
   .embedded-shell {
-    width: min(100% - 10px, 1280px);
     padding-top: 8px;
+    padding-inline: 5px;
   }
 
   .panel,
@@ -506,17 +546,6 @@ button.mini-button {
   .scope-copy,
   .map-card {
     padding: 18px;
-  }
-
-  .panel-header,
-  .subpanel-header,
-  .output-header,
-  .chart-header,
-  .priority-card,
-  .status-panel,
-  .map-header {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .data-table {
