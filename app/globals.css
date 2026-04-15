@@ -375,6 +375,11 @@ button.mini-button {
   padding: 10px 12px;
 }
 
+.table-input::placeholder,
+.table-textarea::placeholder {
+  color: #b8afa6;
+}
+
 .table-textarea {
   min-height: 82px;
 }

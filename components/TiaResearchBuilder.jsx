@@ -12,6 +12,7 @@ const SURVEY_TYPES = [
   { value: "none", label: "자료 없음" },
 ];
 const CHART_COLORS = ["#0b4f8a", "#2f6fa5", "#5e90bb", "#8fb4d0", "#b7cbdd", "#d5dfeb", "#7f9c7a", "#c68f58", "#8a6b5c", "#b9a79d"];
+const MANUAL_RESEARCH_PLACEHOLDER = "수동 조사필요";
 
 function todayString() {
   return new Date().toISOString().slice(0, 10);
@@ -447,9 +448,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         centerLng: "",
       },
       roads: [
-        createRoadRow({ roadClass: "고속도로", name: "영동고속도로", startAddress: "수원신갈IC", endAddress: "동수원IC", source: "국가교통정보센터" }),
-        createRoadRow({ roadClass: "대로", name: "경수대로", startAddress: "인계사거리", endAddress: "매교사거리", source: "수원시 도로현황도" }),
-        createRoadRow({ roadClass: "로", name: "효원로", startAddress: "수원시청", endAddress: "인계동 일원", source: "수원시 도로현황도" }),
+        createRoadRow({ roadClass: "고속도로", name: "영동고속도로", startAddress: "", endAddress: "", source: "국가교통정보센터" }),
+        createRoadRow({ roadClass: "대로", name: "경수대로", startAddress: "", endAddress: "", source: "수원시 도로현황도" }),
+        createRoadRow({ roadClass: "로", name: "효원로", startAddress: "", endAddress: "", source: "수원시 도로현황도" }),
       ],
       surveyPoints: [
         createSurveyRow({ pointName: "수원시청사거리", jurisdiction: "수원시", distanceKm: "0.7", dataType: "time", note: "첨두시 확인 가능", source: "수시 교통량 조사자료" }),
@@ -608,8 +609,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     </select>
                   </td>
                   <td><input className="table-input" value={row.name} onChange={(event) => updateListItem("roads", index, { name: event.target.value })} placeholder="예: 경수대로" /></td>
-                  <td><input className="table-input" value={row.startAddress} onChange={(event) => updateListItem("roads", index, { startAddress: event.target.value })} placeholder="기점 주소" /></td>
-                  <td><input className="table-input" value={row.endAddress} onChange={(event) => updateListItem("roads", index, { endAddress: event.target.value })} placeholder="종점 주소" /></td>
+                  <td><input className="table-input" value={row.startAddress} onChange={(event) => updateListItem("roads", index, { startAddress: event.target.value })} placeholder={MANUAL_RESEARCH_PLACEHOLDER} /></td>
+                  <td><input className="table-input" value={row.endAddress} onChange={(event) => updateListItem("roads", index, { endAddress: event.target.value })} placeholder={MANUAL_RESEARCH_PLACEHOLDER} /></td>
                   <td><input className="table-input" value={row.source} onChange={(event) => updateListItem("roads", index, { source: event.target.value })} placeholder="예: 도로 현황도" /></td>
                   <td className="actions"><button type="button" className="mini-button" onClick={() => removeRow("roads", index, () => createRoadRow({ roadClass: "로" }))}>삭제</button></td>
                 </tr>
@@ -966,7 +967,7 @@ function buildRoadSummary(form) {
     lines.push("기본 정보에서 주소지와 가로·세로 범위를 입력해 조사 범위를 먼저 설정한다.");
   }
   lines.push("조사 대상 도로 구분은 고속도로, 대로, 로를 기본 기준으로 한다.");
-  lines.push("자동조사 결과의 기점·종점 주소는 조사영역 내부에서 확인된 도로명 주소를 기준으로 정리한다.");
+  lines.push("범위 내에 걸친 도로명은 자동으로 수집하되, 도로 전체 기준의 기점·종점 주소는 별도 수동 조사가 필요하다.");
   if (form.basics.centerLat && form.basics.centerLng) {
     lines.push(`중심 좌표는 위도 ${form.basics.centerLat}, 경도 ${form.basics.centerLng}이다.`);
   }
@@ -1157,14 +1158,11 @@ function buildRoadRowsFromBuckets(roadBuckets) {
         .slice()
         .sort((a, b) => (a.lat - b.lat) || (a.lng - b.lng) || a.address.localeCompare(b.address, "ko"));
 
-      const startSample = sortedSamples[0];
-      const endSample = sortedSamples[sortedSamples.length - 1];
-
       return createRoadRow({
         roadClass: bucket.roadClass,
         name: bucket.name,
-        startAddress: startSample?.address || "",
-        endAddress: endSample?.address || startSample?.address || "",
+        startAddress: "",
+        endAddress: "",
         source: "카카오 좌표-주소 변환 자동조사",
       });
     })
