@@ -170,6 +170,20 @@ h3 {
   margin-top: 18px;
 }
 
+.inline-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.inline-fields label {
+  gap: 6px;
+}
+
+.inline-fields input {
+  padding: 10px 12px;
+}
+
 .compact-grid {
   margin-bottom: 18px;
 }
@@ -501,6 +515,10 @@ button.mini-button {
   .chart-grid,
   .chart-layout {
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .inline-fields {
     grid-template-columns: 1fr;
   }
 }

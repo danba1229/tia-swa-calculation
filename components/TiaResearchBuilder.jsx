@@ -517,18 +517,20 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <span>주소지</span>
             <input value={form.basics.siteAddress} onChange={(event) => updateBasics("siteAddress", event.target.value)} placeholder="예: 경기도 수원시 팔달구 효원로 241" />
           </label>
-          <label>
-            <span>가로 범위(m)</span>
-            <input type="number" min="1" step="1" value={form.basics.rectWidth} onChange={(event) => updateBasics("rectWidth", event.target.value)} placeholder="예: 1200" />
-          </label>
-          <label>
-            <span>세로 범위(m)</span>
-            <input type="number" min="1" step="1" value={form.basics.rectHeight} onChange={(event) => updateBasics("rectHeight", event.target.value)} placeholder="예: 800" />
-          </label>
-          <label>
-            <span>기준일</span>
-            <input type="date" value={form.basics.baseDate} onChange={(event) => updateBasics("baseDate", event.target.value)} />
-          </label>
+          <div className="inline-fields full">
+            <label>
+              <span>가로 범위(m)</span>
+              <input type="number" min="1" step="1" value={form.basics.rectWidth} onChange={(event) => updateBasics("rectWidth", event.target.value)} placeholder="예: 1200" />
+            </label>
+            <label>
+              <span>세로 범위(m)</span>
+              <input type="number" min="1" step="1" value={form.basics.rectHeight} onChange={(event) => updateBasics("rectHeight", event.target.value)} placeholder="예: 800" />
+            </label>
+            <label>
+              <span>기준일</span>
+              <input type="date" value={form.basics.baseDate} onChange={(event) => updateBasics("baseDate", event.target.value)} />
+            </label>
+          </div>
           <label className="full">
             <span>작성 메모</span>
             <input value={form.basics.projectNote} onChange={(event) => updateBasics("projectNote", event.target.value)} placeholder="예: 통계연보 2025년 기준" />
