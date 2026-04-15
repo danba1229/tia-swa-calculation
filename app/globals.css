@@ -308,7 +308,7 @@ button.mini-button {
 
 .map-view {
   margin-top: 14px;
-  min-height: 340px;
+  min-height: 510px;
   border-radius: 18px;
   border: 1px solid rgba(11, 79, 138, 0.14);
   background:
@@ -587,7 +587,7 @@ button.mini-button {
   }
 
   .map-view {
-    min-height: 280px;
+    min-height: 420px;
   }
 }
 
