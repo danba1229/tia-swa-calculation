@@ -19,8 +19,6 @@ function todayString() {
 
 function createBlankBasics() {
   return {
-    cityName: "",
-    jurisdictionName: "",
     siteAddress: "",
     rectWidth: "",
     rectHeight: "",
@@ -431,8 +429,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function fillSampleData() {
     setForm({
       basics: {
-        cityName: "수원시",
-        jurisdictionName: "경기도 수원시청",
         siteAddress: "경기도 수원시 팔달구 효원로 241",
         rectWidth: "1200",
         rectHeight: "800",
@@ -517,14 +513,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
 
         <div className="form-grid">
-          <label>
-            <span>도시명</span>
-            <input value={form.basics.cityName} onChange={(event) => updateBasics("cityName", event.target.value)} placeholder="예: 수원시" />
-          </label>
-          <label>
-            <span>관할명</span>
-            <input value={form.basics.jurisdictionName} onChange={(event) => updateBasics("jurisdictionName", event.target.value)} placeholder="예: 경기도 수원시청" />
-          </label>
           <label className="full">
             <span>주소지</span>
             <input value={form.basics.siteAddress} onChange={(event) => updateBasics("siteAddress", event.target.value)} placeholder="예: 경기도 수원시 팔달구 효원로 241" />
@@ -923,7 +911,8 @@ function buildScopeData(basics) {
   const address = safe(basics.siteAddress);
   const width = toNumber(basics.rectWidth);
   const height = toNumber(basics.rectHeight);
-  const cityName = safe(basics.cityName) || "대상 도시";
+  const cityName = deriveCityName(address, "대상 도시");
+  const jurisdictionName = deriveJurisdictionName(address, cityName);
   const meta = [];
 
   if (!address && !width && !height) {
@@ -937,6 +926,7 @@ function buildScopeData(basics) {
   }
 
   meta.push(`중심 주소: ${address}`);
+  meta.push(`관할 추정: ${jurisdictionName}`);
   meta.push(`가로: ${formatNumber(width)}m`);
   meta.push(`세로: ${formatNumber(height)}m`);
   meta.push(`면적: ${formatNumber(width * height)}㎡`);
@@ -945,7 +935,7 @@ function buildScopeData(basics) {
   }
 
   return {
-    summary: `${cityName}의 조사 범위는 "${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m의 직사각형으로 설정됩니다.${basics.centerLat && basics.centerLng ? ` 중심 좌표는 (${basics.centerLat}, ${basics.centerLng})입니다.` : ""}`,
+    summary: `${jurisdictionName} 내 조사 범위는 "${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m의 직사각형으로 설정됩니다.${basics.centerLat && basics.centerLng ? ` 중심 좌표는 (${basics.centerLat}, ${basics.centerLng})입니다.` : ""}`,
     meta,
   };
 }
@@ -955,11 +945,12 @@ function buildRoadSummary(form) {
   const address = safe(form.basics.siteAddress);
   const width = toNumber(form.basics.rectWidth);
   const height = toNumber(form.basics.rectHeight);
-  const cityName = safe(form.basics.cityName) || "대상지";
+  const cityName = deriveCityName(address, "대상지");
+  const jurisdictionName = deriveJurisdictionName(address, cityName);
   const filledRoads = form.roads.filter((row) => isFilled(row.name) || isFilled(row.startAddress) || isFilled(row.endAddress));
 
   if (address && width > 0 && height > 0) {
-    lines.push(`${cityName} 가로망 조사는 "${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위 안에서 수행한다.`);
+    lines.push(`${jurisdictionName} 일대 가로망 조사는 "${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위 안에서 수행한다.`);
   } else {
     lines.push("기본 정보에서 주소지와 가로·세로 범위를 입력해 조사 범위를 먼저 설정한다.");
   }
@@ -1003,8 +994,9 @@ function buildSurveySummary(form, selectedSurveyPoint) {
   if (!filledRows.length) return "조사지점 후보를 입력해 주세요.";
 
   const lines = [];
+  const jurisdictionName = deriveJurisdictionName(form.basics.siteAddress, "해당 관할");
   if (selectedSurveyPoint && selectedSurveyPoint.dataType !== "none") {
-    lines.push(`가장 우선 검토할 사전조사지점은 ${safe(selectedSurveyPoint.pointName) || "지점명 미입력"}이며, 자료 유형은 ${surveyTypeLabel(selectedSurveyPoint.dataType)}이다.`);
+    lines.push(`${jurisdictionName} 기준으로 가장 우선 검토할 사전조사지점은 ${safe(selectedSurveyPoint.pointName) || "지점명 미입력"}이며, 자료 유형은 ${surveyTypeLabel(selectedSurveyPoint.dataType)}이다.`);
   } else {
     lines.push("현재 입력 기준으로는 1순위와 2순위 조건을 만족하는 사전조사지점을 찾지 못했다.");
   }
@@ -1019,7 +1011,7 @@ function buildSurveySummary(form, selectedSurveyPoint) {
 }
 
 function buildLanduseSummary(form, landuseStats, zoningStats) {
-  const cityName = safe(form.basics.cityName) || "대상 도시";
+  const cityName = deriveCityName(form.basics.siteAddress, "대상 도시");
   return [
     `${cityName}의 지목별 토지이용현황과 용도지역 현황을 면적과 구성비 기준으로 정리했다.`,
     landuseStats.total > 0
@@ -1036,8 +1028,9 @@ function buildLanduseSummary(form, landuseStats, zoningStats) {
 function buildPlanSummary(form) {
   const trafficPlans = form.trafficPlans.filter((row) => isFilled(row.title) || isFilled(row.relatedPlan) || isFilled(row.description));
   const constructionPlans = form.constructionPlans.filter((row) => isFilled(row.title) || isFilled(row.location) || isFilled(row.status));
-  const cityName = safe(form.basics.cityName) || "대상 도시";
-  const lines = [`${cityName}와 연관된 교통계획 및 공사 중인 시설계획을 정리한다.`];
+  const cityName = deriveCityName(form.basics.siteAddress, "대상 도시");
+  const jurisdictionName = deriveJurisdictionName(form.basics.siteAddress, cityName);
+  const lines = [`${jurisdictionName}와 연관된 교통계획 및 공사 중인 시설계획을 정리한다.`];
 
   if (!trafficPlans.length) {
     lines.push("연계 교통계획 입력값이 아직 없다.");
@@ -1068,6 +1061,35 @@ function rankClass(rank) {
 
 function normalizeAddress(address) {
   return safe(address).replace(/\s+/g, " ");
+}
+
+function deriveCityName(address, fallback) {
+  const normalized = normalizeAddress(address);
+  if (!normalized) return fallback;
+
+  const parts = normalized.split(" ").filter(Boolean);
+  const cityLike = parts.find((part) => /[시군구]$/.test(part));
+
+  return cityLike || parts[0] || fallback;
+}
+
+function deriveJurisdictionName(address, fallback) {
+  const normalized = normalizeAddress(address);
+  if (!normalized) return fallback;
+
+  const parts = normalized.split(" ").filter(Boolean);
+  const adminParts = [];
+
+  for (const part of parts) {
+    if (/(특별자치도|특별자치시|특별시|광역시|자치시|자치도|도|시|군|구)$/.test(part)) {
+      adminParts.push(part);
+      if (adminParts.length >= 3) break;
+      continue;
+    }
+    if (adminParts.length) break;
+  }
+
+  return adminParts.length ? adminParts.join(" ") : deriveCityName(address, fallback);
 }
 
 function computeRectangleBounds(lat, lng, widthMeters, heightMeters) {
