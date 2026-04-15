@@ -419,6 +419,51 @@ button.mini-button {
   line-height: 1.2;
 }
 
+.survey-recommendations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.survey-recommendation-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(11, 79, 138, 0.06), transparent 40%),
+    rgba(255, 255, 255, 0.72);
+}
+
+.survey-recommendation-card h3 {
+  margin: 10px 0 8px;
+  font-size: 18px;
+}
+
+.survey-recommendation-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.survey-recommendation-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.survey-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.survey-links a,
+.survey-links button {
+  white-space: nowrap;
+}
+
 .subpanel-grid,
 .chart-grid {
   display: grid;

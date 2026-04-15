@@ -39,7 +39,17 @@ function createRoadRow(overrides = {}) {
 }
 
 function createSurveyRow(overrides = {}) {
-  return { pointName: "", jurisdiction: "", distanceKm: "", dataType: "time", note: "", source: "", ...overrides };
+  return {
+    pointName: "",
+    jurisdiction: "",
+    distanceKm: "",
+    dataType: "time",
+    note: "",
+    source: "",
+    sourceLink: "",
+    downloadLink: "",
+    ...overrides,
+  };
 }
 
 function createZoningRow(overrides = {}) {
@@ -119,9 +129,22 @@ function compareSurveyRows(a, b) {
   return safe(a.pointName).localeCompare(safe(b.pointName), "ko");
 }
 
+function isSurveyRowFilled(row) {
+  return (
+    isFilled(row.pointName) ||
+    isFilled(row.jurisdiction) ||
+    isFilled(row.distanceKm) ||
+    row.dataType !== "time" ||
+    isFilled(row.note) ||
+    isFilled(row.source) ||
+    isFilled(row.sourceLink) ||
+    isFilled(row.downloadLink)
+  );
+}
+
 function selectSurveyPoint(rows) {
   return rows
-    .filter((row) => isFilled(row.pointName) || isFilled(row.jurisdiction) || isFilled(row.distanceKm))
+    .filter(isSurveyRowFilled)
     .slice()
     .sort(compareSurveyRows)[0] || null;
 }
@@ -279,6 +302,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const landuseStats = computeLanduseStats(form);
   const zoningStats = computeZoningStats(form);
   const selectedSurveyPoint = selectSurveyPoint(form.surveyPoints);
+  const surveyRecommendations = buildSurveyRecommendations(form.basics.siteAddress);
   const scope = buildScopeData(form.basics);
   const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
@@ -343,6 +367,19 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       console.error(error);
       setStatusText("복사에 실패했습니다.");
     }
+  }
+
+  function addSurveyRecommendation(recommendation) {
+    const jurisdiction = deriveJurisdictionName(form.basics.siteAddress, "");
+    addRow("surveyPoints", () => createSurveyRow({
+      jurisdiction,
+      dataType: recommendation.dataType,
+      note: recommendation.description,
+      source: recommendation.source,
+      sourceLink: recommendation.sourceLink,
+      downloadLink: recommendation.downloadLink,
+    }));
+    setStatusText(`${recommendation.title} 추천 정보를 사전조사지점 표에 추가했습니다.`);
   }
 
   async function renderScopeMap() {
@@ -453,8 +490,26 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         createRoadRow({ roadClass: "로", name: "효원로", startAddress: "", endAddress: "", source: "수원시 도로현황도" }),
       ],
       surveyPoints: [
-        createSurveyRow({ pointName: "수원시청사거리", jurisdiction: "수원시", distanceKm: "0.7", dataType: "time", note: "첨두시 확인 가능", source: "수시 교통량 조사자료" }),
-        createSurveyRow({ pointName: "인계사거리", jurisdiction: "수원시", distanceKm: "1.4", dataType: "average", note: "요일별 평균교통량만 확인", source: "교통량 통계자료" }),
+        createSurveyRow({
+          pointName: "수원시청사거리",
+          jurisdiction: "수원시",
+          distanceKm: "0.7",
+          dataType: "time",
+          note: "첨두시 확인 가능",
+          source: "경기도교통정보시스템 수시교통량",
+          sourceLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+          downloadLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+        }),
+        createSurveyRow({
+          pointName: "인계사거리",
+          jurisdiction: "수원시",
+          distanceKm: "1.4",
+          dataType: "average",
+          note: "요일별 평균교통량만 확인",
+          source: "경기데이터드림 요일별 상시평균 교통량",
+          sourceLink: "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=Y8Y8YVLJQYM4K5GJ56GV32744671&infSeq=2",
+          downloadLink: "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=Y8Y8YVLJQYM4K5GJ56GV32744671&infSeq=2",
+        }),
       ],
       landuseSource: "수원시 통계연보 2025",
       zoningSource: "수원시 도시계획 자료 2025",
@@ -641,6 +696,24 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <button type="button" className="secondary" onClick={() => addRow("surveyPoints", createSurveyRow)}>조사지점 추가</button>
         </div>
 
+        <div className="survey-recommendations">
+          {surveyRecommendations.map((recommendation) => (
+            <article key={recommendation.key} className="survey-recommendation-card">
+              <div className="survey-recommendation-top">
+                <span className="status-badge">{recommendation.priorityLabel}</span>
+                <p className="eyebrow">공식 추천 출처</p>
+              </div>
+              <h3>{recommendation.title}</h3>
+              <p>{recommendation.description}</p>
+              <div className="survey-links">
+                <a href={recommendation.sourceLink} target="_blank" rel="noreferrer">출처 보기</a>
+                <a href={recommendation.downloadLink} target="_blank" rel="noreferrer">다운로드/조회</a>
+                <button type="button" className="secondary" onClick={() => addSurveyRecommendation(recommendation)}>행에 추가</button>
+              </div>
+            </article>
+          ))}
+        </div>
+
         <div className="table-wrap">
           <table className="data-table">
             <thead>
@@ -651,6 +724,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 <th>자료 유형</th>
                 <th>설명</th>
                 <th>출처</th>
+                <th>출처 링크</th>
+                <th>다운로드/조회</th>
                 <th>관리</th>
               </tr>
             </thead>
@@ -667,6 +742,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   </td>
                   <td><textarea className="table-textarea" value={row.note} onChange={(event) => updateListItem("surveyPoints", index, { note: event.target.value })} placeholder="예: 첨두시간 07~09시 확인 가능" /></td>
                   <td><input className="table-input" value={row.source} onChange={(event) => updateListItem("surveyPoints", index, { source: event.target.value })} placeholder="예: 수시 교통량 조사자료" /></td>
+                  <td><input className="table-input" value={row.sourceLink || ""} onChange={(event) => updateListItem("surveyPoints", index, { sourceLink: event.target.value })} placeholder="공식 출처 링크" /></td>
+                  <td><input className="table-input" value={row.downloadLink || ""} onChange={(event) => updateListItem("surveyPoints", index, { downloadLink: event.target.value })} placeholder="다운로드 또는 조회 링크" /></td>
                   <td className="actions"><button type="button" className="mini-button" onClick={() => removeRow("surveyPoints", index, createSurveyRow)}>삭제</button></td>
                 </tr>
               ))}
@@ -985,14 +1062,14 @@ function buildRoadSummary(form) {
 }
 
 function buildPriorityResult(selectedSurveyPoint, surveyPoints) {
-  const hasRows = surveyPoints.some((row) => isFilled(row.pointName) || isFilled(row.jurisdiction) || isFilled(row.distanceKm));
+  const hasRows = surveyPoints.some(isSurveyRowFilled);
   if (!hasRows) return "아직 조사지점이 없습니다.";
   if (!selectedSurveyPoint || selectedSurveyPoint.dataType === "none") return "적정 조사지점 미확보";
-  return `${safe(selectedSurveyPoint.pointName) || "지점명 미입력"} 우선 검토`;
+  return `${safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력"} 우선 검토`;
 }
 
 function buildPriorityNote(selectedSurveyPoint, surveyPoints) {
-  const hasRows = surveyPoints.some((row) => isFilled(row.pointName) || isFilled(row.jurisdiction) || isFilled(row.distanceKm));
+  const hasRows = surveyPoints.some(isSurveyRowFilled);
   if (!hasRows) return "가까운 수시 교통량 조사지점을 입력하면 우선순위를 자동으로 판단합니다.";
   if (!selectedSurveyPoint || selectedSurveyPoint.dataType === "none") {
     return "1순위와 2순위 자료 유형이 모두 확인되지 않아 현 단계에서는 적정 조사지점을 찾지 못했습니다.";
@@ -1003,13 +1080,13 @@ function buildPriorityNote(selectedSurveyPoint, surveyPoints) {
 }
 
 function buildSurveySummary(form, selectedSurveyPoint) {
-  const filledRows = form.surveyPoints.filter((row) => isFilled(row.pointName) || isFilled(row.jurisdiction) || isFilled(row.distanceKm) || row.dataType !== "time" || isFilled(row.note) || isFilled(row.source));
+  const filledRows = form.surveyPoints.filter(isSurveyRowFilled);
   if (!filledRows.length) return "조사지점 후보를 입력해 주세요.";
 
   const lines = [];
   const jurisdictionName = deriveJurisdictionName(form.basics.siteAddress, "해당 관할");
   if (selectedSurveyPoint && selectedSurveyPoint.dataType !== "none") {
-    lines.push(`${jurisdictionName} 기준으로 가장 우선 검토할 사전조사지점은 ${safe(selectedSurveyPoint.pointName) || "지점명 미입력"}이며, 자료 유형은 ${surveyTypeLabel(selectedSurveyPoint.dataType)}이다.`);
+    lines.push(`${jurisdictionName} 기준으로 가장 우선 검토할 사전조사지점은 ${safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력"}이며, 자료 유형은 ${surveyTypeLabel(selectedSurveyPoint.dataType)}이다.`);
   } else {
     lines.push("현재 입력 기준으로는 1순위와 2순위 조건을 만족하는 사전조사지점을 찾지 못했다.");
   }
@@ -1017,7 +1094,9 @@ function buildSurveySummary(form, selectedSurveyPoint) {
   filledRows.slice().sort(compareSurveyRows).forEach((row, index) => {
     const source = safe(row.source) ? ` / 출처: ${row.source}` : "";
     const note = safe(row.note) ? ` / 비고: ${row.note}` : "";
-    lines.push(`${index + 1}. ${safe(row.pointName) || "지점명 미입력"} / 관할: ${safe(row.jurisdiction) || "-"} / 거리: ${formatDistance(row.distanceKm)} / 자료 유형: ${surveyTypeLabel(row.dataType)}${note}${source}`);
+    const sourceLink = safe(row.sourceLink) ? ` / 출처 링크: ${row.sourceLink}` : "";
+    const downloadLink = safe(row.downloadLink) ? ` / 다운로드·조회 링크: ${row.downloadLink}` : "";
+    lines.push(`${index + 1}. ${safe(row.pointName) || "지점명 미입력"} / 관할: ${safe(row.jurisdiction) || "-"} / 거리: ${formatDistance(row.distanceKm)} / 자료 유형: ${surveyTypeLabel(row.dataType)}${note}${source}${sourceLink}${downloadLink}`);
   });
 
   return lines.join("\n");
@@ -1103,6 +1182,101 @@ function deriveJurisdictionName(address, fallback) {
   }
 
   return adminParts.length ? adminParts.join(" ") : deriveCityName(address, fallback);
+}
+
+function detectSurveyRegion(address) {
+  const normalized = normalizeAddress(address);
+  if (!normalized) return "unknown";
+  if (/서울특별시|서울시| 서울 /.test(normalized)) return "seoul";
+  if (/경기도| 경기 /.test(normalized)) return "gyeonggi";
+  return "other";
+}
+
+function buildSurveyRecommendations(address) {
+  const region = detectSurveyRegion(address);
+
+  if (region === "seoul") {
+    return [
+      {
+        key: "seoul-time",
+        priorityLabel: "1순위",
+        dataType: "time",
+        title: "서울시 TOPIS 도로별 일자별 교통량",
+        description: "요일별 시간대별 교통량 확인용으로 우선 검토합니다.",
+        source: "서울시 TOPIS",
+        sourceLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily",
+        downloadLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily",
+      },
+      {
+        key: "seoul-average",
+        priorityLabel: "2순위",
+        dataType: "average",
+        title: "서울시 TOPIS 교통량 보고서",
+        description: "1순위 자료를 찾지 못한 경우 평균 교통량 보고서 확인용으로 사용합니다.",
+        source: "서울시 TOPIS",
+        sourceLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport",
+        downloadLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport",
+      },
+    ];
+  }
+
+  if (region === "gyeonggi") {
+    return [
+      {
+        key: "gyeonggi-time",
+        priorityLabel: "1순위",
+        dataType: "time",
+        title: "경기도교통정보시스템 수시교통량",
+        description: "지점별, 시간대별, 방향별 교통량을 우선 검토합니다.",
+        source: "경기도교통정보시스템",
+        sourceLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+        downloadLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+      },
+      {
+        key: "gyeonggi-average",
+        priorityLabel: "2순위",
+        dataType: "average",
+        title: "경기데이터드림 요일별 상시평균 교통량",
+        description: "1순위 자료가 없을 때 요일별 평균 교통량 자료를 검토합니다.",
+        source: "경기데이터드림",
+        sourceLink: "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=Y8Y8YVLJQYM4K5GJ56GV32744671&infSeq=2",
+        downloadLink: "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=Y8Y8YVLJQYM4K5GJ56GV32744671&infSeq=2",
+      },
+      {
+        key: "gyeonggi-fallback",
+        priorityLabel: "보조",
+        dataType: "average",
+        title: "교통량정보제공시스템 상시조사 교통량",
+        description: "경기도 자료가 부족할 때 전국 단위 공식 시스템에서 보조 확인합니다.",
+        source: "교통량정보제공시스템",
+        sourceLink: "https://www.road.re.kr/",
+        downloadLink: "https://www.road.re.kr/pds/request_list.asp",
+      },
+    ];
+  }
+
+  return [
+    {
+      key: "national-time",
+      priorityLabel: "1순위",
+      dataType: "time",
+      title: "교통량정보제공시스템 상시조사 자료",
+      description: "전국 단위 공식 시스템에서 시간대별 조사자료 가능 여부를 먼저 확인합니다.",
+      source: "교통량정보제공시스템",
+      sourceLink: "https://www.road.re.kr/",
+      downloadLink: "https://www.road.re.kr/pds/request_list.asp",
+    },
+    {
+      key: "national-average",
+      priorityLabel: "2순위",
+      dataType: "average",
+      title: "교통량정보제공시스템 요청자료실",
+      description: "1순위 자료가 부족하면 통계연보 및 요청자료실을 검토합니다.",
+      source: "교통량정보제공시스템",
+      sourceLink: "https://www.road.re.kr/pds/request_list.asp",
+      downloadLink: "https://www.road.re.kr/pds/request_list.asp",
+    },
+  ];
 }
 
 function classifyRoadClass(roadName) {
