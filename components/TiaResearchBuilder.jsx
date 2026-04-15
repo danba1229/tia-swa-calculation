@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import seoulTopisPoints from "../app/seoul-topis-points.json";
 
 const STORAGE_KEY = "tia-research-builder-next-v1";
+const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
 const LANDUSE_CATEGORIES = ["전", "답", "임야", "대지", "도로", "하천", "학교", "공원", "기타"];
 const ZONING_DEFAULTS = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "기타"];
 const ROAD_CLASSES = ["고속도로", "대로", "로"];
@@ -40,6 +42,7 @@ function createRoadRow(overrides = {}) {
 
 function createSurveyRow(overrides = {}) {
   return {
+    pointCode: "",
     pointName: "",
     jurisdiction: "",
     distanceKm: "",
@@ -111,6 +114,18 @@ function formatDistance(value) {
   return Number.isFinite(num) ? `${num.toFixed(1)}km` : "-";
 }
 
+function distanceBetweenKm(lat1, lng1, lat2, lng2) {
+  const toRadians = (value) => (Number(value) * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const deltaLat = toRadians(lat2 - lat1);
+  const deltaLng = toRadians(lng2 - lng1);
+  const a = (
+    Math.sin(deltaLat / 2) ** 2
+    + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(deltaLng / 2) ** 2
+  );
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function surveyTypeLabel(type) {
   return SURVEY_TYPES.find((item) => item.value === type)?.label || SURVEY_TYPES[0].label;
 }
@@ -131,6 +146,7 @@ function compareSurveyRows(a, b) {
 
 function isSurveyRowFilled(row) {
   return (
+    isFilled(row.pointCode) ||
     isFilled(row.pointName) ||
     isFilled(row.jurisdiction) ||
     isFilled(row.distanceKm) ||
@@ -240,6 +256,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [form, setForm] = useState(createBlankState);
   const [statusText, setStatusText] = useState("초기 화면을 준비하는 중입니다.");
   const [mapStatus, setMapStatus] = useState('배포 환경에 카카오 지도 키를 설정한 뒤 "지도 범위 표시" 버튼을 눌러 주세요.');
+  const [topisCandidates, setTopisCandidates] = useState([]);
+  const [topisStatus, setTopisStatus] = useState("");
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
   const mapRuntimeRef = useRef({
@@ -311,6 +329,109 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const landuseSummary = buildLanduseSummary(form, landuseStats, zoningStats);
   const planSummary = buildPlanSummary(form);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTopisCandidates() {
+      if (detectSurveyRegion(form.basics.siteAddress) !== "seoul") {
+        setTopisCandidates([]);
+        setTopisStatus("");
+        return;
+      }
+
+      if (safe(form.basics.siteAddress).length < 8) {
+        setTopisCandidates([]);
+        setTopisStatus("서울 사업지 주소를 조금 더 구체적으로 입력하면 최근접 TOPIS 지점을 계산합니다.");
+        return;
+      }
+
+      if (!kakaoJsKey) {
+        setTopisCandidates([]);
+        setTopisStatus("서울 TOPIS 최근접 추천은 카카오 지도 키 설정 후 사용할 수 있습니다.");
+        return;
+      }
+
+      try {
+        setTopisStatus("서울 TOPIS 지점 좌표를 확인하는 중입니다.");
+        await loadKakaoMaps(kakaoJsKey);
+
+        const sourceLat = Number(form.basics.centerLat);
+        const sourceLng = Number(form.basics.centerLng);
+        let origin = null;
+
+        if (Number.isFinite(sourceLat) && Number.isFinite(sourceLng)) {
+          origin = { y: String(sourceLat), x: String(sourceLng) };
+        } else {
+          origin = await geocodeAddress(form.basics.siteAddress);
+        }
+
+        const geocoder = new window.kakao.maps.services.Geocoder();
+        const stored = JSON.parse(window.localStorage.getItem(TOPIS_POINT_CACHE_KEY) || "{}");
+        const enriched = [];
+        let updated = false;
+        let missingCount = 0;
+
+        for (const point of seoulTopisPoints) {
+          const cached = stored[point.code];
+          if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lng)) {
+            enriched.push({ ...point, lat: cached.lat, lng: cached.lng });
+            continue;
+          }
+
+          missingCount += 1;
+          const result = await tryAddressSearch(geocoder, point.address, window.kakao.maps.services.AnalyzeType.SIMILAR)
+            .catch(() => tryKeywordSearch(point.address))
+            .catch(() => null);
+
+          if (!result) continue;
+
+          const lat = Number(result.y);
+          const lng = Number(result.x);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+
+          stored[point.code] = { lat, lng };
+          enriched.push({ ...point, lat, lng });
+          updated = true;
+        }
+
+        if (updated) {
+          window.localStorage.setItem(TOPIS_POINT_CACHE_KEY, JSON.stringify(stored));
+        }
+
+        const originLat = Number(origin.y);
+        const originLng = Number(origin.x);
+        const candidates = enriched
+          .map((point) => ({
+            ...point,
+            distanceKm: distanceBetweenKm(originLat, originLng, point.lat, point.lng),
+          }))
+          .filter((point) => Number.isFinite(point.distanceKm))
+          .sort((a, b) => a.distanceKm - b.distanceKm)
+          .slice(0, 3);
+
+        if (cancelled) return;
+
+        setTopisCandidates(candidates);
+        setTopisStatus(
+          candidates.length
+            ? `서울 TOPIS 최근접 후보 ${candidates.length}개를 계산했습니다.${missingCount ? " 일부 지점은 주소 변환 결과에 따라 보정이 필요할 수 있습니다." : ""}`
+            : "서울 TOPIS 최근접 후보를 계산하지 못했습니다.",
+        );
+      } catch (error) {
+        if (cancelled) return;
+        console.error(error);
+        setTopisCandidates([]);
+        setTopisStatus("서울 TOPIS 최근접 후보를 불러오지 못했습니다.");
+      }
+    }
+
+    loadTopisCandidates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.basics.siteAddress, form.basics.centerLat, form.basics.centerLng, kakaoJsKey]);
+
   function updateBasics(field, value) {
     setForm((current) => ({
       ...current,
@@ -380,6 +501,21 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       downloadLink: recommendation.downloadLink,
     }));
     setStatusText(`${recommendation.title} 추천 정보를 사전조사지점 표에 추가했습니다.`);
+  }
+
+  function addTopisCandidate(candidate) {
+    addRow("surveyPoints", () => createSurveyRow({
+      pointCode: candidate.code,
+      pointName: candidate.name,
+      jurisdiction: "서울특별시",
+      distanceKm: candidate.distanceKm.toFixed(1),
+      dataType: "time",
+      note: `서울 TOPIS 최근접 후보 / ${candidate.address}`,
+      source: "서울시 TOPIS",
+      sourceLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily",
+      downloadLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport",
+    }));
+    setStatusText(`${candidate.code} ${candidate.name} 지점을 사전조사지점 표에 추가했습니다.`);
   }
 
   async function renderScopeMap() {
@@ -696,6 +832,33 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <button type="button" className="secondary" onClick={() => addRow("surveyPoints", createSurveyRow)}>조사지점 추가</button>
         </div>
 
+        {detectSurveyRegion(form.basics.siteAddress) === "seoul" ? (
+          <div className="survey-recommendation-block">
+            <div className="output-header">
+              <h3>서울 TOPIS 최근접 3지점</h3>
+            </div>
+            <p className="priority-note">{topisStatus || "서울 TOPIS 지점 좌표를 준비하는 중입니다."}</p>
+            <div className="survey-recommendations">
+              {topisCandidates.map((candidate) => (
+                <article key={candidate.code} className="survey-recommendation-card">
+                  <div className="survey-recommendation-top">
+                    <span className="status-badge">{candidate.code}</span>
+                    <p className="eyebrow">{candidate.category}</p>
+                  </div>
+                  <h3>{candidate.name}</h3>
+                  <p>{candidate.address}</p>
+                  <p className="candidate-distance">사업지 기준 {formatDistance(candidate.distanceKm)}</p>
+                  <div className="survey-links">
+                    <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily" target="_blank" rel="noreferrer">출처 보기</a>
+                    <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport" target="_blank" rel="noreferrer">조사자료 PDF</a>
+                    <button type="button" className="secondary" onClick={() => addTopisCandidate(candidate)}>행에 추가</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="survey-recommendations">
           {surveyRecommendations.map((recommendation) => (
             <article key={recommendation.key} className="survey-recommendation-card">
@@ -718,6 +881,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <table className="data-table">
             <thead>
               <tr>
+                <th>지점번호</th>
                 <th>조사지점명</th>
                 <th>관할</th>
                 <th>거리(km)</th>
@@ -732,6 +896,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <tbody>
               {form.surveyPoints.map((row, index) => (
                 <tr key={`survey-${index}`}>
+                  <td><input className="table-input" value={row.pointCode || ""} onChange={(event) => updateListItem("surveyPoints", index, { pointCode: event.target.value })} placeholder="예: A-01" /></td>
                   <td><input className="table-input" value={row.pointName} onChange={(event) => updateListItem("surveyPoints", index, { pointName: event.target.value })} placeholder="예: 수원시청사거리" /></td>
                   <td><input className="table-input" value={row.jurisdiction} onChange={(event) => updateListItem("surveyPoints", index, { jurisdiction: event.target.value })} placeholder="예: 수원시" /></td>
                   <td><input className="table-input" type="number" value={row.distanceKm} onChange={(event) => updateListItem("surveyPoints", index, { distanceKm: event.target.value })} placeholder="예: 1.8" /></td>
@@ -1065,7 +1230,7 @@ function buildPriorityResult(selectedSurveyPoint, surveyPoints) {
   const hasRows = surveyPoints.some(isSurveyRowFilled);
   if (!hasRows) return "아직 조사지점이 없습니다.";
   if (!selectedSurveyPoint || selectedSurveyPoint.dataType === "none") return "적정 조사지점 미확보";
-  return `${safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력"} 우선 검토`;
+  return `${safe(selectedSurveyPoint.pointCode) || ""} ${safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력"}`.trim() + " 우선 검토";
 }
 
 function buildPriorityNote(selectedSurveyPoint, surveyPoints) {
@@ -1086,7 +1251,7 @@ function buildSurveySummary(form, selectedSurveyPoint) {
   const lines = [];
   const jurisdictionName = deriveJurisdictionName(form.basics.siteAddress, "해당 관할");
   if (selectedSurveyPoint && selectedSurveyPoint.dataType !== "none") {
-    lines.push(`${jurisdictionName} 기준으로 가장 우선 검토할 사전조사지점은 ${safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력"}이며, 자료 유형은 ${surveyTypeLabel(selectedSurveyPoint.dataType)}이다.`);
+    lines.push(`${jurisdictionName} 기준으로 가장 우선 검토할 사전조사지점은 ${(safe(selectedSurveyPoint.pointCode) ? `${safe(selectedSurveyPoint.pointCode)} ` : "") + (safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력")}이며, 자료 유형은 ${surveyTypeLabel(selectedSurveyPoint.dataType)}이다.`);
   } else {
     lines.push("현재 입력 기준으로는 1순위와 2순위 조건을 만족하는 사전조사지점을 찾지 못했다.");
   }
@@ -1096,7 +1261,8 @@ function buildSurveySummary(form, selectedSurveyPoint) {
     const note = safe(row.note) ? ` / 비고: ${row.note}` : "";
     const sourceLink = safe(row.sourceLink) ? ` / 출처 링크: ${row.sourceLink}` : "";
     const downloadLink = safe(row.downloadLink) ? ` / 다운로드·조회 링크: ${row.downloadLink}` : "";
-    lines.push(`${index + 1}. ${safe(row.pointName) || "지점명 미입력"} / 관할: ${safe(row.jurisdiction) || "-"} / 거리: ${formatDistance(row.distanceKm)} / 자료 유형: ${surveyTypeLabel(row.dataType)}${note}${source}${sourceLink}${downloadLink}`);
+    const pointLabel = `${safe(row.pointCode) ? `${safe(row.pointCode)} / ` : ""}${safe(row.pointName) || "지점명 미입력"}`;
+    lines.push(`${index + 1}. ${pointLabel} / 관할: ${safe(row.jurisdiction) || "-"} / 거리: ${formatDistance(row.distanceKm)} / 자료 유형: ${surveyTypeLabel(row.dataType)}${note}${source}${sourceLink}${downloadLink}`);
   });
 
   return lines.join("\n");

@@ -347,7 +347,7 @@ button.mini-button {
 
 .data-table {
   width: 100%;
-  min-width: 860px;
+  min-width: 1080px;
   border-collapse: collapse;
 }
 
@@ -445,6 +445,10 @@ button.mini-button {
   color: var(--muted);
 }
 
+.survey-recommendation-block {
+  margin-bottom: 18px;
+}
+
 .survey-recommendation-top {
   display: flex;
   align-items: center;
@@ -462,6 +466,12 @@ button.mini-button {
 .survey-links a,
 .survey-links button {
   white-space: nowrap;
+}
+
+.candidate-distance {
+  margin-top: 10px !important;
+  font-weight: 700;
+  color: var(--text) !important;
 }
 
 .subpanel-grid,
