@@ -369,7 +369,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
     try {
       setMapStatus("카카오 지도 SDK를 불러오는 중입니다.");
-      setStatusText("조사 범위를 지도에 표시하는 중입니다.");
+      setStatusText("조사 범위를 지도에 표시하고 가로망을 자동 조사하는 중입니다.");
 
       await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
       const result = await geocodeAddress(address);
@@ -409,6 +409,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       mapRuntimeRef.current.infoWindow.open(mapRuntimeRef.current.map, mapRuntimeRef.current.marker);
       mapRuntimeRef.current.map.setBounds(bounds, 48, 48, 48, 48);
 
+      setMapStatus("조사 영역에 걸친 도로를 자동 조사하는 중입니다.");
+      const autoRoadRows = await collectRoadRowsInScope({
+        lat,
+        lng,
+        width,
+        height,
+      });
+
       setForm((current) => ({
         ...current,
         basics: {
@@ -416,9 +424,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           centerLat: lat.toFixed(6),
           centerLng: lng.toFixed(6),
         },
+        roads: autoRoadRows.length ? autoRoadRows : [createRoadRow({ roadClass: "로" })],
       }));
-      setMapStatus(`"${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위를 지도에 표시했습니다.`);
-      setStatusText("지도 범위를 갱신했습니다.");
+      setMapStatus(`"${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위를 지도에 표시했고, 범위에 걸친 도로 ${autoRoadRows.length}건을 자동 조사했습니다.`);
+      setStatusText(autoRoadRows.length ? "지도 범위와 가로망 자동조사를 갱신했습니다." : "지도 범위는 표시했지만 범위에 걸친 도로를 찾지 못했습니다.");
     } catch (error) {
       console.error(error);
       setMapStatus(error.message || "지도 표시 중 오류가 발생했습니다.");
@@ -567,7 +576,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 1</p>
             <h2>가로망 조사</h2>
           </div>
-          <p className="panel-copy">조사 대상 도로는 고속도로, 대로, 로를 기본 구분으로 두고 직사각형 범위 안에서 정리합니다.</p>
+          <p className="panel-copy">조사 대상 도로는 고속도로, 대로, 로를 기본 구분으로 두고 직사각형 조사 영역에 걸친 도로를 자동 조사해 정리합니다.</p>
         </div>
 
         <div className="tag-strip">
@@ -957,6 +966,7 @@ function buildRoadSummary(form) {
     lines.push("기본 정보에서 주소지와 가로·세로 범위를 입력해 조사 범위를 먼저 설정한다.");
   }
   lines.push("조사 대상 도로 구분은 고속도로, 대로, 로를 기본 기준으로 한다.");
+  lines.push("자동조사 결과의 기점·종점 주소는 조사영역 내부에서 확인된 도로명 주소를 기준으로 정리한다.");
   if (form.basics.centerLat && form.basics.centerLng) {
     lines.push(`중심 좌표는 위도 ${form.basics.centerLat}, 경도 ${form.basics.centerLng}이다.`);
   }
@@ -1092,6 +1102,121 @@ function deriveJurisdictionName(address, fallback) {
   }
 
   return adminParts.length ? adminParts.join(" ") : deriveCityName(address, fallback);
+}
+
+function classifyRoadClass(roadName) {
+  if (!roadName) return null;
+  if (roadName.endsWith("고속도로")) return "고속도로";
+  if (roadName.endsWith("대로")) return "대로";
+  if (roadName.endsWith("로")) return "로";
+  return null;
+}
+
+function buildScopeSamplePoints(lat, lng, widthMeters, heightMeters) {
+  const bounds = computeRectangleBounds(lat, lng, widthMeters, heightMeters);
+  const xCount = Math.min(Math.max(Math.ceil(widthMeters / 180) + 1, 4), 7);
+  const yCount = Math.min(Math.max(Math.ceil(heightMeters / 180) + 1, 4), 7);
+  const points = [];
+  const seen = new Set();
+
+  for (let yIndex = 0; yIndex < yCount; yIndex += 1) {
+    const yRatio = yCount === 1 ? 0.5 : yIndex / (yCount - 1);
+    const sampleLat = bounds.south + ((bounds.north - bounds.south) * yRatio);
+
+    for (let xIndex = 0; xIndex < xCount; xIndex += 1) {
+      const xRatio = xCount === 1 ? 0.5 : xIndex / (xCount - 1);
+      const sampleLng = bounds.west + ((bounds.east - bounds.west) * xRatio);
+      const key = `${sampleLat.toFixed(6)}:${sampleLng.toFixed(6)}`;
+
+      if (!seen.has(key)) {
+        seen.add(key);
+        points.push({ lat: sampleLat, lng: sampleLng });
+      }
+    }
+  }
+
+  return points;
+}
+
+function coordToAddress(geocoder, lng, lat) {
+  return new Promise((resolve, reject) => {
+    geocoder.coord2Address(lng, lat, (result, status) => {
+      if (status === window.kakao.maps.services.Status.OK && result?.length) {
+        resolve(result[0]);
+        return;
+      }
+      reject(new Error("coord2Address failed"));
+    });
+  });
+}
+
+function buildRoadRowsFromBuckets(roadBuckets) {
+  return Array.from(roadBuckets.values())
+    .map((bucket) => {
+      const sortedSamples = bucket.samples
+        .slice()
+        .sort((a, b) => (a.lat - b.lat) || (a.lng - b.lng) || a.address.localeCompare(b.address, "ko"));
+
+      const startSample = sortedSamples[0];
+      const endSample = sortedSamples[sortedSamples.length - 1];
+
+      return createRoadRow({
+        roadClass: bucket.roadClass,
+        name: bucket.name,
+        startAddress: startSample?.address || "",
+        endAddress: endSample?.address || startSample?.address || "",
+        source: "카카오 좌표-주소 변환 자동조사",
+      });
+    })
+    .sort((a, b) => {
+      const roadClassDiff = ROAD_CLASSES.indexOf(a.roadClass) - ROAD_CLASSES.indexOf(b.roadClass);
+      if (roadClassDiff !== 0) return roadClassDiff;
+      return a.name.localeCompare(b.name, "ko");
+    });
+}
+
+async function collectRoadRowsInScope({ lat, lng, width, height }) {
+  const geocoder = new window.kakao.maps.services.Geocoder();
+  const points = buildScopeSamplePoints(lat, lng, width, height);
+  const roadBuckets = new Map();
+
+  for (let index = 0; index < points.length; index += 6) {
+    const chunk = points.slice(index, index + 6);
+    const results = await Promise.all(
+      chunk.map((point) => coordToAddress(geocoder, point.lng, point.lat).catch(() => null)),
+    );
+
+    results.forEach((result, chunkIndex) => {
+      const roadAddress = result?.road_address;
+      const roadName = safe(roadAddress?.road_name);
+      const roadClass = classifyRoadClass(roadName);
+
+      if (!roadAddress || !roadName || !roadClass) return;
+
+      const point = chunk[chunkIndex];
+      const sampleAddress = safe(roadAddress.address_name) || `${roadName}`;
+      const key = `${roadClass}:${roadName}`;
+
+      if (!roadBuckets.has(key)) {
+        roadBuckets.set(key, {
+          roadClass,
+          name: roadName,
+          samples: [],
+        });
+      }
+
+      const bucket = roadBuckets.get(key);
+      if (!bucket.samples.some((sample) => sample.address === sampleAddress)) {
+        bucket.samples.push({
+          address: sampleAddress,
+          lat: point.lat,
+          lng: point.lng,
+        });
+      }
+    });
+  }
+
+  return buildRoadRowsFromBuckets(roadBuckets);
 }
 
 function computeRectangleBounds(lat, lng, widthMeters, heightMeters) {
