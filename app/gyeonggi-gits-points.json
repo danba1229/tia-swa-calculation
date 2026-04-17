@@ -1,0 +1,7162 @@
+{
+  "source": "경기도교통정보시스템 수시교통량",
+  "sourceLink": "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+  "fallbackLink": "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/regularAverageTrafficVolumeByWeekday.do",
+  "year": "2024",
+  "routes": [
+    {
+      "code": "1",
+      "name": "경부고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "15",
+      "name": "서해안고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "17",
+      "name": "평택화성(수원광명)고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "17.2",
+      "name": "평택파주고속도로2",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "17.3",
+      "name": "평택파주고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "29",
+      "name": "구리포천고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "35",
+      "name": "중부고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "37",
+      "name": "제2중부고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "40",
+      "name": "평택충주고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "45",
+      "name": "중부내륙고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "50",
+      "name": "영동고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "52",
+      "name": "광주원주고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "60",
+      "name": "서울양양고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "60.2",
+      "name": "서울양양고속도로2",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "100",
+      "name": "수도권제1순환고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "100.2",
+      "name": "수도권제1순환고속도로(북부)",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "110",
+      "name": "제2경인고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "110.2",
+      "name": "인천대교",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "110.3",
+      "name": "제2경인고속도로2",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "120",
+      "name": "경인고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "130",
+      "name": "인천국제공항고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "153",
+      "name": "평택시흥고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "171",
+      "name": "오산화성고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "171.2",
+      "name": "용인서울고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "400",
+      "name": "수도권제2순환고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "400.2",
+      "name": "인천김포고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "400.3",
+      "name": "봉담송산고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "400.4",
+      "name": "화성광주고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "400.5",
+      "name": "화도양평고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "400.6",
+      "name": "포천화도고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "400.7",
+      "name": "양주소흘고속도로",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "code": "1",
+      "name": "일반국도 1호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "3",
+      "name": "일반국도 3호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "6",
+      "name": "일반국도 6호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "17",
+      "name": "일반국도 17호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "34",
+      "name": "일반국도 34호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "37",
+      "name": "일반국도 37호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "38",
+      "name": "일반국도 38호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "39",
+      "name": "일반국도 39호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "42",
+      "name": "일반국도 42호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "43",
+      "name": "일반국도 43호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "44",
+      "name": "일반국도 44호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "45",
+      "name": "일반국도 45호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "46",
+      "name": "일반국도 46호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "47",
+      "name": "일반국도 47호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "48",
+      "name": "일반국도 48호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "75",
+      "name": "일반국도 75호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "77",
+      "name": "일반국도 77호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "82",
+      "name": "일반국도 82호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "87",
+      "name": "일반국도 87호선",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "code": "23",
+      "name": "국가지원지방도 23호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "39",
+      "name": "국가지원지방도 39호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "56",
+      "name": "국가지원지방도 56호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "57",
+      "name": "국가지원지방도 57호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "70",
+      "name": "국가지원지방도 70호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "78",
+      "name": "국가지원지방도 78호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "82",
+      "name": "국가지원지방도 82호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "84",
+      "name": "국가지원지방도 84호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "86",
+      "name": "국가지원지방도 86호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "88",
+      "name": "국가지원지방도 88호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "98",
+      "name": "국가지원지방도 98호선",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "code": "301",
+      "name": "지방도 301호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "302",
+      "name": "지방도 302호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "305",
+      "name": "지방도 305호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "306",
+      "name": "지방도 306호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "309",
+      "name": "지방도 309호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "310",
+      "name": "지방도 310호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "311",
+      "name": "지방도 311호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "313",
+      "name": "지방도 313호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "314",
+      "name": "지방도 314호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "315",
+      "name": "지방도 315호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "317",
+      "name": "지방도 317호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "318",
+      "name": "지방도 318호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "321",
+      "name": "지방도 321호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "322",
+      "name": "지방도 322호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "325",
+      "name": "지방도 325호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "329",
+      "name": "지방도 329호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "333",
+      "name": "지방도 333호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "334",
+      "name": "지방도 334호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "337",
+      "name": "지방도 337호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "338",
+      "name": "지방도 338호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "341",
+      "name": "지방도 341호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "342",
+      "name": "지방도 342호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "345",
+      "name": "지방도 345호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "349",
+      "name": "지방도 349호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "352",
+      "name": "지방도 352호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "355",
+      "name": "지방도 355호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "356",
+      "name": "지방도 356호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "357",
+      "name": "지방도 357호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "358",
+      "name": "지방도 358호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "359",
+      "name": "지방도 359호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "360",
+      "name": "지방도 360호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "363",
+      "name": "지방도 363호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "364",
+      "name": "지방도 364호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "367",
+      "name": "지방도 367호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "368",
+      "name": "지방도 368호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "371",
+      "name": "지방도 371호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "372",
+      "name": "지방도 372호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "375",
+      "name": "지방도 375호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "379",
+      "name": "지방도 379호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "383",
+      "name": "지방도 383호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "387",
+      "name": "지방도 387호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "391",
+      "name": "지방도 391호선",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "code": "A103-142",
+      "name": "성남시도 142호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-1",
+      "name": "용인시도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-10",
+      "name": "용인시도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-12",
+      "name": "용인시도 12호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-13",
+      "name": "용인시도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-14",
+      "name": "용인시도 14호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-15",
+      "name": "용인시도 15호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-16",
+      "name": "용인시도 16호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-17",
+      "name": "용인시도 17호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-19",
+      "name": "용인시도 19호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-2",
+      "name": "용인시도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-25",
+      "name": "용인시도 25호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-27",
+      "name": "용인시도 27호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-3",
+      "name": "용인시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-31",
+      "name": "용인시도 31호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-5",
+      "name": "용인시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-7",
+      "name": "용인시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A106-9",
+      "name": "용인시도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-1",
+      "name": "평택시도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-10",
+      "name": "평택시도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-11",
+      "name": "평택시도 11호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-13",
+      "name": "평택시도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-14",
+      "name": "평택시도 14호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-15",
+      "name": "평택시도 15호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-16",
+      "name": "평택시도 16호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-17",
+      "name": "평택시도 17호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-3",
+      "name": "평택시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-7",
+      "name": "평택시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-8",
+      "name": "평택시도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A107-9",
+      "name": "평택시도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-1",
+      "name": "화성시도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-2",
+      "name": "화성시도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-3",
+      "name": "화성시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-4",
+      "name": "화성시도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-5",
+      "name": "화성시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-50",
+      "name": "화성시도 50호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-51",
+      "name": "화성시도 51호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-52",
+      "name": "화성시도 52호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-53",
+      "name": "화성시도 53호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-54",
+      "name": "화성시도 54호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-55",
+      "name": "화성시도 55호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-56",
+      "name": "화성시도 56호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-57",
+      "name": "화성시도 57호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-58",
+      "name": "화성시도 58호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-59",
+      "name": "화성시도 59호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-60",
+      "name": "화성시도 60호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-61",
+      "name": "화성시도 61호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-62",
+      "name": "화성시도 62호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-63",
+      "name": "화성시도 63호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-64",
+      "name": "화성시도 64호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-65",
+      "name": "화성시도 65호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-66",
+      "name": "화성시도 66호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-67",
+      "name": "화성시도 67호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-68",
+      "name": "화성시도 68호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-69",
+      "name": "화성시도 69호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-70",
+      "name": "화성시도 70호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-71",
+      "name": "화성시도 71호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-72",
+      "name": "화성시도 72호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-73",
+      "name": "화성시도 73호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-74",
+      "name": "화성시도 74호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-75",
+      "name": "화성시도 75호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-76",
+      "name": "화성시도 76호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A111-78",
+      "name": "화성시도 78호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-1",
+      "name": "이천시도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-10",
+      "name": "이천시도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-15",
+      "name": "이천시도 15호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-17",
+      "name": "이천시도 17호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-2",
+      "name": "이천시도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-3",
+      "name": "이천시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-4",
+      "name": "이천시도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-5",
+      "name": "이천시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-7",
+      "name": "이천시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-8",
+      "name": "이천시도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A112-9",
+      "name": "이천시도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-10",
+      "name": "김포시도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-11",
+      "name": "김포시도 11호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-12",
+      "name": "김포시도 12호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-13",
+      "name": "김포시도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-14",
+      "name": "김포시도 14호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-18",
+      "name": "김포시도 18호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-19",
+      "name": "김포시도 19호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-22",
+      "name": "김포시도 22호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-4",
+      "name": "김포시도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-7",
+      "name": "김포시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A113-9",
+      "name": "김포시도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-10",
+      "name": "광주시도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-11",
+      "name": "광주시도 11호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-12",
+      "name": "광주시도 12호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-13",
+      "name": "광주시도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-2",
+      "name": "광주시도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-3",
+      "name": "광주시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-4",
+      "name": "광주시도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-5",
+      "name": "광주시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-7",
+      "name": "광주시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-8",
+      "name": "광주시도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A114-9",
+      "name": "광주시도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-1",
+      "name": "안성시도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-10",
+      "name": "안성시도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-11",
+      "name": "안성시도 11호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-12",
+      "name": "안성시도 12호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-13",
+      "name": "안성시도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-14",
+      "name": "안성시도 14호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-15",
+      "name": "안성시도 15호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-16",
+      "name": "안성시도 16호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-17",
+      "name": "안성시도 17호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-18",
+      "name": "안성시도 18호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-19",
+      "name": "안성시도 19호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-2",
+      "name": "안성시도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-23",
+      "name": "안성시도 23호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-25",
+      "name": "안성시도 25호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-3",
+      "name": "안성시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-4",
+      "name": "안성시도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-5",
+      "name": "안성시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-6",
+      "name": "안성시도 6호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-7",
+      "name": "안성시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-8",
+      "name": "안성시도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A115-9",
+      "name": "안성시도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A201-100",
+      "name": "고양시도 100호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A201-61",
+      "name": "고양시도 61호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A201-62",
+      "name": "고양시도 62호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A201-75",
+      "name": "고양시도 75호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A201-76",
+      "name": "고양시도 76호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-1",
+      "name": "남양주시도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-10",
+      "name": "남양주시도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-108",
+      "name": "남양주시도 108호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-13",
+      "name": "남양주시도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-15",
+      "name": "남양주시도 15호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-16",
+      "name": "남양주시도 16호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-17",
+      "name": "남양주시도 17호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-3",
+      "name": "남양주시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-4",
+      "name": "남양주시도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-5",
+      "name": "남양주시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-7",
+      "name": "남양주시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A203-9",
+      "name": "남양주시도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-1",
+      "name": "파주시도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-13",
+      "name": "파주시도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-17",
+      "name": "파주시도 17호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-19",
+      "name": "파주시도 19호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-2",
+      "name": "파주시도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-23",
+      "name": "파주시도 23호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-3",
+      "name": "파주시도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-31",
+      "name": "파주시도 31호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-33",
+      "name": "파주시도 33호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-36",
+      "name": "파주시도 36호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-5",
+      "name": "파주시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-7",
+      "name": "파주시도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A204-8",
+      "name": "파주시도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-12",
+      "name": "양주시도 12호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-18",
+      "name": "양주시도 18호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-19",
+      "name": "양주시도 19호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-2",
+      "name": "양주시도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-20",
+      "name": "양주시도 20호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-23",
+      "name": "양주시도 23호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-24",
+      "name": "양주시도 24호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-26",
+      "name": "양주시도 26호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-27",
+      "name": "양주시도 27호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-28",
+      "name": "양주시도 28호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-29",
+      "name": "양주시도 29호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-31",
+      "name": "양주시도 31호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-39",
+      "name": "양주시도 39호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-5",
+      "name": "양주시도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "A207-8",
+      "name": "양주시도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-1",
+      "name": "여주군도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-10",
+      "name": "여주군도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-2",
+      "name": "여주군도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-3",
+      "name": "여주군도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-4",
+      "name": "여주군도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-5",
+      "name": "여주군도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-6",
+      "name": "여주군도 6호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-7",
+      "name": "여주군도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-8",
+      "name": "여주군도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B119-9",
+      "name": "여주군도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-1",
+      "name": "양평군도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-10",
+      "name": "양평군도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-11",
+      "name": "양평군도 11호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-15",
+      "name": "양평군도 15호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-2",
+      "name": "양평군도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-3",
+      "name": "양평군도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-4",
+      "name": "양평군도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-5",
+      "name": "양평군도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-6",
+      "name": "양평군도 6호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-7",
+      "name": "양평군도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-8",
+      "name": "양평군도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B120-9",
+      "name": "양평군도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-1",
+      "name": "포천군도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-10",
+      "name": "포천군도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-13",
+      "name": "포천군도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-15",
+      "name": "포천군도 15호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-19",
+      "name": "포천군도 19호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-2",
+      "name": "포천군도 2호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-20",
+      "name": "포천군도 20호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-21",
+      "name": "포천군도 21호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-22",
+      "name": "포천군도 22호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-23",
+      "name": "포천군도 23호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-24",
+      "name": "포천군도 24호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-27",
+      "name": "포천군도 27호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-28",
+      "name": "포천군도 28호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-4",
+      "name": "포천군도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-6",
+      "name": "포천군도 6호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-7",
+      "name": "포천군도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-8",
+      "name": "포천군도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B206-9",
+      "name": "포천군도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-1",
+      "name": "가평군도 1호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-10",
+      "name": "가평군도 10호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-12",
+      "name": "가평군도 12호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-13",
+      "name": "가평군도 13호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-4",
+      "name": "가평군도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-6",
+      "name": "가평군도 6호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-7",
+      "name": "가평군도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-8",
+      "name": "가평군도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B209-9",
+      "name": "가평군도 9호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B210-3",
+      "name": "연천군도 3호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B210-4",
+      "name": "연천군도 4호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B210-5",
+      "name": "연천군도 5호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B210-7",
+      "name": "연천군도 7호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    },
+    {
+      "code": "B210-8",
+      "name": "연천군도 8호선",
+      "category": "5",
+      "categoryLabel": "시군도"
+    }
+  ],
+  "points": [
+    {
+      "pointCode": "00132-1",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "안성IC - 안성JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "00133-1",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "-",
+      "sectionName": "남사진위IC-오산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "00134-1",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "경기 화성 만세 마도면",
+      "sectionName": "동탄JCT - 기흥IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "00137-1",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "경기 성남 분당 삼평동",
+      "sectionName": "판교JCT - 금토JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "133",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "안성JCT - 오산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "135",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "경기 화성 만세 마도면",
+      "sectionName": "기흥IC - 수원신갈IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "137",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "-",
+      "sectionName": "신갈JCT - 판교JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "139",
+      "routeName": "경부고속도로",
+      "routeCode": "1",
+      "jurisdiction": "경기 성남 분당 분당동",
+      "sectionName": "금토JCT - 양재IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "12,007",
+      "routeName": "경인고속도로",
+      "routeCode": "120",
+      "jurisdiction": "경기 부천 오정 오정동",
+      "sectionName": "부천IC - 신월IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,201",
+      "routeName": "광주원주고속도로",
+      "routeCode": "52",
+      "jurisdiction": "-",
+      "sectionName": "경기광주JCT - 동곤지암IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,203",
+      "routeName": "광주원주고속도로",
+      "routeCode": "52",
+      "jurisdiction": "경기 여주 대신면",
+      "sectionName": "흥천이포IC - 대신IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,204",
+      "routeName": "광주원주고속도로",
+      "routeCode": "52",
+      "jurisdiction": "경기 여주 대신면",
+      "sectionName": "대신IC - 동여주IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,205",
+      "routeName": "광주원주고속도로",
+      "routeCode": "52",
+      "jurisdiction": "경기 여주 북내면",
+      "sectionName": "동여주IC - 동양평IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,901",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "서울 중랑 망우본동",
+      "sectionName": "남구리IC - 중랑IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,902",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "-",
+      "sectionName": "중랑IC - 남별내IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,903",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "경기 남양주 별내동",
+      "sectionName": "남별내IC - 동의정부IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,904",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "-",
+      "sectionName": "동의정부IC - 민락IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,905",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "경기 의정부 자금동",
+      "sectionName": "민락IC - 소흘IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,906",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "경기 포천 소흘읍",
+      "sectionName": "소흘IC - 소흘JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,907",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "경기 포천 소흘읍",
+      "sectionName": "소흘JCT - 선단IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,908",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "경기 포천 군내면",
+      "sectionName": "선단IC - 포천IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "2,909",
+      "routeName": "구리포천고속도로",
+      "routeCode": "29",
+      "jurisdiction": "경기 포천 군내면",
+      "sectionName": "포천IC - 신북IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "23-03",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "경기 안성 미양면",
+      "sectionName": "입장 - 안성",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-04",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "경기 안성 대덕면",
+      "sectionName": "안성 - 양성",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-05",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "-",
+      "sectionName": "양성 - 남사",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-06",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "경기 용인 기흥 기흥동",
+      "sectionName": "죽전 - 수원",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-11",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "경기 용인 기흥 구성동",
+      "sectionName": "고산JCT - 상현IC",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-13",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "경기 성남 수정 고등동",
+      "sectionName": "판교IC - 수서IC",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-19",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "경기 안성 미양면",
+      "sectionName": "남안성IC - 대덕",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-20",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "-",
+      "sectionName": "풍덕천동-금곡IC",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "23-21",
+      "routeName": "국가지원지방도 23호선",
+      "routeCode": "23",
+      "jurisdiction": "경기 성남 수정 시흥동",
+      "sectionName": "백현교차로-시흥사거리",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "39-01",
+      "routeName": "국가지원지방도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "고양 - 의정부",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "39-02",
+      "routeName": "국가지원지방도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 양주 광적면",
+      "sectionName": "남 - 백석",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "39-03",
+      "routeName": "국가지원지방도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 양주 남면",
+      "sectionName": "남 - 백석",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "39-05",
+      "routeName": "국가지원지방도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "송추 - 기산",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-01",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 김포 월곶면",
+      "sectionName": "강화 - 통진",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-02",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 파주 조리읍",
+      "sectionName": "일반1 - 광탄",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-03",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 파주 광탄면",
+      "sectionName": "뇌조 - 방축",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-05",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 양주 은현면",
+      "sectionName": "선암 - 덕정",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-06",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "-",
+      "sectionName": "회천 - 포천",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-07",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 포천 군내면",
+      "sectionName": "포천 - 신팔",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-09",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 파주 광탄면",
+      "sectionName": "뇌조 - 방축",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-11",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 양주 광적면",
+      "sectionName": "갈곡 - 상수",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-12",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 양주 남면",
+      "sectionName": "갈곡 - 상수",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-14",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 양주 은현면",
+      "sectionName": "상수 - 회천",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-15",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "-",
+      "sectionName": "문발IC - 조리",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-16",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 파주 금촌1동",
+      "sectionName": "일반1 - 운정",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-17",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 포천 소흘읍",
+      "sectionName": "송우리-송우리",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "56-18",
+      "routeName": "국가지원지방도 56호선",
+      "routeCode": "56",
+      "jurisdiction": "경기 파주 적성면",
+      "sectionName": "구읍리-구읍리",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-03",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "경기 안성 서운면",
+      "sectionName": "성환 - 진천",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-05",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "경기 용인 처인 원삼면",
+      "sectionName": "용인 - 안성",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-06",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "경기 용인 처인 동부동",
+      "sectionName": "일반42 - 원삼",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-07",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "경기 성남 분당 운중동",
+      "sectionName": "안양 - 분당",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-08",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "-",
+      "sectionName": "수지 - 광주",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-09",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "-",
+      "sectionName": "포곡 - 성남",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-10",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "경기 성남 분당 분당동",
+      "sectionName": "능평 - 분당",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-11",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "경기 의왕 청계동",
+      "sectionName": "과천 - 의왕",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-12",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "경기 안양 동안 관양동",
+      "sectionName": "청계동-관양동",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-13",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "-",
+      "sectionName": "관양동-비산동",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "57-14",
+      "routeName": "국가지원지방도 57호선",
+      "routeCode": "57",
+      "jurisdiction": "충청 청주 청원 오창읍",
+      "sectionName": "백현교차로-운중동",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-04",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 이천 모가면",
+      "sectionName": "부발 - 삼죽",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-05",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 이천 중리동",
+      "sectionName": "부발 - 삼죽",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-06",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 이천 백사면",
+      "sectionName": "일반3 - 금사",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-07",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 여주 산북면",
+      "sectionName": "이천 - 지평",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-08",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 양평군 지평면",
+      "sectionName": "이포대교 - 지평",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-09",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 양평군 지평면",
+      "sectionName": "일반6 - 지제",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-10",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 여주 금사면",
+      "sectionName": "이천 - 지평",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-14",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 양평군 단월면",
+      "sectionName": "양평 - 홍천",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-18",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 안성 고삼면",
+      "sectionName": "평택 - 일죽",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "70-22",
+      "routeName": "국가지원지방도 70호선",
+      "routeCode": "70",
+      "jurisdiction": "경기 안성 미양면",
+      "sectionName": "천안 - 대덕",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-01",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 김포 하성면",
+      "sectionName": "전류 - 일산대교",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-02",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "-",
+      "sectionName": "서울 - 강화",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-03",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 파주 광탄면",
+      "sectionName": "분수 - 용미",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-04",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 파주 파주읍",
+      "sectionName": "월롱 - 방축",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-05",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 연천군 군남면",
+      "sectionName": "연천 - 신서",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-06",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 포천 영북면",
+      "sectionName": "영중 - 철원",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-07",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 포천 영북면",
+      "sectionName": "철원 - 영중",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-08",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "-",
+      "sectionName": "누산 - 일산대교",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-09",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 파주 광탄면",
+      "sectionName": "신산 - 일반39",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-10",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 파주 조리읍",
+      "sectionName": "조리 - 신산",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-11",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 포천 영북면",
+      "sectionName": "산정호수 - 이동",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-12",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "-",
+      "sectionName": "김포 - 서울",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-13",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 고양 덕양 고양동",
+      "sectionName": "고양동-용미리",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "78-14",
+      "routeName": "국가지원지방도 78호선",
+      "routeCode": "78",
+      "jurisdiction": "경기 파주 문산읍",
+      "sectionName": "문산읍-율곡리",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "82-01",
+      "routeName": "국가지원지방도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "-",
+      "sectionName": "향남 - 향남IC",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "82-02",
+      "routeName": "국가지원지방도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "경기 오산 초평동",
+      "sectionName": "향남IC - 오산",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "82-03",
+      "routeName": "국가지원지방도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "경기 오산 중앙동",
+      "sectionName": "향남IC - 남사",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "82-04",
+      "routeName": "국가지원지방도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "경기 안성 양성면",
+      "sectionName": "용인 - 양성",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "82-14",
+      "routeName": "국가지원지방도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "경기 안성 죽산면",
+      "sectionName": "안성 - 일죽IC",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "82-17",
+      "routeName": "국가지원지방도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "-",
+      "sectionName": "양성 - 용인",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "82-20",
+      "routeName": "국가지원지방도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "경기 안성 죽산면",
+      "sectionName": "안성 - 장호원",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "84-02",
+      "routeName": "국가지원지방도 84호선",
+      "routeCode": "84",
+      "jurisdiction": "경기 여주 점동면",
+      "sectionName": "장호원 - 여주",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "84-04",
+      "routeName": "국가지원지방도 84호선",
+      "routeCode": "84",
+      "jurisdiction": "경기 시흥 월곶동",
+      "sectionName": "정왕 - 군자",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "84-05",
+      "routeName": "국가지원지방도 84호선",
+      "routeCode": "84",
+      "jurisdiction": "-",
+      "sectionName": "화산 - 기흥",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "84-06",
+      "routeName": "국가지원지방도 84호선",
+      "routeCode": "84",
+      "jurisdiction": "-",
+      "sectionName": "서리 - 원삼",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "84-07",
+      "routeName": "국가지원지방도 84호선",
+      "routeCode": "84",
+      "jurisdiction": "-",
+      "sectionName": "봉담 - 수원",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "84-08",
+      "routeName": "국가지원지방도 84호선",
+      "routeCode": "84",
+      "jurisdiction": "-",
+      "sectionName": "이천 - 장호원",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "84-09",
+      "routeName": "국가지원지방도 84호선",
+      "routeCode": "84",
+      "jurisdiction": "경기 여주 가남읍",
+      "sectionName": "하귀 - 삼승",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "86-06",
+      "routeName": "국가지원지방도 86호선",
+      "routeCode": "86",
+      "jurisdiction": "경기 남양주 진건읍",
+      "sectionName": "진접 - 이패IC",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "86-07",
+      "routeName": "국가지원지방도 86호선",
+      "routeCode": "86",
+      "jurisdiction": "경기 남양주 와부읍",
+      "sectionName": "구리 - 팔당대교",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "86-08",
+      "routeName": "국가지원지방도 86호선",
+      "routeCode": "86",
+      "jurisdiction": "경기 양평군 서종면",
+      "sectionName": "청평 - 서종IC",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "86-09",
+      "routeName": "국가지원지방도 86호선",
+      "routeCode": "86",
+      "jurisdiction": "경기 가평군 설악면",
+      "sectionName": "일반37 - 창의",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "86-14",
+      "routeName": "국가지원지방도 86호선",
+      "routeCode": "86",
+      "jurisdiction": "경기 남양주 진접읍",
+      "sectionName": "일반47 - 오남",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "88-01",
+      "routeName": "국가지원지방도 88호선",
+      "routeCode": "88",
+      "jurisdiction": "경기 광주 퇴촌면",
+      "sectionName": "팔당댐 - 상번천",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "88-02",
+      "routeName": "국가지원지방도 88호선",
+      "routeCode": "88",
+      "jurisdiction": "경기 양평군 강상면",
+      "sectionName": "강하 - 화양",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "88-04",
+      "routeName": "국가지원지방도 88호선",
+      "routeCode": "88",
+      "jurisdiction": "경기 여주 강천면",
+      "sectionName": "대신 - 양동",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "88-05",
+      "routeName": "국가지원지방도 88호선",
+      "routeCode": "88",
+      "jurisdiction": "경기 양평군 양동면",
+      "sectionName": "대신 - 문막",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "88-16",
+      "routeName": "국가지원지방도 88호선",
+      "routeCode": "88",
+      "jurisdiction": "경기 광주 퇴촌면",
+      "sectionName": "광동 - 양평",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "88-17",
+      "routeName": "국가지원지방도 88호선",
+      "routeCode": "88",
+      "jurisdiction": "경기 여주 산북면",
+      "sectionName": "이포 - 세월",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "88-18",
+      "routeName": "국가지원지방도 88호선",
+      "routeCode": "88",
+      "jurisdiction": "경기 여주 북내면",
+      "sectionName": "대신 - 양동",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-02",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 가평군 청평면",
+      "sectionName": "마석 - 청평",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-04",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 고양 일산서 대화동",
+      "sectionName": "이산포IC - 킨텍스",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-05",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 고양 일산동 고봉동",
+      "sectionName": "일산 - 관산",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-06",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 파주 조리읍",
+      "sectionName": "문산 - 벽제",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-07",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 양주 백석읍",
+      "sectionName": "광탄 - 송추",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-08",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 양주 백석읍",
+      "sectionName": "기산 - 광석",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-09",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 포천 소흘읍",
+      "sectionName": "송우 - 이동교",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-10",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 남양주 진접읍",
+      "sectionName": "내촌 - 가산",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-11",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 양평군 강상면",
+      "sectionName": "강하 - 세월",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-12",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "-",
+      "sectionName": "광주 - 이천",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-13",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "-",
+      "sectionName": "용인 - 마장",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-14",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "-",
+      "sectionName": "매송 - 수원",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-16",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 여주 대신면",
+      "sectionName": "산북 - 금사",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-17",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 파주 광탄면",
+      "sectionName": "광적 - 덕양",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "98-18",
+      "routeName": "국가지원지방도 98호선",
+      "routeCode": "98",
+      "jurisdiction": "경기 광주 도척면",
+      "sectionName": "곤지암리-유정리",
+      "category": "3",
+      "categoryLabel": "국가지원지방도"
+    },
+    {
+      "pointCode": "40,011",
+      "routeName": "봉담송산고속도로",
+      "routeCode": "400.3",
+      "jurisdiction": "-",
+      "sectionName": "화성JCT-남봉담IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,012",
+      "routeName": "봉담송산고속도로",
+      "routeCode": "400.3",
+      "jurisdiction": "-",
+      "sectionName": "남봉담IC-남비봉팔탄IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,013",
+      "routeName": "봉담송산고속도로",
+      "routeCode": "400.3",
+      "jurisdiction": "-",
+      "sectionName": "남비봉팔탄IC-팔탄JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,014",
+      "routeName": "봉담송산고속도로",
+      "routeCode": "400.3",
+      "jurisdiction": "경기 화성 효행 비봉면",
+      "sectionName": "팔탄JCT-화성IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,015",
+      "routeName": "봉담송산고속도로",
+      "routeCode": "400.3",
+      "jurisdiction": "경기 화성 효행 비봉면",
+      "sectionName": "화성IC-마도IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,016",
+      "routeName": "봉담송산고속도로",
+      "routeCode": "400.3",
+      "jurisdiction": "-",
+      "sectionName": "마도IC-마도JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "6,002",
+      "routeName": "서울양양고속도로",
+      "routeCode": "60",
+      "jurisdiction": "-",
+      "sectionName": "선동IC - 미사IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "6,003",
+      "routeName": "서울양양고속도로",
+      "routeCode": "60",
+      "jurisdiction": "-",
+      "sectionName": "미사IC - 덕소삼패IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "6,004",
+      "routeName": "서울양양고속도로",
+      "routeCode": "60",
+      "jurisdiction": "경기 남양주 양정동",
+      "sectionName": "덕소삼패IC - 화도IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "6,005",
+      "routeName": "서울양양고속도로",
+      "routeCode": "60",
+      "jurisdiction": "-",
+      "sectionName": "화도IC - 서종IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "6,006",
+      "routeName": "서울양양고속도로",
+      "routeCode": "60",
+      "jurisdiction": "경기 양평군 서종면",
+      "sectionName": "서종IC - 설악IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "6,007",
+      "routeName": "서울양양고속도로",
+      "routeCode": "60",
+      "jurisdiction": "경기 가평군 설악면",
+      "sectionName": "설악IC - 강촌IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "01523-1",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "-",
+      "sectionName": "서평택JCT - 발안IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "01524-1",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "-",
+      "sectionName": "팔탄JCT-비봉IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "01530-1",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "-",
+      "sectionName": "광명역IC - 일직JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,523",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "-",
+      "sectionName": "서평택IC - 서평택JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,524",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "-",
+      "sectionName": "발안IC - 비봉IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,525",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "-",
+      "sectionName": "비봉IC - 매송IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,526",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "-",
+      "sectionName": "매송IC - 팔곡JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,527",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "경기 안산 상록 반월동",
+      "sectionName": "팔곡JCT - 안산JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,528",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "경기 안산 상록 안산동",
+      "sectionName": "안산JCT - 조남JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,529",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "경기 시흥 목감동",
+      "sectionName": "조남JCT - 목감IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,530",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "경기 시흥 목감동",
+      "sectionName": "목감IC - 광명역IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,531",
+      "routeName": "서해안고속도로",
+      "routeCode": "15",
+      "jurisdiction": "경기 광명 소하1동",
+      "sectionName": "일직JCT - 소하JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,001",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 성남 분당 분당동",
+      "sectionName": "판교JCT - 성남IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,002",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 성남 수정 수진2동",
+      "sectionName": "성남IC - 송파IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,004",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 하남 천현동",
+      "sectionName": "서하남IC - 하남JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,005",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 하남 춘궁동",
+      "sectionName": "하남JCT - 상일IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,008",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 구리 수택1동",
+      "sectionName": "토평IC - 남양주IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,009",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "-",
+      "sectionName": "남양주IC - 구리IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,010",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 구리 인창동",
+      "sectionName": "구리IC - 퇴계원IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,011",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 의왕 청계동",
+      "sectionName": "학의JCT - 판교JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,012",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 안양 동안 평촌동",
+      "sectionName": "평촌IC - 학의JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,013",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 군포 산본1동",
+      "sectionName": "산본IC - 평촌IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,014",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 시흥 목감동",
+      "sectionName": "조남JCT - 산본IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,015",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 성남 중원 은행1동",
+      "sectionName": "안현JCT - 도리JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,016",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 시흥 대야동",
+      "sectionName": "시흥IC - 안현JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,018",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 부천 소사 괴안동",
+      "sectionName": "송내IC - 장수IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,019",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 부천 원미 상동",
+      "sectionName": "중동IC - 송내IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,023",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "-",
+      "sectionName": "김포IC - 노오지JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,024",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 고양 덕양 능곡동",
+      "sectionName": "자유로JCT - 김포IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,025",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 고양 덕양 능곡동",
+      "sectionName": "일산IC - 자유로JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10015-1",
+      "routeName": "수도권제1순환고속도로",
+      "routeCode": "100",
+      "jurisdiction": "경기 시흥 목감동",
+      "sectionName": "도리JCT - 조남JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,026",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 고양 일산서 일산1동",
+      "sectionName": "고양IC - 일산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,027",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 고양 덕양 주교동",
+      "sectionName": "통일로IC - 고양IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,028",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "송추IC - 통일로IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,029",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "호원IC - 송추IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,030",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 남양주 별내면",
+      "sectionName": "별내IC - 의정부IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10,031",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 남양주 별내면",
+      "sectionName": "퇴계원IC - 별내IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10027-1",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 고양 덕양 원신동",
+      "sectionName": "통일로IC-고양JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "10029-1",
+      "routeName": "수도권제1순환고속도로(북부)",
+      "routeCode": "100.2",
+      "jurisdiction": "경기 의정부 호원1동",
+      "sectionName": "의정부IC - 호원IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,001",
+      "routeName": "수도권제2순환고속도로",
+      "routeCode": "400",
+      "jurisdiction": "경기 화성 만세 마도면",
+      "sectionName": "동탄JCT - 북오산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,002",
+      "routeName": "수도권제2순환고속도로",
+      "routeCode": "400",
+      "jurisdiction": "경기 오산 세마동",
+      "sectionName": "북오산IC - 서오산JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,006",
+      "routeName": "수도권제2순환고속도로",
+      "routeCode": "400",
+      "jurisdiction": "-",
+      "sectionName": "검단양촌IC - 대곶IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,007",
+      "routeName": "수도권제2순환고속도로",
+      "routeCode": "400",
+      "jurisdiction": "경기 김포 대곶면",
+      "sectionName": "대곶IC - 서김포통진IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,008",
+      "routeName": "양주소흘고속도로",
+      "routeCode": "400.7",
+      "jurisdiction": "경기 양주시",
+      "sectionName": "양주IC-옥정IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,009",
+      "routeName": "양주소흘고속도로",
+      "routeCode": "400.7",
+      "jurisdiction": "경기 포천시",
+      "sectionName": "옥정IC-소흘JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "05003-1",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "-",
+      "sectionName": "군자JCT - 서안산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "05006-1",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "-",
+      "sectionName": "둔대JCT - 군포IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "05013-1",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 용인 처인 포곡읍",
+      "sectionName": "서용인JCT-용인IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "05018-1",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 여주 가남읍",
+      "sectionName": "여주JCT - 여주IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,003",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "-",
+      "sectionName": "월곶JCT - 군자JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,004",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 안산 단원 선부1동",
+      "sectionName": "서안산IC - 안산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,005",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 안산 상록 월피동",
+      "sectionName": "안산IC - 안산JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,006",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 안산 상록 부곡동",
+      "sectionName": "안산JCT - 둔대JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,007",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 시흥 대야동",
+      "sectionName": "군포IC - 동군포IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,008",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 군포 군포1동",
+      "sectionName": "동군포IC - 부곡IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,009",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 의왕 부곡동",
+      "sectionName": "부곡IC - 북수원IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,010",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 수원 장안 파장동",
+      "sectionName": "북수원IC - 동수원IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,011",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "-",
+      "sectionName": "동수원IC - 신갈JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,012",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "-",
+      "sectionName": "신갈JCT - 마성IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,013",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 용인 처인 포곡읍",
+      "sectionName": "마성IC - 용인IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,014",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "-",
+      "sectionName": "용인IC - 양지IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,015",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "-",
+      "sectionName": "양지IC - 덕평IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,016",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 이천 마장면",
+      "sectionName": "덕평IC - 호법JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,017",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 이천 호법면",
+      "sectionName": "호법JCT - 이천IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,018",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 이천 대월면",
+      "sectionName": "이천IC - 여주JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "5,019",
+      "routeName": "영동고속도로",
+      "routeCode": "50",
+      "jurisdiction": "경기 여주 가남읍",
+      "sectionName": "여주IC - 문막IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17,101",
+      "routeName": "오산화성고속도로",
+      "routeCode": "171",
+      "jurisdiction": "경기 오산 세마동",
+      "sectionName": "서오산JCT - 안녕IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17,111",
+      "routeName": "용인서울고속도로",
+      "routeCode": "171.2",
+      "jurisdiction": "-",
+      "sectionName": "흥덕IC - 광교상현IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17,112",
+      "routeName": "용인서울고속도로",
+      "routeCode": "171.2",
+      "jurisdiction": "경기 용인 수지 성복동",
+      "sectionName": "광교상현IC - 서수지IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17,113",
+      "routeName": "용인서울고속도로",
+      "routeCode": "171.2",
+      "jurisdiction": "경기 용인 수지 신봉동",
+      "sectionName": "서수지IC - 서분당IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17,114",
+      "routeName": "용인서울고속도로",
+      "routeCode": "171.2",
+      "jurisdiction": "경기 성남 분당 백현동",
+      "sectionName": "서분당IC - 서판교IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17,115",
+      "routeName": "용인서울고속도로",
+      "routeCode": "171.2",
+      "jurisdiction": "경기 성남 수정 시흥동",
+      "sectionName": "서판교IC - 고등IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17,116",
+      "routeName": "용인서울고속도로",
+      "routeCode": "171.2",
+      "jurisdiction": "경기 성남 수정 고등동",
+      "sectionName": "고등IC - 헌릉IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "17115-1",
+      "routeName": "용인서울고속도로",
+      "routeCode": "171.2",
+      "jurisdiction": "경기 성남 수정 고등동",
+      "sectionName": "금토JCT-고등IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "13005-1",
+      "routeName": "인천국제공항고속도로",
+      "routeCode": "130",
+      "jurisdiction": "경기 고양 덕양 대덕동",
+      "sectionName": "88JCT - 북로JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,009",
+      "routeName": "인천대교",
+      "routeCode": "110.2",
+      "jurisdiction": "경기 안양 만안 석수1동",
+      "sectionName": "석수IC - 삼막IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,010",
+      "routeName": "인천대교",
+      "routeCode": "110.2",
+      "jurisdiction": "경기 안양 동안 비산1동",
+      "sectionName": "삼막IC - 북의왕IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,011",
+      "routeName": "인천대교",
+      "routeCode": "110.2",
+      "jurisdiction": "경기 의왕 청계동",
+      "sectionName": "북의왕IC - 북청계IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,012",
+      "routeName": "인천대교",
+      "routeCode": "110.2",
+      "jurisdiction": "경기 의왕 청계동",
+      "sectionName": "북청계IC - 동판교IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,013",
+      "routeName": "인천대교",
+      "routeCode": "110.2",
+      "jurisdiction": "경기 성남 수정 시흥동",
+      "sectionName": "동판교IC - 여수대로IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1725-01",
+      "routeName": "일반국도 17호선",
+      "routeCode": "17",
+      "jurisdiction": "경기 안성 죽산면",
+      "sectionName": "안성 - 장호원",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "1726-00",
+      "routeName": "일반국도 17호선",
+      "routeCode": "17",
+      "jurisdiction": "경기 안성 죽산면",
+      "sectionName": "죽산 - 백암",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "1727-00",
+      "routeName": "일반국도 17호선",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "용인 - 이천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "1728-01",
+      "routeName": "일반국도 17호선",
+      "routeCode": "17",
+      "jurisdiction": "경기 용인 처인 백암면",
+      "sectionName": "원삼 - 설성",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0133-00",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "경기 평택 세교동",
+      "sectionName": "평택 - 오산",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0136-00",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "경기 화성 효행 정남면",
+      "sectionName": "오산 - 수원",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0136-02",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "경기 평택 진위면",
+      "sectionName": "송탄 - 오산",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0140-01",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "-",
+      "sectionName": "서울 - 조리",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0140-02",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "경기 고양 덕양 관산동",
+      "sectionName": "벽제 - 문산",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0141-02",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "경기 파주 조리읍",
+      "sectionName": "벽제 - 월롱",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0141-03",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "경기 파주 파주읍",
+      "sectionName": "조리 - 문산",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0141-04",
+      "routeName": "일반국도 1호선",
+      "routeCode": "1",
+      "jurisdiction": "경기 파주 월롱면",
+      "sectionName": "조리 - 월롱",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3406-00",
+      "routeName": "일반국도 34호선",
+      "routeCode": "34",
+      "jurisdiction": "경기 부천 오정 신흥동",
+      "sectionName": "성환읍-도림리",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3717-02",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 여주 여흥동",
+      "sectionName": "점동 - 여주IC",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3719-00",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 여주 대신면",
+      "sectionName": "개군 - 상구",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3720-00",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 양평군 개군면",
+      "sectionName": "천서 - 양평",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3721-01",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 양평군 양평읍",
+      "sectionName": "옥천 - 용문",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3721-02",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 가평군 설악면",
+      "sectionName": "청평 - 설악",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3721-03",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 가평군 설악면",
+      "sectionName": "양평 - 설악",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3722-01",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 가평군 청평면",
+      "sectionName": "청평 - 가평",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3723-03",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 가평군 상면",
+      "sectionName": "청평 - 포천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3725-01",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 포천 창수면",
+      "sectionName": "전곡 - 영중",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3726-00",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 연천군 청산면",
+      "sectionName": "전곡 - 영중",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3727-00",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 연천군 전곡읍",
+      "sectionName": "전곡 - 적성",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3727-01",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 파주 적성면",
+      "sectionName": "파평 - 적암",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3727-03",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 파주 적성면",
+      "sectionName": "파평 - 적암",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3728-00",
+      "routeName": "일반국도 37호선",
+      "routeCode": "37",
+      "jurisdiction": "경기 파주 적성면",
+      "sectionName": "파평 - 적암",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3801-01",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 평택 안중읍",
+      "sectionName": "만호 - 안중",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3801-07",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "-",
+      "sectionName": "만호 - 안중",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3802-02",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 평택 신평동",
+      "sectionName": "오성 - 안성",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3802-03",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 평택 팽성읍",
+      "sectionName": "안중면-팽성읍",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3803-01",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 안성 공도읍",
+      "sectionName": "평택 - 안성",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3804-03",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 안성 죽산면",
+      "sectionName": "안성 - 장호원",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3805-00",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 이천 장호원읍",
+      "sectionName": "일죽 - 감곡",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3805-01",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 이천 설성면",
+      "sectionName": "일죽 - 장호원",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3805-02",
+      "routeName": "일반국도 38호선",
+      "routeCode": "38",
+      "jurisdiction": "경기 안성 일죽면",
+      "sectionName": "죽산교 - 장호원",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3906-03",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 평택 현덕면",
+      "sectionName": "아산만 - 안중",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3906-05",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "-",
+      "sectionName": "청북 - 양감",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3907-00",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "-",
+      "sectionName": "우정 - 향남",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3907-03",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "-",
+      "sectionName": "팔탄 - 비봉",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3910-00",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 시흥 은행동",
+      "sectionName": "인천 - 안양",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3911-00",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 시흥 대야동",
+      "sectionName": "인천 - 서울",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3911-02",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "-",
+      "sectionName": "서안산IC - 선부",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3913-00",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "-",
+      "sectionName": "부천 - 행주대교",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3916-01",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 고양 덕양 원신동",
+      "sectionName": "고양 - 선유",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "3917-00",
+      "routeName": "일반국도 39호선",
+      "routeCode": "39",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "고양 - 의정부",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0327-00",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 이천 장호원읍",
+      "sectionName": "충주 - 이천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0328-01",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 이천 신둔면",
+      "sectionName": "서이천IC - 이천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0328-03",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 이천 부발읍",
+      "sectionName": "이천 - 여주",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0329-02",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 여주 가남읍",
+      "sectionName": "장호원 - 이천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0334-03",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "동두천 - 서울",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0335-00",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 동두천 소요동",
+      "sectionName": "동두천 - 전곡",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0336-00",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 연천군 연천읍",
+      "sectionName": "연천 - 전곡",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0336-04",
+      "routeName": "일반국도 3호선",
+      "routeCode": "3",
+      "jurisdiction": "경기 연천군 신서면",
+      "sectionName": "연천 - 철원",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4206-04",
+      "routeName": "일반국도 42호선",
+      "routeCode": "42",
+      "jurisdiction": "경기 이천 마장면",
+      "sectionName": "양지 - 이천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4207-01",
+      "routeName": "일반국도 42호선",
+      "routeCode": "42",
+      "jurisdiction": "경기 이천 부발읍",
+      "sectionName": "부발 - 여주",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4208-02",
+      "routeName": "일반국도 42호선",
+      "routeCode": "42",
+      "jurisdiction": "경기 여주 강천면",
+      "sectionName": "강천 - 문막",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4301-02",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "-",
+      "sectionName": "팔탄 - 정남",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4301-03",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "-",
+      "sectionName": "향남 - 양감",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4303-02",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "-",
+      "sectionName": "죽전 - 문형",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4304-01",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "-",
+      "sectionName": "죽전 - 광주",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4305-02",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "-",
+      "sectionName": "광주 - 하남",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4306-02",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "경기 구리 교문1동",
+      "sectionName": "서울 - 토평IC",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4306-03",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "경기 구리 동구동",
+      "sectionName": "갈매 - 진관",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4309-00",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "경기 포천 소흘읍",
+      "sectionName": "양주 - 내촌",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4311-02",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "경기 포천 영북면",
+      "sectionName": "포천 - 갈말",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4311-03",
+      "routeName": "일반국도 43호선",
+      "routeCode": "43",
+      "jurisdiction": "경기 포천 영중면",
+      "sectionName": "양문리-성동리",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4505-00",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "평택 - 양성",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4505-01",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 안성 양성면",
+      "sectionName": "남사 - 고삼",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4505-02",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 평택 송탄동",
+      "sectionName": "오성 - 양성",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4505-03",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "평택 - 이동",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4506-01",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "-",
+      "sectionName": "남사 - 고삼",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4506-03",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "-",
+      "sectionName": "이동 - 용인",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4507-00",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 용인 처인 포곡읍",
+      "sectionName": "문형 - 왕산",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4509-01",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 광주 퇴촌면",
+      "sectionName": "광주 - 팔당",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4510-00",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 남양주 조안면",
+      "sectionName": "조안 - 양수",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4510-02",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "경기 남양주 조안면",
+      "sectionName": "조안 - 양수",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4511-00",
+      "routeName": "일반국도 45호선",
+      "routeCode": "45",
+      "jurisdiction": "-",
+      "sectionName": "남양주 - 청평",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4603-00",
+      "routeName": "일반국도 46호선",
+      "routeCode": "46",
+      "jurisdiction": "경기 남양주 양정동",
+      "sectionName": "퇴계원 - 화도",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4603-01",
+      "routeName": "일반국도 46호선",
+      "routeCode": "46",
+      "jurisdiction": "경기 남양주 평내동",
+      "sectionName": "퇴계원 - 화도",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4603-02",
+      "routeName": "일반국도 46호선",
+      "routeCode": "46",
+      "jurisdiction": "경기 남양주 진건읍",
+      "sectionName": "퇴계원 - 화도",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4604-00",
+      "routeName": "일반국도 46호선",
+      "routeCode": "46",
+      "jurisdiction": "-",
+      "sectionName": "남양주 - 춘천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4607-00",
+      "routeName": "일반국도 46호선",
+      "routeCode": "46",
+      "jurisdiction": "경기 가평군 가평읍",
+      "sectionName": "청평 - 춘천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4704-00",
+      "routeName": "일반국도 47호선",
+      "routeCode": "47",
+      "jurisdiction": "-",
+      "sectionName": "군포 - 과천",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4705-00",
+      "routeName": "일반국도 47호선",
+      "routeCode": "47",
+      "jurisdiction": "경기 구리 갈매동",
+      "sectionName": "갈매 - 퇴계원IC",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4708-01",
+      "routeName": "일반국도 47호선",
+      "routeCode": "47",
+      "jurisdiction": "경기 포천 내촌면",
+      "sectionName": "부평 - 신팔",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4708-03",
+      "routeName": "일반국도 47호선",
+      "routeCode": "47",
+      "jurisdiction": "경기 포천 일동면",
+      "sectionName": "영중 - 일동",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4709-00",
+      "routeName": "일반국도 47호선",
+      "routeCode": "47",
+      "jurisdiction": "경기 포천 이동면",
+      "sectionName": "이동 - 도평",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4709-01",
+      "routeName": "일반국도 47호선",
+      "routeCode": "47",
+      "jurisdiction": "경기 포천 이동면",
+      "sectionName": "일동 - 도평",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4709-02",
+      "routeName": "일반국도 47호선",
+      "routeCode": "47",
+      "jurisdiction": "경기 포천 이동면",
+      "sectionName": "이동 - 김화",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4801-01",
+      "routeName": "일반국도 48호선",
+      "routeCode": "48",
+      "jurisdiction": "인천 강화군 하점면",
+      "sectionName": "하점 - 강화",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4801-02",
+      "routeName": "일반국도 48호선",
+      "routeCode": "48",
+      "jurisdiction": "인천 강화군 송해면",
+      "sectionName": "하점 - 강화",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4802-04",
+      "routeName": "일반국도 48호선",
+      "routeCode": "48",
+      "jurisdiction": "경기 김포 통진읍",
+      "sectionName": "월곶 - 통진",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "4802-05",
+      "routeName": "일반국도 48호선",
+      "routeCode": "48",
+      "jurisdiction": "-",
+      "sectionName": "강화 - 김포",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0607-00",
+      "routeName": "일반국도 6호선",
+      "routeCode": "6",
+      "jurisdiction": "경기 양평군 옥천면",
+      "sectionName": "양수 - 양평",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0608-03",
+      "routeName": "일반국도 6호선",
+      "routeCode": "6",
+      "jurisdiction": "경기 양평군 단월면",
+      "sectionName": "삼가 - 청운",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0608-04",
+      "routeName": "일반국도 6호선",
+      "routeCode": "6",
+      "jurisdiction": "경기 양평군 단월면",
+      "sectionName": "광탄 - 단월",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0609-01",
+      "routeName": "일반국도 6호선",
+      "routeCode": "6",
+      "jurisdiction": "경기 양평군 청운면",
+      "sectionName": "단월 - 갈운",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0609-02",
+      "routeName": "일반국도 6호선",
+      "routeCode": "6",
+      "jurisdiction": "경기 양평군 청운면",
+      "sectionName": "단월 - 갈운",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "0609-03",
+      "routeName": "일반국도 6호선",
+      "routeCode": "6",
+      "jurisdiction": "경기 양평군 청운면",
+      "sectionName": "청운 - 신촌",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7721-00",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "-",
+      "sectionName": "만호 - 안중",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7721-02",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "-",
+      "sectionName": "매향 - 장안",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7722-00",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "-",
+      "sectionName": "운평 - 조암",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7722-02",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 화성 효행 비봉면",
+      "sectionName": "장덕 - 남양",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7723-00",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 화성 효행 비봉면",
+      "sectionName": "송산 - 비봉",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7724-00",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 고양 덕양 화전동",
+      "sectionName": "행주대교 - 가양대교",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7724-01",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 고양 일산동 장항1동",
+      "sectionName": "킨텍스IC - 김포대교",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7724-02",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 고양 일산서 송포동",
+      "sectionName": "구산IC - 킨텍스IC",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7725-00",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "-",
+      "sectionName": "장월IC - 이산포IC",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7727-01",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 파주 탄현면",
+      "sectionName": "문발IC - 파주",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7727-02",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 파주 탄현면",
+      "sectionName": "성동IC - 당동IC",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "7727-03",
+      "routeName": "일반국도 77호선",
+      "routeCode": "77",
+      "jurisdiction": "경기 파주 문산읍",
+      "sectionName": "낙하IC - 문산",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8201-03",
+      "routeName": "일반국도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "-",
+      "sectionName": "우정 - 팔탄",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8202-01",
+      "routeName": "일반국도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "-",
+      "sectionName": "우정 - 청북",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8202-03",
+      "routeName": "일반국도 82호선",
+      "routeCode": "82",
+      "jurisdiction": "-",
+      "sectionName": "팔탄면-청북읍",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8701-01",
+      "routeName": "일반국도 87호선",
+      "routeCode": "87",
+      "jurisdiction": "경기 포천 군내면",
+      "sectionName": "포천 - 가산",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8701-02",
+      "routeName": "일반국도 87호선",
+      "routeCode": "87",
+      "jurisdiction": "경기 포천 가산면",
+      "sectionName": "소흘 - 내촌",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8702-00",
+      "routeName": "일반국도 87호선",
+      "routeCode": "87",
+      "jurisdiction": "경기 포천 신북면",
+      "sectionName": "전곡 - 기지",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8703-00",
+      "routeName": "일반국도 87호선",
+      "routeCode": "87",
+      "jurisdiction": "경기 포천 창수면",
+      "sectionName": "전곡 - 영중",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "8703-01",
+      "routeName": "일반국도 87호선",
+      "routeCode": "87",
+      "jurisdiction": "경기 포천 관인면",
+      "sectionName": "동송 - 관인",
+      "category": "2",
+      "categoryLabel": "일반국도"
+    },
+    {
+      "pointCode": "11,005",
+      "routeName": "제2경인고속도로",
+      "routeCode": "110",
+      "jurisdiction": "경기 시흥 신현동",
+      "sectionName": "신천IC - 안현JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,006",
+      "routeName": "제2경인고속도로",
+      "routeCode": "110",
+      "jurisdiction": "경기 시흥 매화동",
+      "sectionName": "안현JCT - 광명IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,007",
+      "routeName": "제2경인고속도로",
+      "routeCode": "110",
+      "jurisdiction": "경기 광명 학온동",
+      "sectionName": "광명IC - 일직JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "11,008",
+      "routeName": "제2경인고속도로",
+      "routeCode": "110",
+      "jurisdiction": "경기 안양 만안 석수1동",
+      "sectionName": "일직JCT - 석수IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,701",
+      "routeName": "제2중부고속도로",
+      "routeCode": "37",
+      "jurisdiction": "경기 이천 마장면",
+      "sectionName": "마장JCT - 경기광주JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,702",
+      "routeName": "제2중부고속도로",
+      "routeCode": "37",
+      "jurisdiction": "-",
+      "sectionName": "경기광주JCT - 산곡JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "03527-1",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "경기 안성 일죽면",
+      "sectionName": "일죽IC - 남이천IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "03531-1",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "경기 광주 도척면",
+      "sectionName": "곤지암JCT-곤지암IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,528",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "경기 안성 일죽면",
+      "sectionName": "남이천IC - 호법JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,529",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "경기 이천 호법면",
+      "sectionName": "호법JCT - 마장JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,531",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "경기 이천 마장면",
+      "sectionName": "서이천IC - 곤지암IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,532",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "-",
+      "sectionName": "곤지암IC - 경기광주JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,533",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "-",
+      "sectionName": "경기광주IC - 산곡JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,534",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "경기 하남 천현동",
+      "sectionName": "산곡JCT - 하남IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "3,535",
+      "routeName": "중부고속도로",
+      "routeCode": "35",
+      "jurisdiction": "경기 하남 천현동",
+      "sectionName": "하남IC - 하남JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "04512-1",
+      "routeName": "중부내륙고속도로",
+      "routeCode": "45",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "남여주IC - 서여주IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "04514-1",
+      "routeName": "중부내륙고속도로",
+      "routeCode": "45",
+      "jurisdiction": "경기 양평군 옥천면",
+      "sectionName": "남양평하이패스IC - 양평IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "4,512",
+      "routeName": "중부내륙고속도로",
+      "routeCode": "45",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "여주JCT - 남여주IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "4,513",
+      "routeName": "중부내륙고속도로",
+      "routeCode": "45",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "서여주IC - 북여주IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "0301-10",
+      "routeName": "지방도 301호선",
+      "routeCode": "301",
+      "jurisdiction": "-",
+      "sectionName": "매향 - 일반77",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0301-11",
+      "routeName": "지방도 301호선",
+      "routeCode": "301",
+      "jurisdiction": "경기 안산 단원 대부동",
+      "sectionName": "대부도 - 탄도방조제",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0301-12",
+      "routeName": "지방도 301호선",
+      "routeCode": "301",
+      "jurisdiction": "경기 안산 단원 대부동",
+      "sectionName": "시화방조제 - 대부도",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0301-13",
+      "routeName": "지방도 301호선",
+      "routeCode": "301",
+      "jurisdiction": "경기 시흥 정왕3동",
+      "sectionName": "대부도 - 오이도",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0302-08",
+      "routeName": "지방도 302호선",
+      "routeCode": "302",
+      "jurisdiction": "-",
+      "sectionName": "발안 - 안중",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0302-09",
+      "routeName": "지방도 302호선",
+      "routeCode": "302",
+      "jurisdiction": "경기 평택 고덕면",
+      "sectionName": "청북 - 율포",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0302-10",
+      "routeName": "지방도 302호선",
+      "routeCode": "302",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "평택 - 양성",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0302-11",
+      "routeName": "지방도 302호선",
+      "routeCode": "302",
+      "jurisdiction": "경기 안성 금광면",
+      "sectionName": "안성 - 진천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0302-12",
+      "routeName": "지방도 302호선",
+      "routeCode": "302",
+      "jurisdiction": "경기 안성 공도읍",
+      "sectionName": "평택 - 안성",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0302-15",
+      "routeName": "지방도 302호선",
+      "routeCode": "302",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "오산 - 평택",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0305-04",
+      "routeName": "지방도 305호선",
+      "routeCode": "305",
+      "jurisdiction": "-",
+      "sectionName": "수원 - 대부",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0306-04",
+      "routeName": "지방도 306호선",
+      "routeCode": "306",
+      "jurisdiction": "-",
+      "sectionName": "평택 - 오산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0306-06",
+      "routeName": "지방도 306호선",
+      "routeCode": "306",
+      "jurisdiction": "경기 안성 일죽면",
+      "sectionName": "일죽 - 삼성",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0306-07",
+      "routeName": "지방도 306호선",
+      "routeCode": "306",
+      "jurisdiction": "경기 안성 고삼면",
+      "sectionName": "안성 - 가유",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0306-08",
+      "routeName": "지방도 306호선",
+      "routeCode": "306",
+      "jurisdiction": "경기 평택 서탄면",
+      "sectionName": "회화 - 원곡",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0306-09",
+      "routeName": "지방도 306호선",
+      "routeCode": "306",
+      "jurisdiction": "경기 평택 진위면",
+      "sectionName": "회화 - 원곡",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0309-02",
+      "routeName": "지방도 309호선",
+      "routeCode": "309",
+      "jurisdiction": "-",
+      "sectionName": "향남 - 오산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0309-03",
+      "routeName": "지방도 309호선",
+      "routeCode": "309",
+      "jurisdiction": "-",
+      "sectionName": "향남 - 수원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0309-04",
+      "routeName": "지방도 309호선",
+      "routeCode": "309",
+      "jurisdiction": "-",
+      "sectionName": "사사 - 경기도청",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0309-05",
+      "routeName": "지방도 309호선",
+      "routeCode": "309",
+      "jurisdiction": "-",
+      "sectionName": "팔탄 - 청북",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0310-10",
+      "routeName": "지방도 310호선",
+      "routeCode": "310",
+      "jurisdiction": "-",
+      "sectionName": "조암 - 향남",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0310-11",
+      "routeName": "지방도 310호선",
+      "routeCode": "310",
+      "jurisdiction": "-",
+      "sectionName": "정남 - 오산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0310-12",
+      "routeName": "지방도 310호선",
+      "routeCode": "310",
+      "jurisdiction": "경기 평택 진위면",
+      "sectionName": "오산 - 평택",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0311-03",
+      "routeName": "지방도 311호선",
+      "routeCode": "311",
+      "jurisdiction": "경기 용인 기흥 신갈동",
+      "sectionName": "수원 - 용인",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0313-04",
+      "routeName": "지방도 313호선",
+      "routeCode": "313",
+      "jurisdiction": "경기 평택 팽성읍",
+      "sectionName": "둔포 - 평택",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0313-05",
+      "routeName": "지방도 313호선",
+      "routeCode": "313",
+      "jurisdiction": "경기 평택 안중읍",
+      "sectionName": "평택 - 아산만",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0313-06",
+      "routeName": "지방도 313호선",
+      "routeCode": "313",
+      "jurisdiction": "-",
+      "sectionName": "포승 - 안중",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0313-07",
+      "routeName": "지방도 313호선",
+      "routeCode": "313",
+      "jurisdiction": "-",
+      "sectionName": "안중 - 장안",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0313-08",
+      "routeName": "지방도 313호선",
+      "routeCode": "313",
+      "jurisdiction": "경기 화성 효행 비봉면",
+      "sectionName": "비봉 - 남양",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0313-09",
+      "routeName": "지방도 313호선",
+      "routeCode": "313",
+      "jurisdiction": "-",
+      "sectionName": "팔탄 - 군포",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0314-01",
+      "routeName": "지방도 314호선",
+      "routeCode": "314",
+      "jurisdiction": "경기 평택 진위면",
+      "sectionName": "일반1 - 남사",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0314-02",
+      "routeName": "지방도 314호선",
+      "routeCode": "314",
+      "jurisdiction": "-",
+      "sectionName": "향남IC - 오산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0315-04",
+      "routeName": "지방도 315호선",
+      "routeCode": "315",
+      "jurisdiction": "경기 평택 팽성읍",
+      "sectionName": "성환 - 평택",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0315-05",
+      "routeName": "지방도 315호선",
+      "routeCode": "315",
+      "jurisdiction": "-",
+      "sectionName": "향남 - 오산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0315-06",
+      "routeName": "지방도 315호선",
+      "routeCode": "315",
+      "jurisdiction": "-",
+      "sectionName": "태안 - 봉담",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0315-07",
+      "routeName": "지방도 315호선",
+      "routeCode": "315",
+      "jurisdiction": "경기 용인 기흥 기흥동",
+      "sectionName": "기흥 - 수원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0315-08",
+      "routeName": "지방도 315호선",
+      "routeCode": "315",
+      "jurisdiction": "-",
+      "sectionName": "수원 - 기흥IC",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0317-01",
+      "routeName": "지방도 317호선",
+      "routeCode": "317",
+      "jurisdiction": "경기 화성 만세 마도면",
+      "sectionName": "오산 - 이동",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0317-02",
+      "routeName": "지방도 317호선",
+      "routeCode": "317",
+      "jurisdiction": "경기 평택 송탄동",
+      "sectionName": "송탄 - 원곡",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0317-03",
+      "routeName": "지방도 317호선",
+      "routeCode": "317",
+      "jurisdiction": "-",
+      "sectionName": "동탄 - 신갈",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0318-03",
+      "routeName": "지방도 318호선",
+      "routeCode": "318",
+      "jurisdiction": "-",
+      "sectionName": "향남 - 자안",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0318-04",
+      "routeName": "지방도 318호선",
+      "routeCode": "318",
+      "jurisdiction": "경기 용인 기흥 기흥동",
+      "sectionName": "영통 - 병점",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0318-05",
+      "routeName": "지방도 318호선",
+      "routeCode": "318",
+      "jurisdiction": "-",
+      "sectionName": "일반45 - 묵",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0318-06",
+      "routeName": "지방도 318호선",
+      "routeCode": "318",
+      "jurisdiction": "경기 용인 처인 원삼면",
+      "sectionName": "안성 - 백암",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0318-08",
+      "routeName": "지방도 318호선",
+      "routeCode": "318",
+      "jurisdiction": "-",
+      "sectionName": "금당 - 일반77",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0318-09",
+      "routeName": "지방도 318호선",
+      "routeCode": "318",
+      "jurisdiction": "경기 용인 처인 백암면",
+      "sectionName": "원삼 - 설성",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0321-04",
+      "routeName": "지방도 321호선",
+      "routeCode": "321",
+      "jurisdiction": "-",
+      "sectionName": "송전 - 오산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0321-06",
+      "routeName": "지방도 321호선",
+      "routeCode": "321",
+      "jurisdiction": "-",
+      "sectionName": "기흥 - 용인",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0321-07",
+      "routeName": "지방도 321호선",
+      "routeCode": "321",
+      "jurisdiction": "경기 안성 양성면",
+      "sectionName": "진위 - 안성",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0321-08",
+      "routeName": "지방도 321호선",
+      "routeCode": "321",
+      "jurisdiction": "-",
+      "sectionName": "죽전 - 오포",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0322-05",
+      "routeName": "지방도 322호선",
+      "routeCode": "322",
+      "jurisdiction": "-",
+      "sectionName": "서신 - 남양",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0322-06",
+      "routeName": "지방도 322호선",
+      "routeCode": "322",
+      "jurisdiction": "-",
+      "sectionName": "향남 - 봉담",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0325-05",
+      "routeName": "지방도 325호선",
+      "routeCode": "325",
+      "jurisdiction": "경기 안성 금광면",
+      "sectionName": "안성 - 백곡",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0325-06",
+      "routeName": "지방도 325호선",
+      "routeCode": "325",
+      "jurisdiction": "경기 안성 보개면",
+      "sectionName": "평택 - 일죽",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0325-07",
+      "routeName": "지방도 325호선",
+      "routeCode": "325",
+      "jurisdiction": "경기 안성 삼죽면",
+      "sectionName": "고삼 - 죽산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0325-08",
+      "routeName": "지방도 325호선",
+      "routeCode": "325",
+      "jurisdiction": "경기 용인 처인 백암면",
+      "sectionName": "양지 - 일죽IC",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0325-09",
+      "routeName": "지방도 325호선",
+      "routeCode": "325",
+      "jurisdiction": "경기 광주 도척면",
+      "sectionName": "용인 - 이천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0325-10",
+      "routeName": "지방도 325호선",
+      "routeCode": "325",
+      "jurisdiction": "경기 광주 초월읍",
+      "sectionName": "광주 - 이천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0325-11",
+      "routeName": "지방도 325호선",
+      "routeCode": "325",
+      "jurisdiction": "경기 광주 퇴촌면",
+      "sectionName": "일반45 - 강하",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0329-04",
+      "routeName": "지방도 329호선",
+      "routeCode": "329",
+      "jurisdiction": "경기 안성 일죽면",
+      "sectionName": "일죽IC - 장호원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0329-05",
+      "routeName": "지방도 329호선",
+      "routeCode": "329",
+      "jurisdiction": "경기 안성 일죽면",
+      "sectionName": "일죽IC - 장호원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0329-06",
+      "routeName": "지방도 329호선",
+      "routeCode": "329",
+      "jurisdiction": "경기 이천 모가면",
+      "sectionName": "용인 - 장호원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-07",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 이천 율면",
+      "sectionName": "장호원 - 일죽",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-08",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 이천 설성면",
+      "sectionName": "일죽 - 장호원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-09",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "-",
+      "sectionName": "장호원 - 이천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-10",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "-",
+      "sectionName": "이천 - 장호원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-11",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 여주 가남읍",
+      "sectionName": "서여주IC - 강천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-12",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "능서 - 여주",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-13",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "여주시청 - 이포",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-14",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 여주 산북면",
+      "sectionName": "산북 - 국지도88",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-15",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 양평군 강하면",
+      "sectionName": "강상 - 퇴촌",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0333-28",
+      "routeName": "지방도 333호선",
+      "routeCode": "333",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "여주시청 - 이포",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0334-05",
+      "routeName": "지방도 334호선",
+      "routeCode": "334",
+      "jurisdiction": "경기 성남 분당 구미1동",
+      "sectionName": "수지 - 판교",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0337-04",
+      "routeName": "지방도 337호선",
+      "routeCode": "337",
+      "jurisdiction": "경기 이천 부발읍",
+      "sectionName": "이천IC - 장호원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0337-05",
+      "routeName": "지방도 337호선",
+      "routeCode": "337",
+      "jurisdiction": "경기 이천 대월면",
+      "sectionName": "이천 - 장호원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0337-06",
+      "routeName": "지방도 337호선",
+      "routeCode": "337",
+      "jurisdiction": "경기 이천 신둔면",
+      "sectionName": "도척 - 부발",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0337-07",
+      "routeName": "지방도 337호선",
+      "routeCode": "337",
+      "jurisdiction": "경기 이천 신둔면",
+      "sectionName": "도척 - 모전",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0338-02",
+      "routeName": "지방도 338호선",
+      "routeCode": "338",
+      "jurisdiction": "경기 광주 초월읍",
+      "sectionName": "광주IC - 지방도325",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0338-04",
+      "routeName": "지방도 338호선",
+      "routeCode": "338",
+      "jurisdiction": "경기 성남 중원 상대원1동",
+      "sectionName": "중원구청 - 광주시청",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0338-05",
+      "routeName": "지방도 338호선",
+      "routeCode": "338",
+      "jurisdiction": "-",
+      "sectionName": "송정동-초월읍",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0338-06",
+      "routeName": "지방도 338호선",
+      "routeCode": "338",
+      "jurisdiction": "-",
+      "sectionName": "송정동-초월읍",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0338-07",
+      "routeName": "지방도 338호선",
+      "routeCode": "338",
+      "jurisdiction": "경기 광주 탄벌동",
+      "sectionName": "송정동-초월읍",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0338-08",
+      "routeName": "지방도 338호선",
+      "routeCode": "338",
+      "jurisdiction": "경기 광주 탄벌동",
+      "sectionName": "송정동-초월읍",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0338-09",
+      "routeName": "지방도 338호선",
+      "routeCode": "338",
+      "jurisdiction": "-",
+      "sectionName": "송정동-초월읍",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0341-03",
+      "routeName": "지방도 341호선",
+      "routeCode": "341",
+      "jurisdiction": "-",
+      "sectionName": "설성 - 여주",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0341-04",
+      "routeName": "지방도 341호선",
+      "routeCode": "341",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "여주 - 이천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0341-05",
+      "routeName": "지방도 341호선",
+      "routeCode": "341",
+      "jurisdiction": "경기 여주 흥천면",
+      "sectionName": "이천 - 여주",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0341-06",
+      "routeName": "지방도 341호선",
+      "routeCode": "341",
+      "jurisdiction": "경기 여주 북내면",
+      "sectionName": "대신 - 주암",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0341-07",
+      "routeName": "지방도 341호선",
+      "routeCode": "341",
+      "jurisdiction": "경기 양평군 지평면",
+      "sectionName": "주암 - 지평",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0341-08",
+      "routeName": "지방도 341호선",
+      "routeCode": "341",
+      "jurisdiction": "경기 양평군 지평면",
+      "sectionName": "용문 - 지평",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0341-09",
+      "routeName": "지방도 341호선",
+      "routeCode": "341",
+      "jurisdiction": "경기 양평군 용문면",
+      "sectionName": "양평 - 홍천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0342-03",
+      "routeName": "지방도 342호선",
+      "routeCode": "342",
+      "jurisdiction": "-",
+      "sectionName": "서울 - 성남",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0342-04",
+      "routeName": "지방도 342호선",
+      "routeCode": "342",
+      "jurisdiction": "-",
+      "sectionName": "광주 - 하남",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0342-05",
+      "routeName": "지방도 342호선",
+      "routeCode": "342",
+      "jurisdiction": "경기 광주 남종면",
+      "sectionName": "일반45 - 강하",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0342-06",
+      "routeName": "지방도 342호선",
+      "routeCode": "342",
+      "jurisdiction": "경기 양평군 강상면",
+      "sectionName": "양평대교 - 화양",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0342-07",
+      "routeName": "지방도 342호선",
+      "routeCode": "342",
+      "jurisdiction": "경기 양평군 개군면",
+      "sectionName": "양평군청 - 개군",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0342-08",
+      "routeName": "지방도 342호선",
+      "routeCode": "342",
+      "jurisdiction": "경기 양평군 지평면",
+      "sectionName": "용문 - 망미",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0345-03",
+      "routeName": "지방도 345호선",
+      "routeCode": "345",
+      "jurisdiction": "경기 여주 가남읍",
+      "sectionName": "홍문 - 강천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0345-05",
+      "routeName": "지방도 345호선",
+      "routeCode": "345",
+      "jurisdiction": "경기 여주 강천면",
+      "sectionName": "대신 - 양동",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0345-06",
+      "routeName": "지방도 345호선",
+      "routeCode": "345",
+      "jurisdiction": "경기 여주 강천면",
+      "sectionName": "대신 - 양동",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0345-08",
+      "routeName": "지방도 345호선",
+      "routeCode": "345",
+      "jurisdiction": "경기 양평군 단월면",
+      "sectionName": "양평 - 청운",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0345-09",
+      "routeName": "지방도 345호선",
+      "routeCode": "345",
+      "jurisdiction": "경기 양평군 단월면",
+      "sectionName": "보룡 - 굴업",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0349-06",
+      "routeName": "지방도 349호선",
+      "routeCode": "349",
+      "jurisdiction": "경기 여주 강천면",
+      "sectionName": "강천 - 문막",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0349-07",
+      "routeName": "지방도 349호선",
+      "routeCode": "349",
+      "jurisdiction": "경기 양평군 양동면",
+      "sectionName": "여주 - 문막",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0349-08",
+      "routeName": "지방도 349호선",
+      "routeCode": "349",
+      "jurisdiction": "경기 양평군 청운면",
+      "sectionName": "일반6 - 양동",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0352-03",
+      "routeName": "지방도 352호선",
+      "routeCode": "352",
+      "jurisdiction": "경기 양평군 양서면",
+      "sectionName": "청평 - 팔당",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0352-04",
+      "routeName": "지방도 352호선",
+      "routeCode": "352",
+      "jurisdiction": "경기 양평군 서종면",
+      "sectionName": "청평 - 팔당",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0355-01",
+      "routeName": "지방도 355호선",
+      "routeCode": "355",
+      "jurisdiction": "-",
+      "sectionName": "대포 - 통진",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0355-02",
+      "routeName": "지방도 355호선",
+      "routeCode": "355",
+      "jurisdiction": "경기 김포 통진읍",
+      "sectionName": "김포 - 강화",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0356-01",
+      "routeName": "지방도 356호선",
+      "routeCode": "356",
+      "jurisdiction": "경기 김포 대곶면",
+      "sectionName": "강화 - 김포",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0356-02",
+      "routeName": "지방도 356호선",
+      "routeCode": "356",
+      "jurisdiction": "-",
+      "sectionName": "대곶 - 누산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0356-03",
+      "routeName": "지방도 356호선",
+      "routeCode": "356",
+      "jurisdiction": "경기 고양 일산서 일산1동",
+      "sectionName": "탄현 - 원당",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0356-04",
+      "routeName": "지방도 356호선",
+      "routeCode": "356",
+      "jurisdiction": "경기 고양 덕양 성사1동",
+      "sectionName": "벽제 - 화정",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0356-05",
+      "routeName": "지방도 356호선",
+      "routeCode": "356",
+      "jurisdiction": "-",
+      "sectionName": "대화 - 덕이",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0357-01",
+      "routeName": "지방도 357호선",
+      "routeCode": "357",
+      "jurisdiction": "경기 고양 덕양 행신2동",
+      "sectionName": "강매IC - 상암",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0357-02",
+      "routeName": "지방도 357호선",
+      "routeCode": "357",
+      "jurisdiction": "경기 고양 일산서 송포동",
+      "sectionName": "한류월드IC - 장산가좌IC",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0357-03",
+      "routeName": "지방도 357호선",
+      "routeCode": "357",
+      "jurisdiction": "-",
+      "sectionName": "법곳IC - 송산IC",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0357-04",
+      "routeName": "지방도 357호선",
+      "routeCode": "357",
+      "jurisdiction": "-",
+      "sectionName": "문발IC - 파주",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0358-01",
+      "routeName": "지방도 358호선",
+      "routeCode": "358",
+      "jurisdiction": "-",
+      "sectionName": "장월IC - 덕이",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0359-01",
+      "routeName": "지방도 359호선",
+      "routeCode": "359",
+      "jurisdiction": "-",
+      "sectionName": "금촌 - 덕이",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0359-02",
+      "routeName": "지방도 359호선",
+      "routeCode": "359",
+      "jurisdiction": "경기 파주 문산읍",
+      "sectionName": "탄현 - 문산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0359-03",
+      "routeName": "지방도 359호선",
+      "routeCode": "359",
+      "jurisdiction": "-",
+      "sectionName": "덕이 - 교하",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0359-04",
+      "routeName": "지방도 359호선",
+      "routeCode": "359",
+      "jurisdiction": "-",
+      "sectionName": "성동IC - 파주",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-01",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 파주 탄현면",
+      "sectionName": "성동 - 금촌",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-02",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "-",
+      "sectionName": "성동 - 금촌",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-03",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 파주 월롱면",
+      "sectionName": "성동 - 봉암",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-04",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 파주 파주읍",
+      "sectionName": "금촌 - 광적",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-05",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 파주 광탄면",
+      "sectionName": "연풍 - 신산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-07",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 양주 백석읍",
+      "sectionName": "백석 - 양주",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-08",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 양주 양주2동",
+      "sectionName": "양주 - 소홀",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-09",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 포천 가산면",
+      "sectionName": "일반43 - 가산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-10",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 파주 월롱면",
+      "sectionName": "조리 - 문산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0360-11",
+      "routeName": "지방도 360호선",
+      "routeCode": "360",
+      "jurisdiction": "경기 파주 금촌1동",
+      "sectionName": "성동 - 봉암",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0363-05",
+      "routeName": "지방도 363호선",
+      "routeCode": "363",
+      "jurisdiction": "경기 파주 조리읍",
+      "sectionName": "금촌 - 서울",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0363-06",
+      "routeName": "지방도 363호선",
+      "routeCode": "363",
+      "jurisdiction": "경기 파주 금촌2동",
+      "sectionName": "문산 - 서울",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0363-08",
+      "routeName": "지방도 363호선",
+      "routeCode": "363",
+      "jurisdiction": "경기 고양 일산동 고봉동",
+      "sectionName": "통일로 - 조리",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0363-09",
+      "routeName": "지방도 363호선",
+      "routeCode": "363",
+      "jurisdiction": "경기 파주 금촌1동",
+      "sectionName": "성동 - 봉암",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0364-01",
+      "routeName": "지방도 364호선",
+      "routeCode": "364",
+      "jurisdiction": "경기 파주 문산읍",
+      "sectionName": "문산 - 법원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0364-02",
+      "routeName": "지방도 364호선",
+      "routeCode": "364",
+      "jurisdiction": "경기 양주 광적면",
+      "sectionName": "법원 - 상수",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0364-03",
+      "routeName": "지방도 364호선",
+      "routeCode": "364",
+      "jurisdiction": "경기 양주 남면",
+      "sectionName": "신산 - 동두천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0364-04",
+      "routeName": "지방도 364호선",
+      "routeCode": "364",
+      "jurisdiction": "경기 동두천 상패동",
+      "sectionName": "회천 - 연천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0364-05",
+      "routeName": "지방도 364호선",
+      "routeCode": "364",
+      "jurisdiction": "경기 포천 선단동",
+      "sectionName": "송우 - 포천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0364-06",
+      "routeName": "지방도 364호선",
+      "routeCode": "364",
+      "jurisdiction": "경기 동두천 불현동",
+      "sectionName": "동두천 - 포천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0367-01",
+      "routeName": "지방도 367호선",
+      "routeCode": "367",
+      "jurisdiction": "경기 고양 덕양 고양동",
+      "sectionName": "용미 - 일반39",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0367-02",
+      "routeName": "지방도 367호선",
+      "routeCode": "367",
+      "jurisdiction": "경기 양주 광적면",
+      "sectionName": "광적 - 파주",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0367-03",
+      "routeName": "지방도 367호선",
+      "routeCode": "367",
+      "jurisdiction": "경기 파주 법원읍",
+      "sectionName": "문산 - 갈곡",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0367-04",
+      "routeName": "지방도 367호선",
+      "routeCode": "367",
+      "jurisdiction": "경기 파주 법원읍",
+      "sectionName": "장남 - 법원",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0368-09",
+      "routeName": "지방도 368호선",
+      "routeCode": "368",
+      "jurisdiction": "경기 연천군 청산면",
+      "sectionName": "연천 - 동두천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0368-10",
+      "routeName": "지방도 368호선",
+      "routeCode": "368",
+      "jurisdiction": "경기 포천 신북면",
+      "sectionName": "포천 - 영중",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0368-11",
+      "routeName": "지방도 368호선",
+      "routeCode": "368",
+      "jurisdiction": "경기 포천 일동면",
+      "sectionName": "일반47 - 무리울",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0371-01",
+      "routeName": "지방도 371호선",
+      "routeCode": "371",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "의정부 - 고양",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0371-02",
+      "routeName": "지방도 371호선",
+      "routeCode": "371",
+      "jurisdiction": "경기 양주 장흥면",
+      "sectionName": "고양 - 의정부",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0371-03",
+      "routeName": "지방도 371호선",
+      "routeCode": "371",
+      "jurisdiction": "경기 양주 광적면",
+      "sectionName": "법원 - 상수",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0371-04",
+      "routeName": "지방도 371호선",
+      "routeCode": "371",
+      "jurisdiction": "경기 양주 남면",
+      "sectionName": "효촌 - 동두천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0371-05",
+      "routeName": "지방도 371호선",
+      "routeCode": "371",
+      "jurisdiction": "경기 파주 적성면",
+      "sectionName": "파평 - 전곡",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0371-06",
+      "routeName": "지방도 371호선",
+      "routeCode": "371",
+      "jurisdiction": "경기 파주 적성면",
+      "sectionName": "두지 - 율포",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0371-07",
+      "routeName": "지방도 371호선",
+      "routeCode": "371",
+      "jurisdiction": "경기 양주 광적면",
+      "sectionName": "갈곡 - 상수",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0372-01",
+      "routeName": "지방도 372호선",
+      "routeCode": "372",
+      "jurisdiction": "경기 연천군 백학면",
+      "sectionName": "장남 - 미산",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0372-02",
+      "routeName": "지방도 372호선",
+      "routeCode": "372",
+      "jurisdiction": "경기 연천군 군남면",
+      "sectionName": "동두천 - 연천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0372-03",
+      "routeName": "지방도 372호선",
+      "routeCode": "372",
+      "jurisdiction": "경기 연천군 청산면",
+      "sectionName": "창수 - 전곡",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0372-04",
+      "routeName": "지방도 372호선",
+      "routeCode": "372",
+      "jurisdiction": "경기 포천 이동면",
+      "sectionName": "김화 - 이동",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0372-05",
+      "routeName": "지방도 372호선",
+      "routeCode": "372",
+      "jurisdiction": "경기 포천 영중면",
+      "sectionName": "일반43 - 일동",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0375-01",
+      "routeName": "지방도 375호선",
+      "routeCode": "375",
+      "jurisdiction": "경기 양주 광적면",
+      "sectionName": "석우 - 일반3",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0375-02",
+      "routeName": "지방도 375호선",
+      "routeCode": "375",
+      "jurisdiction": "경기 양주 은현면",
+      "sectionName": "법원 - 회천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0379-01",
+      "routeName": "지방도 379호선",
+      "routeCode": "379",
+      "jurisdiction": "-",
+      "sectionName": "가산 - 회천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0383-08",
+      "routeName": "지방도 383호선",
+      "routeCode": "383",
+      "jurisdiction": "경기 남양주 진건읍",
+      "sectionName": "퇴계원 - 사능",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0383-09",
+      "routeName": "지방도 383호선",
+      "routeCode": "383",
+      "jurisdiction": "경기 남양주 진건읍",
+      "sectionName": "진관 - 오남",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0387-05",
+      "routeName": "지방도 387호선",
+      "routeCode": "387",
+      "jurisdiction": "-",
+      "sectionName": "동호평IC - 구암",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0387-06",
+      "routeName": "지방도 387호선",
+      "routeCode": "387",
+      "jurisdiction": "경기 가평군 상면",
+      "sectionName": "청평 - 포천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0387-07",
+      "routeName": "지방도 387호선",
+      "routeCode": "387",
+      "jurisdiction": "-",
+      "sectionName": "신팔 - 하천",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0387-08",
+      "routeName": "지방도 387호선",
+      "routeCode": "387",
+      "jurisdiction": "-",
+      "sectionName": "하판 - 현",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0387-09",
+      "routeName": "지방도 387호선",
+      "routeCode": "387",
+      "jurisdiction": "경기 포천 일동면",
+      "sectionName": "일동 - 화현",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0387-10",
+      "routeName": "지방도 387호선",
+      "routeCode": "387",
+      "jurisdiction": "경기 포천 영북면",
+      "sectionName": "운천 - 갈말",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0387-12",
+      "routeName": "지방도 387호선",
+      "routeCode": "387",
+      "jurisdiction": "경기 남양주 수동면",
+      "sectionName": "상 - 화도",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0391-05",
+      "routeName": "지방도 391호선",
+      "routeCode": "391",
+      "jurisdiction": "경기 가평군 청평면",
+      "sectionName": "설악 - 청평대교",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0391-06",
+      "routeName": "지방도 391호선",
+      "routeCode": "391",
+      "jurisdiction": "경기 가평군 청평면",
+      "sectionName": "일반37 - 청평대교",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "0391-07",
+      "routeName": "지방도 391호선",
+      "routeCode": "391",
+      "jurisdiction": "경기 가평군 북면",
+      "sectionName": "적목 - 가평",
+      "category": "4",
+      "categoryLabel": "지방도"
+    },
+    {
+      "pointCode": "15,301",
+      "routeName": "평택시흥고속도로",
+      "routeCode": "153",
+      "jurisdiction": "-",
+      "sectionName": "서평택JCT - 조암IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "15,302",
+      "routeName": "평택시흥고속도로",
+      "routeCode": "153",
+      "jurisdiction": "-",
+      "sectionName": "조암IC - 송산마도IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "15,303",
+      "routeName": "평택시흥고속도로",
+      "routeCode": "153",
+      "jurisdiction": "-",
+      "sectionName": "송산마도IC - 남안산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "15,304",
+      "routeName": "평택시흥고속도로",
+      "routeCode": "153",
+      "jurisdiction": "-",
+      "sectionName": "남안산IC - 군자JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "15302-1",
+      "routeName": "평택시흥고속도로",
+      "routeCode": "153",
+      "jurisdiction": "-",
+      "sectionName": "마도JCT-송산마도IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "15303-1",
+      "routeName": "평택시흥고속도로",
+      "routeCode": "153",
+      "jurisdiction": "-",
+      "sectionName": "시화JCT-남안산IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "04002-1",
+      "routeName": "평택충주고속도로",
+      "routeCode": "40",
+      "jurisdiction": "경기 평택 오성면",
+      "sectionName": "평택JCT - 평택고덕IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "04002-2",
+      "routeName": "평택충주고속도로",
+      "routeCode": "40",
+      "jurisdiction": "경기 평택 고덕면",
+      "sectionName": "평택고덕IC - 송탄IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "4,001",
+      "routeName": "평택충주고속도로",
+      "routeCode": "40",
+      "jurisdiction": "-",
+      "sectionName": "서평택JCT - 청북IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "4,002",
+      "routeName": "평택충주고속도로",
+      "routeCode": "40",
+      "jurisdiction": "-",
+      "sectionName": "청북IC - 평택JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "4,003",
+      "routeName": "평택충주고속도로",
+      "routeCode": "40",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "송탄IC - 안성JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "4,004",
+      "routeName": "평택충주고속도로",
+      "routeCode": "40",
+      "jurisdiction": "경기 안성 원곡면",
+      "sectionName": "안성JCT - 서안성IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "4,006",
+      "routeName": "평택충주고속도로",
+      "routeCode": "40",
+      "jurisdiction": "경기 안성 금광면",
+      "sectionName": "남안성IC - 북진천IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "01720-1",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 능곡동",
+      "sectionName": "행주산성JCT-봉대산JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,720",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 화정1동",
+      "sectionName": "남고양IC-봉대산JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,721",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 화정2동",
+      "sectionName": "봉대산JCT-흥도IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,722",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 행주동",
+      "sectionName": "흥도IC-고양JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,723",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 행신1동",
+      "sectionName": "고양JCT-사리현IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,724",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 행신2동",
+      "sectionName": "사리현IC-북고양·설문IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,725",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 화전동",
+      "sectionName": "북고양·설문IC-금촌IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,726",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "경기 고양 덕양 대덕동",
+      "sectionName": "금촌IC-월롱IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,727",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "-",
+      "sectionName": "월롱IC-산단IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,728",
+      "routeName": "평택파주고속도로",
+      "routeCode": "17.3",
+      "jurisdiction": "-",
+      "sectionName": "산단IC-내포IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "01706-1",
+      "routeName": "평택파주고속도로2",
+      "routeCode": "17.2",
+      "jurisdiction": "-",
+      "sectionName": "봉담IC - 금곡IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "01703-1",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "양감IC - 향남IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "01705-1",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "정남IC-화성JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,701",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "경기 평택 오성면",
+      "sectionName": "오성 - 평택JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,702",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "평택JCT - 어연IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,703",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "어연IC - 향남IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,704",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "향남IC - 서오산JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,705",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "서오산JCT - 정남IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,706",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "-",
+      "sectionName": "정남IC - 봉담IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,707",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "경기 수원 권선구",
+      "sectionName": "금곡IC - 동안산·당수IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,708",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "경기 수원 권선구",
+      "sectionName": "동안산·당수IC - 남군포IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,709",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "경기 군포 군포2동",
+      "sectionName": "남군포IC - 동시흥JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "1,710",
+      "routeName": "평택화성(수원광명)고속도로",
+      "routeCode": "17",
+      "jurisdiction": "경기 광명 학온동",
+      "sectionName": "동시흥JCT - 성채/소하IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,026",
+      "routeName": "포천화도고속도로",
+      "routeCode": "400.6",
+      "jurisdiction": "경기 남양주시",
+      "sectionName": "고모IC-내촌IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,027",
+      "routeName": "포천화도고속도로",
+      "routeCode": "400.6",
+      "jurisdiction": "경기 남양주시",
+      "sectionName": "내촌IC-수동휴게소IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,028",
+      "routeName": "포천화도고속도로",
+      "routeCode": "400.6",
+      "jurisdiction": "경기 남양주시",
+      "sectionName": "수동휴게소IC-수동IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,029",
+      "routeName": "포천화도고속도로",
+      "routeCode": "400.6",
+      "jurisdiction": "경기 남양주시",
+      "sectionName": "수동IC-달뫼IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,010",
+      "routeName": "화도양평고속도로",
+      "routeCode": "400.5",
+      "jurisdiction": "경기 남양주시",
+      "sectionName": "화도JCT-조안IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,024",
+      "routeName": "화도양평고속도로",
+      "routeCode": "400.5",
+      "jurisdiction": "경기 양평군 양서면",
+      "sectionName": "두물머리하이패스IC-조안IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,030",
+      "routeName": "화도양평고속도로",
+      "routeCode": "400.5",
+      "jurisdiction": "경기 남양주시",
+      "sectionName": "달뫼IC-화도JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,017",
+      "routeName": "화성광주고속도로",
+      "routeCode": "400.4",
+      "jurisdiction": "경기 광주 도척면",
+      "sectionName": "곤지암JC-도척IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,018",
+      "routeName": "화성광주고속도로",
+      "routeCode": "400.4",
+      "jurisdiction": "경기 광주 도척면",
+      "sectionName": "도척IC-포곡IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,019",
+      "routeName": "화성광주고속도로",
+      "routeCode": "400.4",
+      "jurisdiction": "-",
+      "sectionName": "포곡IC-서용인JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,020",
+      "routeName": "화성광주고속도로",
+      "routeCode": "400.4",
+      "jurisdiction": "-",
+      "sectionName": "서용인JCT-서용인IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,021",
+      "routeName": "화성광주고속도로",
+      "routeCode": "400.4",
+      "jurisdiction": "경기 용인 처인 포곡읍",
+      "sectionName": "서용인IC-동탄IC",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    },
+    {
+      "pointCode": "40,022",
+      "routeName": "화성광주고속도로",
+      "routeCode": "400.4",
+      "jurisdiction": "경기 화성 만세 마도면",
+      "sectionName": "동탄IC-동탄JCT",
+      "category": "1",
+      "categoryLabel": "고속도로"
+    }
+  ]
+}
