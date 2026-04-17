@@ -5,6 +5,7 @@ import seoulTopisPoints from "../app/seoul-topis-points.json";
 
 const STORAGE_KEY = "tia-research-builder-next-v1";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
+const GYEONGGI_POINT_CACHE_KEY = "tia-gyeonggi-point-coordinates-v1";
 const LANDUSE_CATEGORIES = ["전", "답", "임야", "대지", "도로", "하천", "학교", "공원", "기타"];
 const ZONING_DEFAULTS = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "기타"];
 const ROAD_CLASSES = ["고속도로", "대로", "로"];
@@ -258,6 +259,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [mapStatus, setMapStatus] = useState('배포 환경에 카카오 지도 키를 설정한 뒤 "지도 범위 표시" 버튼을 눌러 주세요.');
   const [topisCandidates, setTopisCandidates] = useState([]);
   const [topisStatus, setTopisStatus] = useState("");
+  const [gyeonggiCandidates, setGyeonggiCandidates] = useState([]);
+  const [gyeonggiStatus, setGyeonggiStatus] = useState("");
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
   const mapRuntimeRef = useRef({
@@ -321,6 +324,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const zoningStats = computeZoningStats(form);
   const selectedSurveyPoint = selectSurveyPoint(form.surveyPoints);
   const surveyRecommendations = buildSurveyRecommendations(form.basics.siteAddress);
+  const roadNameSignature = form.roads.map((row) => safe(row.name)).filter(Boolean).join("|");
   const scope = buildScopeData(form.basics);
   const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
@@ -353,7 +357,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       try {
         setTopisStatus("서울 TOPIS 지점 좌표를 확인하는 중입니다.");
-        await loadKakaoMaps(kakaoJsKey);
+        await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
 
         const sourceLat = Number(form.basics.centerLat);
         const sourceLng = Number(form.basics.centerLng);
@@ -431,6 +435,128 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       cancelled = true;
     };
   }, [form.basics.siteAddress, form.basics.centerLat, form.basics.centerLng, kakaoJsKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadGyeonggiCandidates() {
+      if (detectSurveyRegion(form.basics.siteAddress) !== "gyeonggi") {
+        setGyeonggiCandidates([]);
+        setGyeonggiStatus("");
+        return;
+      }
+
+      if (safe(form.basics.siteAddress).length < 8) {
+        setGyeonggiCandidates([]);
+        setGyeonggiStatus("경기도 사업지 주소를 조금 더 구체적으로 입력하면 가까운 GITS 지점번호 후보를 계산합니다.");
+        return;
+      }
+
+      if (!roadNameSignature) {
+        setGyeonggiCandidates([]);
+        setGyeonggiStatus("가로망 조사 결과가 있어야 경기도 GITS 지점번호 후보를 추천할 수 있습니다.");
+        return;
+      }
+
+      if (!kakaoJsKey) {
+        setGyeonggiCandidates([]);
+        setGyeonggiStatus("경기도 GITS 후보 계산에는 카카오 지도 설정이 필요합니다.");
+        return;
+      }
+
+      try {
+        setGyeonggiStatus("경기도 GITS 수시교통량 지점번호 후보를 계산하는 중입니다.");
+
+        const response = await fetch("/api/gyeonggi-survey", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: form.basics.siteAddress,
+            roadNames: form.roads.map((row) => safe(row.name)).filter(Boolean),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load Gyeonggi survey candidates");
+        }
+
+        const payload = await response.json();
+
+        if (!payload.matchedRoutes?.length || !payload.points?.length) {
+          if (cancelled) return;
+          setGyeonggiCandidates([]);
+          setGyeonggiStatus("자동 조사된 도로와 일치하는 경기도 GITS 지점번호 후보를 찾지 못했습니다. 아래 공식 추천 출처를 함께 확인해 주세요.");
+          return;
+        }
+
+        await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
+
+        const sourceLat = Number(form.basics.centerLat);
+        const sourceLng = Number(form.basics.centerLng);
+        let origin = null;
+
+        if (Number.isFinite(sourceLat) && Number.isFinite(sourceLng)) {
+          origin = { y: String(sourceLat), x: String(sourceLng) };
+        } else {
+          origin = await geocodeAddress(form.basics.siteAddress);
+        }
+
+        const stored = JSON.parse(window.localStorage.getItem(GYEONGGI_POINT_CACHE_KEY) || "{}");
+        const enriched = [];
+        let updated = false;
+
+        for (const point of payload.points) {
+          const cached = stored[point.pointCode];
+          if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lng)) {
+            enriched.push({ ...point, lat: cached.lat, lng: cached.lng });
+            continue;
+          }
+
+          const location = await resolveGyeonggiPointLocation(point).catch(() => null);
+          if (!location) continue;
+
+          stored[point.pointCode] = location;
+          enriched.push({ ...point, lat: location.lat, lng: location.lng });
+          updated = true;
+        }
+
+        if (updated) {
+          window.localStorage.setItem(GYEONGGI_POINT_CACHE_KEY, JSON.stringify(stored));
+        }
+
+        const originLat = Number(origin.y);
+        const originLng = Number(origin.x);
+        const candidates = enriched
+          .map((point) => ({
+            ...point,
+            distanceKm: distanceBetweenKm(originLat, originLng, point.lat, point.lng),
+          }))
+          .filter((point) => Number.isFinite(point.distanceKm))
+          .sort((a, b) => a.distanceKm - b.distanceKm)
+          .slice(0, 3);
+
+        if (cancelled) return;
+
+        setGyeonggiCandidates(candidates);
+        setGyeonggiStatus(
+          candidates.length
+            ? `경기도 GITS ${payload.year || ""} 수시교통량 기준 최근접 지점번호 후보 ${candidates.length}개를 계산했습니다. 거리 계산은 행정구역과 구간 양끝(IC/JCT) 기준의 근사값입니다.`
+            : "경기도 GITS 지점번호 후보의 위치를 계산하지 못했습니다. 아래 공식 추천 출처를 함께 확인해 주세요.",
+        );
+      } catch (error) {
+        if (cancelled) return;
+        console.error(error);
+        setGyeonggiCandidates([]);
+        setGyeonggiStatus("경기도 GITS 지점번호 후보를 불러오지 못했습니다.");
+      }
+    }
+
+    loadGyeonggiCandidates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.basics.siteAddress, form.basics.centerLat, form.basics.centerLng, kakaoJsKey, roadNameSignature]);
 
   function updateBasics(field, value) {
     setForm((current) => ({
@@ -516,6 +642,21 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       downloadLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport",
     }));
     setStatusText(`${candidate.code} ${candidate.name} 지점을 사전조사지점 표에 추가했습니다.`);
+  }
+
+  function addGyeonggiCandidate(candidate) {
+    addRow("surveyPoints", () => createSurveyRow({
+      pointCode: candidate.pointCode,
+      pointName: `${candidate.routeName} / ${candidate.sectionName}`,
+      jurisdiction: candidate.jurisdiction,
+      distanceKm: candidate.distanceKm.toFixed(1),
+      dataType: "time",
+      note: `경기 GITS 근사 추천 / ${candidate.sectionName}`,
+      source: "경기도교통정보시스템",
+      sourceLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+      downloadLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+    }));
+    setStatusText(`${candidate.pointCode} 지점번호 후보를 사전조사지점 표에 추가했습니다.`);
   }
 
   async function renderScopeMap() {
@@ -852,6 +993,34 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily" target="_blank" rel="noreferrer">출처 보기</a>
                     <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport" target="_blank" rel="noreferrer">조사자료 PDF</a>
                     <button type="button" className="secondary" onClick={() => addTopisCandidate(candidate)}>행에 추가</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {detectSurveyRegion(form.basics.siteAddress) === "gyeonggi" ? (
+          <div className="survey-recommendation-block">
+            <div className="output-header">
+              <h3>경기 GITS 최근접 3지점</h3>
+            </div>
+            <p className="priority-note">{gyeonggiStatus || "경기 GITS 지점번호 후보를 준비하고 있습니다."}</p>
+            <div className="survey-recommendations">
+              {gyeonggiCandidates.map((candidate) => (
+                <article key={`${candidate.routeCode}-${candidate.pointCode}`} className="survey-recommendation-card">
+                  <div className="survey-recommendation-top">
+                    <span className="status-badge">{candidate.pointCode}</span>
+                    <p className="eyebrow">{candidate.categoryLabel}</p>
+                  </div>
+                  <h3>{candidate.routeName}</h3>
+                  <p>{candidate.jurisdiction} / {candidate.sectionName}</p>
+                  <p className="candidate-distance">사업지 기준 {formatDistance(candidate.distanceKm)}</p>
+                  <p className="candidate-note">거리 계산은 구간 양끝(IC/JCT) 기준의 근사값입니다.</p>
+                  <div className="survey-links">
+                    <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do" target="_blank" rel="noreferrer">출처 보기</a>
+                    <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/regularAverageTrafficVolumeByWeekday.do" target="_blank" rel="noreferrer">2순위 자료</a>
+                    <button type="button" className="secondary" onClick={() => addGyeonggiCandidate(candidate)}>행에 추가</button>
                   </div>
                 </article>
               ))}
@@ -1651,6 +1820,73 @@ function tryKeywordSearch(keyword) {
       reject(new Error("keyword search failed"));
     }, { size: 1 });
   });
+}
+
+function buildGyeonggiPointQueries(point) {
+  const queries = [];
+  const sectionAnchors = safe(point.sectionName)
+    .split(/\s*-\s*/)
+    .map((part) => safe(part))
+    .filter(Boolean);
+
+  sectionAnchors.forEach((anchor) => {
+    if (safe(point.jurisdiction) && point.jurisdiction !== "-") {
+      queries.push(`${point.jurisdiction} ${anchor}`);
+    }
+    queries.push(`${point.routeName} ${anchor}`);
+    queries.push(anchor);
+  });
+
+  if (safe(point.jurisdiction) && point.jurisdiction !== "-") {
+    queries.push(`${point.jurisdiction} ${point.sectionName}`);
+  }
+  queries.push(`${point.routeName} ${point.sectionName}`);
+  queries.push(`${point.routeName} ${point.pointCode}`);
+
+  return Array.from(new Set(queries.map((query) => safe(query)).filter(Boolean)));
+}
+
+async function resolveGyeonggiPointLocation(point) {
+  const anchorQueries = buildGyeonggiPointQueries(point);
+  const endpoints = safe(point.sectionName)
+    .split(/\s*-\s*/)
+    .map((part) => safe(part))
+    .filter(Boolean);
+  const anchorResults = [];
+
+  for (const endpoint of endpoints.slice(0, 2)) {
+    const endpointQueries = anchorQueries.filter((query) => query.includes(endpoint));
+    let found = null;
+
+    for (const query of endpointQueries) {
+      found = await tryKeywordSearch(query).catch(() => null);
+      if (found) break;
+    }
+
+    if (found) {
+      anchorResults.push({ lat: Number(found.y), lng: Number(found.x) });
+    }
+  }
+
+  if (anchorResults.length === 2) {
+    return {
+      lat: (anchorResults[0].lat + anchorResults[1].lat) / 2,
+      lng: (anchorResults[0].lng + anchorResults[1].lng) / 2,
+    };
+  }
+
+  if (anchorResults.length === 1) {
+    return anchorResults[0];
+  }
+
+  for (const query of anchorQueries) {
+    const found = await tryKeywordSearch(query).catch(() => null);
+    if (found) {
+      return { lat: Number(found.y), lng: Number(found.x) };
+    }
+  }
+
+  throw new Error("Failed to geocode Gyeonggi survey point");
 }
 
 function geocodeAddress(address) {

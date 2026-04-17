@@ -474,6 +474,11 @@ button.mini-button {
   color: var(--text) !important;
 }
 
+.candidate-note {
+  margin-top: 6px !important;
+  font-size: 13px;
+}
+
 .subpanel-grid,
 .chart-grid {
   display: grid;
