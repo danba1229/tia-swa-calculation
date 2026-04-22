@@ -1422,20 +1422,23 @@ function buildRoadSummary(form) {
 
 function buildPriorityResult(selectedSurveyPoint, surveyPoints) {
   const hasRows = surveyPoints.some(isSurveyRowFilled);
-  if (!hasRows) return "아직 조사지점이 없습니다.";
-  if (!selectedSurveyPoint || selectedSurveyPoint.dataType === "none") return "적정 조사지점 미확보";
-  return `${safe(selectedSurveyPoint.pointCode) || ""} ${safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력"}`.trim() + " 우선 검토";
+  if (!hasRows) return "후보 없음";
+  if (!selectedSurveyPoint || selectedSurveyPoint.dataType === "none") return "후보 없음";
+  if (selectedSurveyPoint.dataType === "time") return "1순위 후보";
+  if (selectedSurveyPoint.dataType === "average") return "2순위 후보";
+  return "후보 없음";
 }
 
 function buildPriorityNote(selectedSurveyPoint, surveyPoints) {
   const hasRows = surveyPoints.some(isSurveyRowFilled);
-  if (!hasRows) return "가까운 수시 교통량 조사지점을 입력하면 우선순위를 자동으로 판단합니다.";
+  if (!hasRows) return "추천 가능한 조사지점을 아직 찾지 못했습니다.";
   if (!selectedSurveyPoint || selectedSurveyPoint.dataType === "none") {
-    return "1순위와 2순위 자료 유형이 모두 확인되지 않아 현 단계에서는 적정 조사지점을 찾지 못했습니다.";
+    return "1순위와 2순위 자료를 아직 확인하지 못했습니다.";
   }
+  const pointLabel = `${safe(selectedSurveyPoint.pointCode) ? `${safe(selectedSurveyPoint.pointCode)} / ` : ""}${safe(selectedSurveyPoint.pointName) || safe(selectedSurveyPoint.source) || "지점명 미입력"}`;
   return selectedSurveyPoint.dataType === "time"
-    ? "요일별 시간대별 교통량 자료가 확인되어 1순위로 선정했습니다."
-    : "요일별 시간대별 교통량 자료는 없지만, 요일별 평균 교통량 자료가 있어 2순위로 선정했습니다.";
+    ? `${pointLabel} / 요일별 시간대별 교통량 확인`
+    : `${pointLabel} / 요일별 평균 교통량 확인`;
 }
 
 function buildSurveySummary(form, selectedSurveyPoint) {
