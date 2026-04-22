@@ -396,7 +396,7 @@ button.mini-button {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  align-items: flex-start;
+  align-items: center;
   margin-top: 18px;
   padding: 20px;
   background:
@@ -417,6 +417,16 @@ button.mini-button {
   font-size: 28px;
   font-weight: 800;
   line-height: 1.2;
+}
+
+.priority-note {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.5;
 }
 
 .survey-recommendations {
