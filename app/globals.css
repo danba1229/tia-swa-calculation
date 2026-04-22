@@ -137,13 +137,24 @@ h3 {
 }
 
 .hero-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(132px, 1fr));
+  align-items: stretch;
   gap: 12px;
-  flex-wrap: wrap;
   min-width: 0;
-  max-width: 320px;
+  width: min(100%, 456px);
+}
+
+.hero-actions > button,
+.hero-action-stack > button {
+  width: 100%;
+  min-height: 48px;
+}
+
+.hero-action-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
 .panel {
@@ -654,8 +665,7 @@ button.mini-button {
   }
 
   .hero-actions {
-    justify-content: flex-start;
-    max-width: 100%;
+    width: min(100%, 456px);
   }
 
   .hero-form {
@@ -676,7 +686,14 @@ button.mini-button {
     align-items: stretch;
   }
 
+  .hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
   .hero-actions button,
+  .hero-action-stack button,
   .subpanel-header button,
   .output-header button,
   .chart-header button,
@@ -725,6 +742,7 @@ button.mini-button {
   }
 
   .hero-actions button,
+  .hero-action-stack button,
   .subpanel-header button,
   .output-header button,
   .chart-header button,

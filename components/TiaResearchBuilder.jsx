@@ -942,8 +942,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
         <div className="hero-actions">
           <button type="button" onClick={renderScopeMap}>조사 시작</button>
-          <button type="button" className="secondary" onClick={fillSeoulSampleData}>서울 샘플</button>
-          <button type="button" className="secondary" onClick={fillGyeonggiSampleData}>경기도 샘플</button>
+          <div className="hero-action-stack">
+            <button type="button" className="secondary" onClick={fillSeoulSampleData}>서울 샘플</button>
+            <button type="button" className="secondary" onClick={fillGyeonggiSampleData}>경기도 샘플</button>
+          </div>
           <button type="button" className="ghost" onClick={resetAll}>전체 초기화</button>
         </div>
       </section>
