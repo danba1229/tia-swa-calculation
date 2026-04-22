@@ -366,10 +366,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const roadNameSignature = form.roads.map((row) => safe(row.name)).filter(Boolean).join("|");
   const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
-  const roadSummary = buildRoadSummary(form);
-  const surveySummary = buildSurveySummary({ ...form, surveyPoints: autoSurveyPoints }, selectedSurveyPoint);
-  const landuseSummary = buildLanduseSummary(form, landuseStats, zoningStats);
-  const planSummary = buildPlanSummary(form);
 
   useEffect(() => {
     let cancelled = false;
@@ -678,21 +674,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ...current,
       landuseAreas: { ...current.landuseAreas, [category]: value },
     }));
-  }
-
-  async function copyText(text) {
-    if (!text) {
-      setStatusText("복사할 내용이 없습니다.");
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(text);
-      setStatusText("요약문을 복사했습니다.");
-    } catch (error) {
-      console.error(error);
-      setStatusText("복사에 실패했습니다.");
-    }
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -1037,13 +1018,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </table>
         </div>
 
-        <div className="output-block">
-          <div className="output-header">
-            <h3>가로망 조사 요약</h3>
-            <button type="button" onClick={() => copyText(roadSummary)}>복사</button>
-          </div>
-          <textarea readOnly rows={7} value={roadSummary} />
-        </div>
       </section>
 
       <section className="panel">
@@ -1140,13 +1114,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <p className="priority-note">{buildPriorityNote(selectedSurveyPoint, autoSurveyPoints)}</p>
         </div>
 
-        <div className="output-block">
-          <div className="output-header">
-            <h3>사전조사지점 요약</h3>
-            <button type="button" onClick={() => copyText(surveySummary)}>복사</button>
-          </div>
-          <textarea readOnly rows={7} value={surveySummary} />
-        </div>
       </section>
 
       <section className="panel">
@@ -1274,13 +1241,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </section>
         </div>
 
-        <div className="output-block">
-          <div className="output-header">
-            <h3>토지이용 및 용도지역 요약</h3>
-            <button type="button" onClick={() => copyText(landuseSummary)}>복사</button>
-          </div>
-          <textarea readOnly rows={8} value={landuseSummary} />
-        </div>
       </section>
 
       <section className="panel">
@@ -1355,13 +1315,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </section>
         </div>
 
-        <div className="output-block">
-          <div className="output-header">
-            <h3>교통관련 계획 요약</h3>
-            <button type="button" onClick={() => copyText(planSummary)}>복사</button>
-          </div>
-          <textarea readOnly rows={8} value={planSummary} />
-        </div>
       </section>
 
       <section className="panel status-panel">
