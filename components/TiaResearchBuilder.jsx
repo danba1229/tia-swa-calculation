@@ -893,13 +893,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div>
           <p className="eyebrow">TIA Research Builder</p>
           <h1>교통영향평가 조사 초안 작성 도구</h1>
-          <p className="hero-copy">
-            주소지를 중심으로 조사 범위를 설정하고, 가로망 조사, 사전조사지점 정리, 토지이용 및 용도지역 정리,
-            교통관련 계획 정리까지 한 화면에서 이어서 작성할 수 있습니다.
-          </p>
         </div>
         <div className="hero-actions">
-          <button type="button" onClick={renderScopeMap}>지도 범위 표시</button>
+          <button type="button" onClick={renderScopeMap}>조사 시작</button>
           <button type="button" className="secondary" onClick={fillSampleData}>샘플 채우기</button>
           <button type="button" className="ghost" onClick={resetAll}>전체 초기화</button>
         </div>

@@ -73,9 +73,9 @@ a {
 .hero-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: flex-start;
-  gap: 24px;
-  padding: 30px;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
 }
 
 .eyebrow {
@@ -128,7 +128,7 @@ h3 {
 
 .hero-actions {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
