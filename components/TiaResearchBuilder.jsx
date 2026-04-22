@@ -292,7 +292,7 @@ function mergeLoadedState(parsed) {
 export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [form, setForm] = useState(createBlankState);
   const [statusText, setStatusText] = useState("초기 화면을 준비하는 중입니다.");
-  const [mapStatus, setMapStatus] = useState('배포 환경에 카카오 지도 키를 설정한 뒤 "지도 범위 표시" 버튼을 눌러 주세요.');
+  const [mapStatus, setMapStatus] = useState('배포 환경에 카카오 지도 키를 설정한 뒤 "조사 시작" 버튼을 눌러 주세요.');
   const [topisCandidates, setTopisCandidates] = useState([]);
   const [topisStatus, setTopisStatus] = useState("");
   const [gyeonggiCandidates, setGyeonggiCandidates] = useState([]);
@@ -362,7 +362,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const autoSurveyPoints = buildAutoSurveyPoints(form.basics.siteAddress, topisCandidates, gyeonggiCandidates, surveyRecommendations);
   const selectedSurveyPoint = selectSurveyPoint(autoSurveyPoints);
   const roadNameSignature = form.roads.map((row) => safe(row.name)).filter(Boolean).join("|");
-  const scope = buildScopeData(form.basics);
   const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
   const roadSummary = buildRoadSummary(form);
@@ -626,7 +625,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }));
 
     if (field === "siteAddress" || field === "rectWidth" || field === "rectHeight") {
-      setMapStatus('입력값이 바뀌었습니다. "지도 범위 표시" 버튼을 눌러 다시 반영해 주세요.');
+      setMapStatus('입력값이 바뀌었습니다. "조사 시작" 버튼을 눌러 다시 반영해 주세요.');
     }
   }
 
@@ -875,7 +874,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       mapContainerRef.current.innerHTML = "";
       mapRuntimeRef.current.map = null;
     }
-    setMapStatus('배포 환경에 카카오 지도 키를 설정한 뒤 "지도 범위 표시" 버튼을 눌러 주세요.');
+    setMapStatus('배포 환경에 카카오 지도 키를 설정한 뒤 "조사 시작" 버튼을 눌러 주세요.');
     setStatusText("모든 입력값을 초기화했습니다.");
   }
 
@@ -896,8 +895,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       <section className="panel project-panel">
         <div className="panel-header">
           <div>
-            <p className="eyebrow">Project Basics</p>
-            <h2>기본 정보 및 조사 범위</h2>
+            <p className="eyebrow">조사 범위</p>
+            <h2>조사 범위</h2>
           </div>
           <p className="panel-copy">
             주소지를 중심점으로 하고, 입력한 가로·세로 길이만큼 직사각형 조사 범위를 설정합니다.
@@ -924,25 +923,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
         <p className="inline-note">카카오 지도 JavaScript 키는 사용자 입력이 아니라 배포 환경변수 `KAKAO_JS_KEY`에서 읽습니다.</p>
 
-        <div className="scope-card">
-          <div className="scope-copy">
-            <p className="eyebrow">Survey Scope</p>
-            <h3>직사각형 조사 영역</h3>
-            <p className="scope-summary">{scope.summary}</p>
-            <div className="scope-meta">
-              {scope.meta.map((item) => (
-                <span key={item} className="meta-chip">{item}</span>
-              ))}
-            </div>
+        <div className="map-card project-map-card">
+          <div className="map-header">
+            <h3>카카오 지도</h3>
+            <p className="chart-caption">{mapStatus}</p>
           </div>
-
-          <div className="map-card">
-            <div className="map-header">
-              <h3>카카오 지도</h3>
-              <p className="chart-caption">{mapStatus}</p>
-            </div>
-            <div ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
-          </div>
+          <div ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
         </div>
       </section>
 

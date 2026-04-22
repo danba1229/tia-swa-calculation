@@ -306,6 +306,10 @@ button.mini-button {
     rgba(255, 255, 255, 0.68);
 }
 
+.project-map-card {
+  margin-top: 18px;
+}
+
 .map-view {
   margin-top: 14px;
   min-height: 510px;
