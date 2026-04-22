@@ -17,17 +17,11 @@ const SURVEY_TYPES = [
 const CHART_COLORS = ["#0b4f8a", "#2f6fa5", "#5e90bb", "#8fb4d0", "#b7cbdd", "#d5dfeb", "#7f9c7a", "#c68f58", "#8a6b5c", "#b9a79d"];
 const MANUAL_RESEARCH_PLACEHOLDER = "수동 조사필요";
 
-function todayString() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function createBlankBasics() {
   return {
     siteAddress: "",
     rectWidth: "",
     rectHeight: "",
-    baseDate: todayString(),
-    projectNote: "",
     centerLat: "",
     centerLng: "",
   };
@@ -819,8 +813,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         siteAddress: "경기도 수원시 팔달구 효원로 241",
         rectWidth: "1200",
         rectHeight: "800",
-        baseDate: todayString(),
-        projectNote: "통계연보 및 도시계획 자료 기준",
         centerLat: "",
         centerLng: "",
       },
@@ -927,15 +919,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               <span>세로 범위(m)</span>
               <input type="number" min="1" step="1" value={form.basics.rectHeight} onChange={(event) => updateBasics("rectHeight", event.target.value)} placeholder="예: 800" />
             </label>
-            <label>
-              <span>기준일</span>
-              <input type="date" value={form.basics.baseDate} onChange={(event) => updateBasics("baseDate", event.target.value)} />
-            </label>
           </div>
-          <label className="full">
-            <span>작성 메모</span>
-            <input value={form.basics.projectNote} onChange={(event) => updateBasics("projectNote", event.target.value)} placeholder="예: 통계연보 2025년 기준" />
-          </label>
         </div>
 
         <p className="inline-note">카카오 지도 JavaScript 키는 사용자 입력이 아니라 배포 환경변수 `KAKAO_JS_KEY`에서 읽습니다.</p>
