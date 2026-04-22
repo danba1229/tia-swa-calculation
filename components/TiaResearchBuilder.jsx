@@ -783,6 +783,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       });
       mapRuntimeRef.current.infoWindow.open(mapRuntimeRef.current.map, mapRuntimeRef.current.marker);
       mapRuntimeRef.current.map.setBounds(bounds, 48, 48, 48, 48);
+      syncSurveyCandidateOverlays({
+        mapRuntimeRef,
+        address,
+        topisCandidates,
+        gyeonggiCandidates,
+        centerLat: lat,
+        centerLng: lng,
+        rectWidth: width,
+        rectHeight: height,
+      });
 
       setMapStatus("조사 영역에 걸친 도로를 자동 조사하는 중입니다.");
       const autoRoadRows = await collectRoadRowsInScope({
