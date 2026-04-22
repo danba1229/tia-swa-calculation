@@ -127,6 +127,10 @@ function pickCandidatePoints(points, address) {
     .slice(0, 18);
 }
 
+function pickAddressFallbackPoints(address) {
+  return pickCandidatePoints(POINTS, address).filter((point) => point.tokenScore > 0).slice(0, 18);
+}
+
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -135,6 +139,7 @@ export async function POST(request) {
 
     if (!address || !roadNames.length) {
       return NextResponse.json({
+        mode: "none",
         year: DATA_YEAR,
         matchedRoutes: [],
         points: [],
@@ -148,10 +153,13 @@ export async function POST(request) {
     const matchedRoutes = pickMatchedRoutes(roadNames, ROUTES);
 
     if (!matchedRoutes.length) {
+      const fallbackPoints = pickAddressFallbackPoints(address);
+
       return NextResponse.json({
+        mode: fallbackPoints.length ? "address-fallback" : "none",
         year: DATA_YEAR,
         matchedRoutes: [],
-        points: [],
+        points: fallbackPoints,
         source: SOURCE_NAME,
         sourceLink: GITS_SOURCE_LINK,
         downloadLink: GITS_SOURCE_LINK,
@@ -164,6 +172,7 @@ export async function POST(request) {
     const candidatePoints = pickCandidatePoints(matchedPoints, address);
 
     return NextResponse.json({
+      mode: "route-match",
       year: DATA_YEAR,
       matchedRoutes: matchedRoutes.map((route) => ({
         code: route.code,
@@ -183,6 +192,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         error: "Failed to build Gyeonggi survey recommendations.",
+        mode: "none",
         year: DATA_YEAR,
         matchedRoutes: [],
         points: [],

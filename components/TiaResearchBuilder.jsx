@@ -482,7 +482,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
         const payload = await response.json();
 
-        if (!payload.matchedRoutes?.length || !payload.points?.length) {
+        if (!payload.points?.length) {
           if (cancelled) return;
           setGyeonggiCandidates([]);
           setGyeonggiStatus("자동 조사된 도로와 일치하는 경기도 GITS 지점번호 후보를 찾지 못했습니다. 아래 공식 추천 출처를 함께 확인해 주세요.");
@@ -534,6 +534,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             const hasLocation = Number.isFinite(point.lat) && Number.isFinite(point.lng);
             return {
               ...point,
+              recommendationMode: payload.mode || "none",
               distanceKm: hasLocation ? distanceBetweenKm(originLat, originLng, point.lat, point.lng) : null,
               sortIndex: index,
             };
@@ -668,7 +669,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       pointCode: candidate.pointCode,
       pointName: `${candidate.routeName} / ${candidate.sectionName}`,
       jurisdiction: candidate.jurisdiction,
-      distanceKm: candidate.distanceKm.toFixed(1),
+      distanceKm: Number.isFinite(candidate.distanceKm) ? candidate.distanceKm.toFixed(1) : "",
       dataType: "time",
       note: `경기 GITS 근사 추천 / ${candidate.sectionName}`,
       source: "경기도교통정보시스템",
