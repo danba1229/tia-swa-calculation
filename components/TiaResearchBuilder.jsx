@@ -987,14 +987,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 1</p>
             <h2>가로망 조사</h2>
           </div>
+          <button type="button" className="secondary" onClick={() => addRow("roads", () => createRoadRow({ roadClass: "로" }))}>도로 추가</button>
         </div>
 
         <div className="tag-strip">
           {ROAD_CLASSES.map((roadClass) => <span key={roadClass} className="tag">{roadClass}</span>)}
-        </div>
-
-        <div className="toolbar">
-          <button type="button" className="secondary" onClick={() => addRow("roads", () => createRoadRow({ roadClass: "로" }))}>도로 추가</button>
         </div>
 
         <div className="table-wrap">
