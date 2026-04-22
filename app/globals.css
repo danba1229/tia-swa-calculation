@@ -314,6 +314,28 @@ button.mini-button {
   overflow: hidden;
 }
 
+.survey-point-overlay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 68px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid rgba(11, 79, 138, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 22px rgba(21, 47, 75, 0.18);
+}
+
+.survey-point-code {
+  color: #0b4f8a;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 .tag-strip {
   display: flex;
   gap: 10px;

@@ -306,6 +306,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     marker: null,
     rectangle: null,
     infoWindow: null,
+    surveyMarkers: [],
+    surveyOverlays: [],
   });
 
   useEffect(() => {
@@ -613,6 +615,27 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       cancelled = true;
     };
   }, [form.basics.siteAddress, form.basics.centerLat, form.basics.centerLng, kakaoJsKey, roadNameSignature]);
+
+  useEffect(() => {
+    syncSurveyCandidateOverlays({
+      mapRuntimeRef,
+      address: form.basics.siteAddress,
+      topisCandidates,
+      gyeonggiCandidates,
+      centerLat: form.basics.centerLat,
+      centerLng: form.basics.centerLng,
+      rectWidth: form.basics.rectWidth,
+      rectHeight: form.basics.rectHeight,
+    });
+  }, [
+    topisCandidates,
+    gyeonggiCandidates,
+    form.basics.siteAddress,
+    form.basics.centerLat,
+    form.basics.centerLng,
+    form.basics.rectWidth,
+    form.basics.rectHeight,
+  ]);
 
   function updateBasics(field, value) {
     setForm((current) => ({
@@ -1781,6 +1804,110 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
+function buildSurveyMapCandidates(address, topisCandidates, gyeonggiCandidates) {
+  const region = detectSurveyRegion(address);
+
+  if (region === "seoul") {
+    return topisCandidates
+      .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng))
+      .slice(0, 3)
+      .map((candidate, index) => ({
+        key: candidate.code || `seoul-${index}`,
+        code: candidate.code || `서울-${index + 1}`,
+        title: candidate.name || "서울 TOPIS 지점",
+        subtitle: candidate.address || "",
+        lat: candidate.lat,
+        lng: candidate.lng,
+      }));
+  }
+
+  if (region === "gyeonggi") {
+    return gyeonggiCandidates
+      .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng))
+      .slice(0, 3)
+      .map((candidate, index) => ({
+        key: candidate.pointCode || `gyeonggi-${index}`,
+        code: candidate.pointCode || `경기-${index + 1}`,
+        title: candidate.sectionName || candidate.routeName || "경기도 GITS 지점",
+        subtitle: candidate.routeName ? `${candidate.routeName}${candidate.sectionName ? ` / ${candidate.sectionName}` : ""}` : "",
+        lat: candidate.lat,
+        lng: candidate.lng,
+      }));
+  }
+
+  return [];
+}
+
+function clearSurveyCandidateOverlays(mapRuntimeRef) {
+  for (const marker of mapRuntimeRef.current.surveyMarkers || []) {
+    marker.setMap(null);
+  }
+  for (const overlay of mapRuntimeRef.current.surveyOverlays || []) {
+    overlay.setMap(null);
+  }
+  mapRuntimeRef.current.surveyMarkers = [];
+  mapRuntimeRef.current.surveyOverlays = [];
+}
+
+function syncSurveyCandidateOverlays({
+  mapRuntimeRef,
+  address,
+  topisCandidates,
+  gyeonggiCandidates,
+  centerLat,
+  centerLng,
+  rectWidth,
+  rectHeight,
+}) {
+  if (!mapRuntimeRef.current.map || !window.kakao?.maps) return;
+
+  clearSurveyCandidateOverlays(mapRuntimeRef);
+
+  const lat = Number(centerLat);
+  const lng = Number(centerLng);
+  const width = toNumber(rectWidth);
+  const height = toNumber(rectHeight);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || width <= 0 || height <= 0) return;
+
+  const candidates = buildSurveyMapCandidates(address, topisCandidates, gyeonggiCandidates);
+  if (!candidates.length) return;
+
+  const kakao = window.kakao;
+  const boundsData = computeRectangleBounds(lat, lng, width, height);
+  const displayBounds = new kakao.maps.LatLngBounds(
+    new kakao.maps.LatLng(boundsData.south, boundsData.west),
+    new kakao.maps.LatLng(boundsData.north, boundsData.east),
+  );
+
+  candidates.forEach((candidate) => {
+    const position = new kakao.maps.LatLng(candidate.lat, candidate.lng);
+    displayBounds.extend(position);
+
+    const marker = new kakao.maps.Marker({
+      position,
+      map: mapRuntimeRef.current.map,
+      title: `${candidate.code} ${candidate.title}`.trim(),
+    });
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position,
+      yAnchor: 1.8,
+      content: `
+        <div class="survey-point-overlay" title="${escapeHtml(`${candidate.code} ${candidate.title}`.trim())}">
+          <span class="survey-point-code">${escapeHtml(candidate.code)}</span>
+        </div>
+      `,
+    });
+
+    overlay.setMap(mapRuntimeRef.current.map);
+    mapRuntimeRef.current.surveyMarkers.push(marker);
+    mapRuntimeRef.current.surveyOverlays.push(overlay);
+  });
+
+  mapRuntimeRef.current.map.setBounds(displayBounds, 48, 48, 48, 48);
+}
+
 function clearMapOverlays(mapRuntimeRef) {
   if (mapRuntimeRef.current.marker) {
     mapRuntimeRef.current.marker.setMap(null);
@@ -1794,6 +1921,7 @@ function clearMapOverlays(mapRuntimeRef) {
     mapRuntimeRef.current.infoWindow.close();
     mapRuntimeRef.current.infoWindow = null;
   }
+  clearSurveyCandidateOverlays(mapRuntimeRef);
 }
 
 function loadKakaoSdk(key, mapRuntimeRef) {
