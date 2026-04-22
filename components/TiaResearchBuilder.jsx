@@ -1549,8 +1549,13 @@ function deriveJurisdictionName(address, fallback) {
 function detectSurveyRegion(address) {
   const normalized = normalizeAddress(address);
   if (!normalized) return "unknown";
-  if (/서울특별시|서울시| 서울 /.test(normalized)) return "seoul";
-  if (/경기도| 경기 /.test(normalized)) return "gyeonggi";
+
+  const compact = normalized.replace(/\s+/g, " ").trim();
+  const hasRegionToken = (tokens) =>
+    tokens.some((token) => compact.startsWith(`${token} `) || compact.includes(` ${token} `) || compact === token);
+
+  if (hasRegionToken(["서울특별시", "서울시", "서울"])) return "seoul";
+  if (hasRegionToken(["경기도", "경기"])) return "gyeonggi";
   return "other";
 }
 
