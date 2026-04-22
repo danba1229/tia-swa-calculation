@@ -881,9 +881,25 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   return (
     <main className={`app-shell${embedded ? " embedded-shell" : ""}`}>
       <section className="hero-card">
-        <div>
+        <div className="hero-main">
           <p className="eyebrow">TIA Research Builder</p>
           <h1>교통영향평가 조사 초안 작성 도구</h1>
+          <div className="hero-form">
+            <label className="full">
+              <span>주소지</span>
+              <input value={form.basics.siteAddress} onChange={(event) => updateBasics("siteAddress", event.target.value)} placeholder="예: 경기도 수원시 팔달구 효원로 241" />
+            </label>
+            <div className="inline-fields full">
+              <label>
+                <span>가로 범위(m)</span>
+                <input type="number" min="1" step="1" value={form.basics.rectWidth} onChange={(event) => updateBasics("rectWidth", event.target.value)} placeholder="예: 1200" />
+              </label>
+              <label>
+                <span>세로 범위(m)</span>
+                <input type="number" min="1" step="1" value={form.basics.rectHeight} onChange={(event) => updateBasics("rectHeight", event.target.value)} placeholder="예: 800" />
+              </label>
+            </div>
+          </div>
         </div>
         <div className="hero-actions">
           <button type="button" onClick={renderScopeMap}>조사 시작</button>
@@ -893,35 +909,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       </section>
 
       <section className="panel project-panel">
-        <div className="panel-header">
+        <div className="panel-header compact-panel-header">
           <div>
-            <p className="eyebrow">조사 범위</p>
-            <h2>조사 범위</h2>
-          </div>
-          <p className="panel-copy">
-            주소지를 중심점으로 하고, 입력한 가로·세로 길이만큼 직사각형 조사 범위를 설정합니다.
-            지도 키는 앱 환경변수로 관리합니다.
-          </p>
-        </div>
-
-        <div className="form-grid">
-          <label className="full">
-            <span>주소지</span>
-            <input value={form.basics.siteAddress} onChange={(event) => updateBasics("siteAddress", event.target.value)} placeholder="예: 경기도 수원시 팔달구 효원로 241" />
-          </label>
-          <div className="inline-fields full">
-            <label>
-              <span>가로 범위(m)</span>
-              <input type="number" min="1" step="1" value={form.basics.rectWidth} onChange={(event) => updateBasics("rectWidth", event.target.value)} placeholder="예: 1200" />
-            </label>
-            <label>
-              <span>세로 범위(m)</span>
-              <input type="number" min="1" step="1" value={form.basics.rectHeight} onChange={(event) => updateBasics("rectHeight", event.target.value)} placeholder="예: 800" />
-            </label>
+            <p className="eyebrow">지도 범위</p>
+            <h2>카카오 지도</h2>
           </div>
         </div>
-
-        <p className="inline-note">카카오 지도 JavaScript 키는 사용자 입력이 아니라 배포 환경변수 `KAKAO_JS_KEY`에서 읽습니다.</p>
 
         <div className="map-card project-map-card">
           <div className="map-header">

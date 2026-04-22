@@ -78,6 +78,17 @@ a {
   padding: 22px 24px;
 }
 
+.hero-main {
+  min-width: 0;
+}
+
+.hero-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: var(--accent-strong);
@@ -115,7 +126,6 @@ h3 {
 .chart-caption,
 .status-text,
 .priority-note,
-.scope-summary,
 .inline-note {
   color: var(--muted);
   line-height: 1.7;
@@ -145,6 +155,10 @@ h3 {
   background:
     linear-gradient(135deg, rgba(160, 79, 47, 0.08), transparent 45%),
     var(--surface);
+}
+
+.compact-panel-header {
+  margin-bottom: 12px;
 }
 
 .panel-header,
@@ -260,44 +274,11 @@ button.mini-button {
   border-radius: 12px;
 }
 
-.scope-card {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  gap: 18px;
-  margin-top: 18px;
-}
-
-.scope-copy,
 .map-card {
   border: 1px solid var(--line);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.58);
   padding: 20px;
-}
-
-.scope-copy {
-  background:
-    linear-gradient(160deg, rgba(11, 79, 138, 0.08), transparent 48%),
-    rgba(255, 255, 255, 0.58);
-}
-
-.scope-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.meta-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 38px;
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: var(--map-soft);
-  color: var(--map-accent);
-  font-size: 14px;
-  font-weight: 700;
 }
 
 .map-card {
@@ -307,7 +288,7 @@ button.mini-button {
 }
 
 .project-map-card {
-  margin-top: 18px;
+  margin-top: 0;
 }
 
 .map-view {
@@ -597,16 +578,24 @@ button.mini-button {
     padding: 34px;
   }
 
+  .hero-form {
+    grid-template-columns: minmax(320px, 1.35fr) minmax(280px, 0.65fr);
+    align-items: end;
+  }
+
+  .hero-form > .full:first-child {
+    grid-column: 1 / 2;
+  }
+
+  .hero-form > .inline-fields.full {
+    grid-column: 2 / 3;
+  }
+
   .panel,
   .subpanel,
   .chart-card,
   .priority-card {
     padding: 26px;
-  }
-
-  .scope-card {
-    grid-template-columns: minmax(360px, 0.82fr) minmax(0, 1.18fr);
-    gap: 22px;
   }
 
   .map-view {
@@ -628,7 +617,6 @@ button.mini-button {
 }
 
 @media (max-width: 980px) {
-  .scope-card,
   .subpanel-grid,
   .chart-grid,
   .chart-layout {
@@ -644,7 +632,6 @@ button.mini-button {
 
 @media (max-width: 900px) {
   .form-grid,
-  .scope-card,
   .subpanel-grid,
   .chart-grid,
   .chart-layout {
@@ -669,6 +656,10 @@ button.mini-button {
   .hero-actions {
     justify-content: flex-start;
     max-width: 100%;
+  }
+
+  .hero-form {
+    margin-top: 14px;
   }
 }
 
@@ -711,7 +702,6 @@ button.mini-button {
   .subpanel,
   .chart-card,
   .priority-card,
-  .scope-copy,
   .map-card {
     padding: 18px;
   }
