@@ -568,7 +568,7 @@ button.mini-button {
   align-items: center;
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 992px) {
   .app-shell {
     max-width: 1680px;
     display: grid;
