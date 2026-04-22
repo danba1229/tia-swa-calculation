@@ -166,6 +166,48 @@ function selectSurveyPoint(rows) {
     .sort(compareSurveyRows)[0] || null;
 }
 
+function buildAutoSurveyPoints(address, topisCandidates, gyeonggiCandidates, surveyRecommendations) {
+  const region = detectSurveyRegion(address);
+
+  if (region === "seoul" && topisCandidates.length) {
+    return topisCandidates.map((candidate) => createSurveyRow({
+      pointCode: candidate.code,
+      pointName: candidate.name,
+      jurisdiction: "서울특별시",
+      distanceKm: Number.isFinite(candidate.distanceKm) ? candidate.distanceKm.toFixed(1) : "",
+      dataType: "time",
+      note: `서울 TOPIS 최근접 후보 / ${candidate.address}`,
+      source: "서울시 TOPIS",
+      sourceLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily",
+      downloadLink: "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport",
+    }));
+  }
+
+  if (region === "gyeonggi" && gyeonggiCandidates.length) {
+    return gyeonggiCandidates.map((candidate) => createSurveyRow({
+      pointCode: candidate.pointCode,
+      pointName: `${candidate.routeName} / ${candidate.sectionName}`,
+      jurisdiction: candidate.jurisdiction,
+      distanceKm: Number.isFinite(candidate.distanceKm) ? candidate.distanceKm.toFixed(1) : "",
+      dataType: "time",
+      note: `경기 GITS 근사 추천 / ${candidate.sectionName}`,
+      source: "경기도교통정보시스템",
+      sourceLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
+      downloadLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/regularAverageTrafficVolumeByWeekday.do",
+    }));
+  }
+
+  const jurisdiction = deriveJurisdictionName(address, "");
+  return surveyRecommendations.map((recommendation) => createSurveyRow({
+    jurisdiction,
+    dataType: recommendation.dataType,
+    note: recommendation.description,
+    source: recommendation.source,
+    sourceLink: recommendation.sourceLink,
+    downloadLink: recommendation.downloadLink,
+  }));
+}
+
 function buildStats(entries) {
   const total = entries.reduce((sum, entry) => sum + entry.value, 0);
   const ratioMap = new Map();
@@ -322,14 +364,15 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   const landuseStats = computeLanduseStats(form);
   const zoningStats = computeZoningStats(form);
-  const selectedSurveyPoint = selectSurveyPoint(form.surveyPoints);
   const surveyRecommendations = buildSurveyRecommendations(form.basics.siteAddress);
+  const autoSurveyPoints = buildAutoSurveyPoints(form.basics.siteAddress, topisCandidates, gyeonggiCandidates, surveyRecommendations);
+  const selectedSurveyPoint = selectSurveyPoint(autoSurveyPoints);
   const roadNameSignature = form.roads.map((row) => safe(row.name)).filter(Boolean).join("|");
   const scope = buildScopeData(form.basics);
   const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
   const roadSummary = buildRoadSummary(form);
-  const surveySummary = buildSurveySummary(form, selectedSurveyPoint);
+  const surveySummary = buildSurveySummary({ ...form, surveyPoints: autoSurveyPoints }, selectedSurveyPoint);
   const landuseSummary = buildLanduseSummary(form, landuseStats, zoningStats);
   const planSummary = buildPlanSummary(form);
 
@@ -989,10 +1032,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <p className="panel-copy">1순위는 요일별 시간대별 교통량, 2순위는 요일별 평균 교통량이며 둘 다 없으면 미확보로 표시합니다.</p>
         </div>
 
-        <div className="toolbar">
-          <button type="button" className="secondary" onClick={() => addRow("surveyPoints", createSurveyRow)}>조사지점 추가</button>
-        </div>
-
         {detectSurveyRegion(form.basics.siteAddress) === "seoul" ? (
           <div className="survey-recommendation-block">
             <div className="output-header">
@@ -1012,7 +1051,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   <div className="survey-links">
                     <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily" target="_blank" rel="noreferrer">출처 보기</a>
                     <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport" target="_blank" rel="noreferrer">조사자료 PDF</a>
-                    <button type="button" className="secondary" onClick={() => addTopisCandidate(candidate)}>행에 추가</button>
                   </div>
                 </article>
               ))}
@@ -1048,7 +1086,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   <div className="survey-links">
                     <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do" target="_blank" rel="noreferrer">출처 보기</a>
                     <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/regularAverageTrafficVolumeByWeekday.do" target="_blank" rel="noreferrer">2순위 자료</a>
-                    <button type="button" className="secondary" onClick={() => addGyeonggiCandidate(candidate)}>행에 추가</button>
                   </div>
                 </article>
               ))}
@@ -1068,57 +1105,17 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               <div className="survey-links">
                 <a href={recommendation.sourceLink} target="_blank" rel="noreferrer">출처 보기</a>
                 <a href={recommendation.downloadLink} target="_blank" rel="noreferrer">다운로드/조회</a>
-                <button type="button" className="secondary" onClick={() => addSurveyRecommendation(recommendation)}>행에 추가</button>
               </div>
             </article>
           ))}
         </div>
 
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>지점번호</th>
-                <th>조사지점명</th>
-                <th>관할</th>
-                <th>거리(km)</th>
-                <th>자료 유형</th>
-                <th>설명</th>
-                <th>출처</th>
-                <th>출처 링크</th>
-                <th>다운로드/조회</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody>
-              {form.surveyPoints.map((row, index) => (
-                <tr key={`survey-${index}`}>
-                  <td><input className="table-input" value={row.pointCode || ""} onChange={(event) => updateListItem("surveyPoints", index, { pointCode: event.target.value })} placeholder="예: A-01" /></td>
-                  <td><input className="table-input" value={row.pointName} onChange={(event) => updateListItem("surveyPoints", index, { pointName: event.target.value })} placeholder="예: 수원시청사거리" /></td>
-                  <td><input className="table-input" value={row.jurisdiction} onChange={(event) => updateListItem("surveyPoints", index, { jurisdiction: event.target.value })} placeholder="예: 수원시" /></td>
-                  <td><input className="table-input" type="number" value={row.distanceKm} onChange={(event) => updateListItem("surveyPoints", index, { distanceKm: event.target.value })} placeholder="예: 1.8" /></td>
-                  <td>
-                    <select className="table-select" value={row.dataType} onChange={(event) => updateListItem("surveyPoints", index, { dataType: event.target.value })}>
-                      {SURVEY_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-                    </select>
-                  </td>
-                  <td><textarea className="table-textarea" value={row.note} onChange={(event) => updateListItem("surveyPoints", index, { note: event.target.value })} placeholder="예: 첨두시간 07~09시 확인 가능" /></td>
-                  <td><input className="table-input" value={row.source} onChange={(event) => updateListItem("surveyPoints", index, { source: event.target.value })} placeholder="예: 수시 교통량 조사자료" /></td>
-                  <td><input className="table-input" value={row.sourceLink || ""} onChange={(event) => updateListItem("surveyPoints", index, { sourceLink: event.target.value })} placeholder="공식 출처 링크" /></td>
-                  <td><input className="table-input" value={row.downloadLink || ""} onChange={(event) => updateListItem("surveyPoints", index, { downloadLink: event.target.value })} placeholder="다운로드 또는 조회 링크" /></td>
-                  <td className="actions"><button type="button" className="mini-button" onClick={() => removeRow("surveyPoints", index, createSurveyRow)}>삭제</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
         <div className="priority-card">
           <div>
             <p className="priority-label">최종 판정</p>
-            <p className="priority-result">{buildPriorityResult(selectedSurveyPoint, form.surveyPoints)}</p>
+            <p className="priority-result">{buildPriorityResult(selectedSurveyPoint, autoSurveyPoints)}</p>
           </div>
-          <p className="priority-note">{buildPriorityNote(selectedSurveyPoint, form.surveyPoints)}</p>
+          <p className="priority-note">{buildPriorityNote(selectedSurveyPoint, autoSurveyPoints)}</p>
         </div>
 
         <div className="output-block">
