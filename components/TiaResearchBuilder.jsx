@@ -508,15 +508,18 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         for (const point of payload.points) {
           const cached = stored[point.pointCode];
           if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lng)) {
-            enriched.push({ ...point, lat: cached.lat, lng: cached.lng });
+            enriched.push({ ...point, lat: cached.lat, lng: cached.lng, locationResolved: true });
             continue;
           }
 
           const location = await resolveGyeonggiPointLocation(point).catch(() => null);
-          if (!location) continue;
+          if (!location) {
+            enriched.push({ ...point, locationResolved: false });
+            continue;
+          }
 
           stored[point.pointCode] = location;
-          enriched.push({ ...point, lat: location.lat, lng: location.lng });
+          enriched.push({ ...point, lat: location.lat, lng: location.lng, locationResolved: true });
           updated = true;
         }
 
@@ -527,12 +530,28 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         const originLat = Number(origin.y);
         const originLng = Number(origin.x);
         const candidates = enriched
-          .map((point) => ({
-            ...point,
-            distanceKm: distanceBetweenKm(originLat, originLng, point.lat, point.lng),
-          }))
-          .filter((point) => Number.isFinite(point.distanceKm))
-          .sort((a, b) => a.distanceKm - b.distanceKm)
+          .map((point, index) => {
+            const hasLocation = Number.isFinite(point.lat) && Number.isFinite(point.lng);
+            return {
+              ...point,
+              distanceKm: hasLocation ? distanceBetweenKm(originLat, originLng, point.lat, point.lng) : null,
+              sortIndex: index,
+            };
+          })
+          .sort((a, b) => {
+            const resolvedDiff = Number(Boolean(b.locationResolved)) - Number(Boolean(a.locationResolved));
+            if (resolvedDiff !== 0) return resolvedDiff;
+
+            const aDistance = Number.isFinite(a.distanceKm) ? a.distanceKm : Number.MAX_SAFE_INTEGER;
+            const bDistance = Number.isFinite(b.distanceKm) ? b.distanceKm : Number.MAX_SAFE_INTEGER;
+            const distanceDiff = aDistance - bDistance;
+            if (distanceDiff !== 0) return distanceDiff;
+
+            const tokenDiff = toSortableNumber(b.tokenScore) - toSortableNumber(a.tokenScore);
+            if (tokenDiff !== 0) return tokenDiff;
+
+            return a.sortIndex - b.sortIndex;
+          })
           .slice(0, 3);
 
         if (cancelled) return;
@@ -540,8 +559,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         setGyeonggiCandidates(candidates);
         setGyeonggiStatus(
           candidates.length
-            ? `경기도 GITS ${payload.year || ""} 수시교통량 기준 최근접 지점번호 후보 ${candidates.length}개를 계산했습니다. 거리 계산은 행정구역과 구간 양끝(IC/JCT) 기준의 근사값입니다.`
-            : "경기도 GITS 지점번호 후보의 위치를 계산하지 못했습니다. 아래 공식 추천 출처를 함께 확인해 주세요.",
+            ? `경기도 GITS ${payload.year || ""} 수시교통량 기준 지점번호 후보 ${candidates.length}개를 준비했습니다. 거리 계산이 가능한 지점은 근사거리도 함께 표시합니다.`
+            : "경기도 GITS 지점번호 후보를 찾지 못했습니다. 아래 공식 추천 출처를 함께 확인해 주세요.",
         );
       } catch (error) {
         if (cancelled) return;
@@ -1015,8 +1034,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   </div>
                   <h3>{candidate.routeName}</h3>
                   <p>{candidate.jurisdiction} / {candidate.sectionName}</p>
-                  <p className="candidate-distance">사업지 기준 {formatDistance(candidate.distanceKm)}</p>
-                  <p className="candidate-note">거리 계산은 구간 양끝(IC/JCT) 기준의 근사값입니다.</p>
+                  <p className="candidate-distance">
+                    {Number.isFinite(candidate.distanceKm)
+                      ? `사업지 기준 ${formatDistance(candidate.distanceKm)}`
+                      : "거리 계산 전 단계 후보"}
+                  </p>
+                  <p className="candidate-note">
+                    {Number.isFinite(candidate.distanceKm)
+                      ? "거리 계산은 구간 양끝(IC/JCT) 기준의 근사값입니다."
+                      : "지점번호는 공식 GITS 자료 기준이며, 현재는 거리 계산 없이 후보로 먼저 표시합니다."}
+                  </p>
                   <div className="survey-links">
                     <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do" target="_blank" rel="noreferrer">출처 보기</a>
                     <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/regularAverageTrafficVolumeByWeekday.do" target="_blank" rel="noreferrer">2순위 자료</a>
