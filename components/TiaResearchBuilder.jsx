@@ -996,7 +996,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 1</p>
             <h2>가로망 조사</h2>
           </div>
-          <p className="panel-copy">조사 대상 도로는 고속도로, 대로, 로를 기본 구분으로 두고 직사각형 조사 영역에 걸친 도로를 자동 조사해 정리합니다.</p>
         </div>
 
         <div className="tag-strip">
@@ -1053,7 +1052,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 2</p>
             <h2>가까운 사전조사지점</h2>
           </div>
-          <p className="panel-copy">1순위는 요일별 시간대별 교통량, 2순위는 요일별 평균 교통량이며 둘 다 없으면 미확보로 표시합니다.</p>
         </div>
 
         {detectSurveyRegion(form.basics.siteAddress) === "seoul" ? (
@@ -1157,7 +1155,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 3</p>
             <h2>토지이용 현황 및 계획</h2>
           </div>
-          <p className="panel-copy">지목별 토지이용현황과 용도지역 현황의 면적과 구성비를 계산하고 원형 그래프로 정리합니다.</p>
         </div>
 
         <div className="form-grid compact-grid">
@@ -1292,7 +1289,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 4</p>
             <h2>교통관련 계획</h2>
           </div>
-          <p className="panel-copy">도시계획과 연계된 교통계획과 공사 중인 시설계획을 구분해서 정리합니다.</p>
         </div>
 
         <div className="subpanel-grid">
