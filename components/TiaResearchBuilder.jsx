@@ -550,7 +550,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             continue;
           }
 
-          const location = await resolveGyeonggiPointLocation(point).catch(() => null);
+          const location = await resolveGyeonggiPointLocation(point, form.basics.siteAddress).catch(() => null);
           if (!location) {
             enriched.push({ ...point, locationResolved: false });
             continue;
@@ -1984,8 +1984,33 @@ function tryKeywordSearch(keyword) {
   });
 }
 
-function buildGyeonggiPointQueries(point) {
+function buildAddressContextTokens(address) {
+  const genericTokens = new Set(["대한민국", "한국", "경기도", "경기", "서울특별시", "서울시", "서울"]);
+
+  return Array.from(
+    new Set(
+      safe(address)
+        .split(/\s+/)
+        .flatMap((part) => {
+          const cleaned = part.replace(/[^\p{L}\p{N}]/gu, "");
+          if (cleaned.length < 2 || /^\d+$/.test(cleaned) || genericTokens.has(cleaned)) {
+            return [];
+          }
+
+          const expanded = [cleaned];
+          if (/[시군구읍면동로길]$/.test(cleaned) && cleaned.length >= 3) {
+            expanded.push(cleaned.slice(0, -1));
+          }
+          return expanded;
+        })
+        .filter((token) => token.length >= 2 && !genericTokens.has(token)),
+    ),
+  );
+}
+
+function buildGyeonggiPointQueries(point, projectAddress = "") {
   const queries = [];
+  const contextTokens = buildAddressContextTokens(projectAddress).slice(0, 3);
   const sectionAnchors = safe(point.sectionName)
     .split(/\s*-\s*/)
     .map((part) => safe(part))
@@ -1995,6 +2020,10 @@ function buildGyeonggiPointQueries(point) {
     if (safe(point.jurisdiction) && point.jurisdiction !== "-") {
       queries.push(`${point.jurisdiction} ${anchor}`);
     }
+    contextTokens.forEach((token) => {
+      queries.push(`${token} ${anchor}`);
+      queries.push(`${token} ${point.routeName} ${anchor}`);
+    });
     queries.push(`${point.routeName} ${anchor}`);
     queries.push(anchor);
   });
@@ -2002,14 +2031,19 @@ function buildGyeonggiPointQueries(point) {
   if (safe(point.jurisdiction) && point.jurisdiction !== "-") {
     queries.push(`${point.jurisdiction} ${point.sectionName}`);
   }
+  contextTokens.forEach((token) => {
+    queries.push(`${token} ${point.sectionName}`);
+    queries.push(`${token} ${point.routeName}`);
+    queries.push(`${token} ${point.routeName} ${point.sectionName}`);
+  });
   queries.push(`${point.routeName} ${point.sectionName}`);
   queries.push(`${point.routeName} ${point.pointCode}`);
 
   return Array.from(new Set(queries.map((query) => safe(query)).filter(Boolean)));
 }
 
-async function resolveGyeonggiPointLocation(point) {
-  const anchorQueries = buildGyeonggiPointQueries(point);
+async function resolveGyeonggiPointLocation(point, projectAddress = "") {
+  const anchorQueries = buildGyeonggiPointQueries(point, projectAddress);
   const endpoints = safe(point.sectionName)
     .split(/\s*-\s*/)
     .map((part) => safe(part))

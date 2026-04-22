@@ -11,6 +11,7 @@ const GITS_FALLBACK_LINK =
 const ROUTES = Array.isArray(gitsPointData.routes) ? gitsPointData.routes : [];
 const POINTS = Array.isArray(gitsPointData.points) ? gitsPointData.points : [];
 const DATA_YEAR = gitsPointData.year || null;
+const GENERIC_ADDRESS_TOKENS = new Set(["대한민국", "한국", "경기도", "경기", "서울특별시", "서울시", "서울"]);
 const SOURCE_NAME = gitsPointData.source || "경기도교통정보시스템 수시교통량";
 
 function safe(value) {
@@ -35,8 +36,50 @@ function buildAddressTokens(address) {
     new Set(
       safe(address)
         .split(/\s+/)
-        .map((part) => part.replace(/[^\p{L}\p{N}]/gu, ""))
-        .filter((part) => part.length >= 2),
+        .flatMap((part) => {
+          const cleaned = part.replace(/[^\p{L}\p{N}]/gu, "");
+          if (cleaned.length < 2 || /^\d+$/.test(cleaned) || GENERIC_ADDRESS_TOKENS.has(cleaned)) {
+            return [];
+          }
+
+          const expanded = [cleaned];
+          if (/[시군구읍면동로길]$/.test(cleaned) && cleaned.length >= 3) {
+            expanded.push(cleaned.slice(0, -1));
+          }
+          return expanded;
+        })
+        .filter((part) => part.length >= 2 && !GENERIC_ADDRESS_TOKENS.has(part)),
+    ),
+  );
+}
+
+function normalizeLocationText(value) {
+  return safe(value).replace(/\s+/g, "");
+}
+
+function includesLocationToken(text, token) {
+  const normalizedText = normalizeLocationText(text);
+  const normalizedToken = normalizeLocationText(token);
+  return Boolean(normalizedToken) && normalizedText.includes(normalizedToken);
+}
+
+function localityTokens(address) {
+  return Array.from(
+    new Set(
+      safe(address)
+        .split(/\s+/)
+        .flatMap((part) => {
+          const cleaned = part.replace(/[^\p{L}\p{N}]/gu, "");
+          if (!/[시군구읍면동]$/.test(cleaned) || cleaned.length < 2 || GENERIC_ADDRESS_TOKENS.has(cleaned)) {
+            return [];
+          }
+
+          const expanded = [cleaned];
+          if (cleaned.length >= 3) {
+            expanded.push(cleaned.slice(0, -1));
+          }
+          return expanded;
+        }),
     ),
   );
 }
@@ -103,22 +146,31 @@ function pickMatchedRoutes(roadNames, routeCatalog) {
     .slice(0, 3);
 }
 
-function pickCandidatePoints(points, address) {
+function pickCandidatePoints(points, address, options = {}) {
+  const { requireLocality = false } = options;
   const tokens = buildAddressTokens(address);
+  const localities = localityTokens(address);
 
   return points
     .map((point) => {
       let tokenScore = 0;
       tokens.forEach((token) => {
-        if (point.jurisdiction.includes(token)) tokenScore += 3;
-        if (point.sectionName.includes(token)) tokenScore += 2;
+        if (includesLocationToken(point.jurisdiction, token)) tokenScore += 4;
+        if (includesLocationToken(point.sectionName, token)) tokenScore += 3;
+        if (includesLocationToken(point.routeName, token)) tokenScore += 1;
       });
+
+      const localityMatched = localities.some((token) => (
+        includesLocationToken(point.jurisdiction, token) || includesLocationToken(point.sectionName, token)
+      ));
 
       return {
         ...point,
         tokenScore,
+        localityMatched,
       };
     })
+    .filter((point) => (!requireLocality || point.localityMatched))
     .sort((a, b) => {
       const scoreDiff = b.tokenScore - a.tokenScore;
       if (scoreDiff !== 0) return scoreDiff;
@@ -128,6 +180,13 @@ function pickCandidatePoints(points, address) {
 }
 
 function pickAddressFallbackPoints(address) {
+  const localityFirst = pickCandidatePoints(POINTS, address, { requireLocality: true })
+    .filter((point) => point.tokenScore > 0);
+
+  if (localityFirst.length) {
+    return localityFirst.slice(0, 18);
+  }
+
   return pickCandidatePoints(POINTS, address).filter((point) => point.tokenScore > 0).slice(0, 18);
 }
 
