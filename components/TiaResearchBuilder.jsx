@@ -806,8 +806,50 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }
   }
 
-  function fillSampleData() {
-    setForm({
+  function applySampleState(nextForm, label) {
+    setForm(nextForm);
+    clearMapOverlays(mapRuntimeRef);
+    setMapStatus(`${label} 샘플 데이터를 채웠습니다. 필요하면 바로 조사 범위를 표시할 수 있습니다.`);
+    setStatusText(`${label} 샘플 데이터를 반영했습니다.`);
+  }
+
+  function fillSeoulSampleData() {
+    applySampleState({
+      basics: {
+        siteAddress: "서울특별시 중구 세종대로 110",
+        rectWidth: "1200",
+        rectHeight: "900",
+        centerLat: "",
+        centerLng: "",
+      },
+      roads: [
+        createRoadRow({ roadClass: "대로", name: "세종대로", startAddress: "", endAddress: "", source: "서울특별시 도로명주소" }),
+        createRoadRow({ roadClass: "대로", name: "을지로", startAddress: "", endAddress: "", source: "서울특별시 도로명주소" }),
+        createRoadRow({ roadClass: "로", name: "덕수궁길", startAddress: "", endAddress: "", source: "서울특별시 도로명주소" }),
+      ],
+      surveyPoints: [createSurveyRow()],
+      landuseSource: "서울특별시 통계연보 예시",
+      zoningSource: "서울특별시 도시계획 자료 예시",
+      landuseAreas: { 전: "0", 답: "0", 임야: "0", 대지: "540000", 도로: "210000", 하천: "12000", 학교: "6000", 공원: "38000", 기타: "94000" },
+      zoningRows: [
+        createZoningRow({ name: "주거지역", area: "120000" }),
+        createZoningRow({ name: "상업지역", area: "410000" }),
+        createZoningRow({ name: "공업지역", area: "0" }),
+        createZoningRow({ name: "녹지지역", area: "46000" }),
+        createZoningRow({ name: "관리지역", area: "0" }),
+        createZoningRow({ name: "기타", area: "108000" }),
+      ],
+      trafficPlans: [
+        createTrafficPlanRow({ title: "도심부 보행 및 대중교통 우선체계 검토", relatedPlan: "서울특별시 도시기본계획 예시", description: "세종대로 일대 차량 흐름과 보행 동선을 함께 검토하는 예시 계획입니다.", source: "서울시 계획자료 예시" }),
+      ],
+      constructionPlans: [
+        createConstructionPlanRow({ title: "도심권 교차로 운영개선 사업 예시", location: "세종대로 일원", status: "계획 검토", source: "서울시 보도자료 예시" }),
+      ],
+    }, "서울");
+  }
+
+  function fillGyeonggiSampleData() {
+    applySampleState({
       basics: {
         siteAddress: "경기도 수원시 팔달구 효원로 241",
         rectWidth: "1200",
@@ -859,10 +901,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       constructionPlans: [
         createConstructionPlanRow({ title: "경수대로 확장공사", location: "수원시청 일원", status: "공사중", source: "도로과 보도자료" }),
       ],
-    });
-    clearMapOverlays(mapRuntimeRef);
-    setMapStatus("샘플 데이터를 채웠습니다. 필요하면 바로 지도 범위를 표시할 수 있습니다.");
-    setStatusText("샘플 데이터를 반영했습니다.");
+    }, "경기도");
   }
 
   function resetAll() {
@@ -903,7 +942,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
         <div className="hero-actions">
           <button type="button" onClick={renderScopeMap}>조사 시작</button>
-          <button type="button" className="secondary" onClick={fillSampleData}>샘플 채우기</button>
+          <button type="button" className="secondary" onClick={fillSeoulSampleData}>서울 샘플</button>
+          <button type="button" className="secondary" onClick={fillGyeonggiSampleData}>경기도 샘플</button>
           <button type="button" className="ghost" onClick={resetAll}>전체 초기화</button>
         </div>
       </section>
