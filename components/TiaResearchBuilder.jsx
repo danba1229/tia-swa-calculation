@@ -1042,11 +1042,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             </div>
             <p className="priority-note">{topisStatus || "서울 TOPIS 지점 좌표를 준비하는 중입니다."}</p>
             <div className="survey-recommendations">
-              {topisCandidates.map((candidate) => (
+              {topisCandidates.map((candidate, index) => (
                 <article key={candidate.code} className="survey-recommendation-card">
                   <div className="survey-recommendation-top">
                     <span className="status-badge">{candidate.code}</span>
-                    <p className="eyebrow">{candidate.category}</p>
+                    <p className="eyebrow">{`${index + 1}순위 · ${candidate.category}`}</p>
                   </div>
                   <h3>{candidate.name}</h3>
                   <p>{candidate.address}</p>
@@ -1068,11 +1068,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             </div>
             <p className="priority-note">{gyeonggiStatus || "경기 GITS 지점번호 후보를 준비하고 있습니다."}</p>
             <div className="survey-recommendations">
-              {gyeonggiCandidates.map((candidate) => (
+              {gyeonggiCandidates.map((candidate, index) => (
                 <article key={`${candidate.routeCode}-${candidate.pointCode}`} className="survey-recommendation-card">
                   <div className="survey-recommendation-top">
                     <span className="status-badge">{candidate.pointCode}</span>
-                    <p className="eyebrow">{candidate.categoryLabel}</p>
+                    <p className="eyebrow">{`${index + 1}순위 · ${candidate.categoryLabel}`}</p>
                   </div>
                   <h3>{candidate.routeName}</h3>
                   <p>{candidate.jurisdiction} / {candidate.sectionName}</p>
