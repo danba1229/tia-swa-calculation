@@ -1100,7 +1100,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           {surveyRecommendations.map((recommendation) => (
             <article key={recommendation.key} className="survey-recommendation-card">
               <div className="survey-recommendation-top">
-                <span className="status-badge">{recommendation.priorityLabel}</span>
+                <span className="status-badge">{recommendation.source}</span>
                 <p className="eyebrow">공식 추천 출처</p>
               </div>
               <h3>{recommendation.title}</h3>
