@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const KOSIS_BASE = "https://kosis.kr/openapi";
+const KOSIS_BASE = "http://kosis.kr/openapi";
 const LANDUSE_TABLE = { orgId: "116", tblId: "DT_MLTM_2300" };
 const URBAN_ZONING_TABLE = { orgId: "460", tblId: "TX_315_2009_H1440" };
 const NON_URBAN_ZONING_TABLE = { orgId: "460", tblId: "TX_315_2009_H1443" };
@@ -71,7 +71,13 @@ function makeParams(params) {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(url, { cache: "no-store" });
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json,text/plain,*/*",
+      "User-Agent": "Mozilla/5.0 tia-support/1.0",
+    },
+  });
   if (!response.ok) {
     throw new Error(`KOSIS request failed: ${response.status}`);
   }
