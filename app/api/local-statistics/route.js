@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import localStatisticsCache from "../../local-statistics-cache.json";
 
 export const runtime = "nodejs";
 
@@ -60,6 +61,48 @@ function toNumber(value) {
 function toAreaString(value) {
   const rounded = Math.round(toNumber(value));
   return rounded > 0 ? String(rounded) : "0";
+}
+
+function matchesProvince(entry, province) {
+  if (!entry?.province) return true;
+  const provinceNames = new Set([province?.full, province?.short, ...(province?.aliases || [])].map(normalizeName));
+  return provinceNames.has(normalizeName(entry.province));
+}
+
+function matchesRegion(entry, target) {
+  const preferred = normalizeName(target?.preferred);
+  const matchNames = Array.isArray(entry?.matchNames) ? entry.matchNames : [entry?.region];
+  return matchNames.some((name) => normalizeName(name) === preferred);
+}
+
+function pickCachedEntry(collection, target, province) {
+  return (Array.isArray(collection) ? collection : []).find((entry) => (
+    matchesProvince(entry, province) && matchesRegion(entry, target)
+  )) || null;
+}
+
+function buildCachedLanduse(target, province) {
+  const entry = pickCachedEntry(localStatisticsCache.landuse, target, province);
+  if (!entry) return null;
+  return {
+    areas: entry.areas,
+    year: entry.year,
+    regionName: entry.region,
+    source: entry.source,
+    cached: true,
+  };
+}
+
+function buildCachedZoning(target, province) {
+  const entry = pickCachedEntry(localStatisticsCache.zoning, target, province);
+  if (!entry) return null;
+  return {
+    rows: entry.rows,
+    year: entry.year,
+    regionName: entry.region,
+    source: entry.source,
+    cached: true,
+  };
 }
 
 function makeParams(params) {
@@ -291,10 +334,6 @@ async function buildZoning(address, target, province) {
 
 export async function POST(request) {
   try {
-    if (!process.env.KOSIS_API_KEY) {
-      return NextResponse.json({ error: "KOSIS_API_KEY is not configured." }, { status: 500 });
-    }
-
     const body = await request.json();
     const address = safe(body.address);
     if (!address) {
@@ -311,10 +350,21 @@ export async function POST(request) {
       return NextResponse.json({ error: "주소에서 시군구 단위를 찾지 못했습니다." }, { status: 400 });
     }
 
-    const [landuse, zoning] = await Promise.all([
-      buildLanduse(address, target, province).catch((error) => ({ error: error.message })),
-      buildZoning(address, target, province).catch((error) => ({ error: error.message })),
-    ]);
+    const cachedLanduse = buildCachedLanduse(target, province);
+    const cachedZoning = buildCachedZoning(target, province);
+    const [liveLanduse, liveZoning] = process.env.KOSIS_API_KEY
+      ? await Promise.all([
+        buildLanduse(address, target, province).catch((error) => ({ error: error.message })),
+        buildZoning(address, target, province).catch((error) => ({ error: error.message })),
+      ])
+      : [null, null];
+
+    const landuse = liveLanduse?.areas ? liveLanduse : cachedLanduse;
+    const zoning = liveZoning?.rows ? liveZoning : cachedZoning;
+    const warnings = [
+      liveLanduse?.error && cachedLanduse ? "KOSIS 실시간 연결 실패로 내장 캐시의 지목별 토지이용 자료를 사용했습니다." : liveLanduse?.error,
+      liveZoning?.error && cachedZoning ? "KOSIS 실시간 연결 실패로 내장 캐시의 용도지역 자료를 사용했습니다." : liveZoning?.error,
+    ].filter(Boolean);
 
     return NextResponse.json({
       address,
@@ -322,7 +372,7 @@ export async function POST(request) {
       target: target.preferred,
       landuse: landuse?.areas ? landuse : null,
       zoning: zoning?.rows ? zoning : null,
-      warnings: [landuse?.error, zoning?.error].filter(Boolean),
+      warnings,
     });
   } catch (error) {
     return NextResponse.json({ error: error.message || "KOSIS 조회 중 오류가 발생했습니다." }, { status: 500 });
