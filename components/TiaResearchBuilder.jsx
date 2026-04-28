@@ -844,7 +844,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       surveyPoints: [createSurveyRow()],
       landuseSource: "서울특별시 통계연보 예시",
       zoningSource: "서울특별시 도시계획 자료 예시",
-      landuseAreas: { 전: "0", 답: "0", 임야: "0", 대지: "540000", 도로: "210000", 하천: "12000", 학교: "6000", 공원: "38000", 기타: "94000" },
+      landuseAreas: { 전: "0", 답: "0", 임야: "0", 대지: "540123", 도로: "210456", 하천: "12078", 학교: "6450", 공원: "38220", 기타: "94112" },
       zoningRows: [
         createZoningRow({ name: "주거지역", area: "120000" }),
         createZoningRow({ name: "상업지역", area: "410000" }),
@@ -900,7 +900,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ],
       landuseSource: "수원시 통계연보 2025",
       zoningSource: "수원시 도시계획 자료 2025",
-      landuseAreas: { 전: "220000", 답: "135000", 임야: "180000", 대지: "460000", 도로: "290000", 하천: "64000", 학교: "38000", 공원: "52000", 기타: "91000" },
+      landuseAreas: { 전: "220315", 답: "135482", 임야: "180764", 대지: "460219", 도로: "290638", 하천: "64275", 학교: "38410", 공원: "52796", 기타: "91854" },
       zoningRows: [
         createZoningRow({ name: "주거지역", area: "510000" }),
         createZoningRow({ name: "상업지역", area: "120000" }),
