@@ -634,14 +634,28 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   ]);
 
   function updateBasics(field, value) {
-    setForm((current) => ({
-      ...current,
-      basics: {
-        ...current.basics,
-        [field]: value,
-        ...(field === "siteAddress" || field === "rectWidth" || field === "rectHeight" ? { centerLat: "", centerLng: "" } : {}),
-      },
-    }));
+    setForm((current) => {
+      const next = {
+        ...current,
+        basics: {
+          ...current.basics,
+          [field]: value,
+          ...(field === "siteAddress" || field === "rectWidth" || field === "rectHeight" ? { centerLat: "", centerLng: "" } : {}),
+        },
+      };
+
+      if (field === "siteAddress") {
+        const sourcePatch = buildLocalStatisticsSources(value);
+        if (sourcePatch.landuseSource && shouldUpdateLocalStatisticsSource(current.landuseSource)) {
+          next.landuseSource = sourcePatch.landuseSource;
+        }
+        if (sourcePatch.zoningSource && shouldUpdateLocalStatisticsSource(current.zoningSource)) {
+          next.zoningSource = sourcePatch.zoningSource;
+        }
+      }
+
+      return next;
+    });
 
     if (field === "siteAddress" || field === "rectWidth" || field === "rectHeight") {
       setMapStatus('입력값이 바뀌었습니다. "조사 시작" 버튼을 눌러 다시 반영해 주세요.');
@@ -1549,6 +1563,29 @@ function deriveLocalStatisticsUnit(address, fallback) {
   }
 
   return deriveCityName(address, fallback);
+}
+
+function buildLocalStatisticsSources(address) {
+  const sourceBase = deriveLocalStatisticsUnit(address, "");
+  if (!sourceBase) {
+    return { landuseSource: "", zoningSource: "" };
+  }
+
+  return {
+    landuseSource: `${sourceBase} 통계연보 2025`,
+    zoningSource: `${sourceBase} 통계연보 2025`,
+  };
+}
+
+function shouldUpdateLocalStatisticsSource(value) {
+  const source = safe(value);
+  return (
+    !source ||
+    /통계연보 예시$/.test(source) ||
+    /도시계획 자료 예시$/.test(source) ||
+    /^[^\s]+ 통계연보 \d{4}$/.test(source) ||
+    /^[^\s]+ 도시계획 자료 \d{4}$/.test(source)
+  );
 }
 
 function detectSurveyRegion(address) {
