@@ -71,13 +71,21 @@ function makeParams(params) {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(url, {
-    cache: "no-store",
-    headers: {
-      Accept: "application/json,text/plain,*/*",
-      "User-Agent": "Mozilla/5.0 tia-support/1.0",
-    },
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json,text/plain,*/*",
+        "User-Agent": "Mozilla/5.0 tia-support/1.0",
+      },
+    });
+  } catch (error) {
+    const cause = error.cause;
+    const detail = [error.message, cause?.code, cause?.message].filter(Boolean).join(" / ");
+    throw new Error(`KOSIS network failed: ${detail}`);
+  }
+
   if (!response.ok) {
     throw new Error(`KOSIS request failed: ${response.status}`);
   }
