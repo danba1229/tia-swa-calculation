@@ -1046,7 +1046,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 <article key={candidate.code} className="survey-recommendation-card">
                   <div className="survey-recommendation-top">
                     <span className="status-badge">{candidate.code}</span>
-                    <p className="eyebrow">{`${index + 1}순위 · ${candidate.category}`}</p>
+                    <p className="eyebrow survey-rank">{`${index + 1}순위 · ${candidate.category}`}</p>
                   </div>
                   <h3>{candidate.name}</h3>
                   <p>{candidate.address}</p>
@@ -1072,7 +1072,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 <article key={`${candidate.routeCode}-${candidate.pointCode}`} className="survey-recommendation-card">
                   <div className="survey-recommendation-top">
                     <span className="status-badge">{candidate.pointCode}</span>
-                    <p className="eyebrow">{`${index + 1}순위 · ${candidate.categoryLabel}`}</p>
+                    <p className="eyebrow survey-rank">{`${index + 1}순위 · ${candidate.categoryLabel}`}</p>
                   </div>
                   <h3>{candidate.routeName}</h3>
                   <p>{candidate.jurisdiction} / {candidate.sectionName}</p>

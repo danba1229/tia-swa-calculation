@@ -485,6 +485,21 @@ button.mini-button {
   gap: 10px;
 }
 
+.survey-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(176, 95, 48, 0.14);
+  color: var(--accent-strong);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 0 0 1px rgba(176, 95, 48, 0.14);
+}
+
 .survey-links {
   display: flex;
   flex-wrap: wrap;
