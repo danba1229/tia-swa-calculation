@@ -398,6 +398,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const roadNameSignature = form.roads.map((row) => safe(row.name)).filter(Boolean).join("|");
   const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
+  const annualReportLink = buildStatisticsAnnualReportLink(form.basics.siteAddress);
 
   useEffect(() => {
     let cancelled = false;
@@ -1238,6 +1239,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 3</p>
             <h2>토지이용 현황 및 계획</h2>
           </div>
+          <a className="button-link secondary" href={annualReportLink} target="_blank" rel="noreferrer">
+            통계연보 파일 찾기
+          </a>
         </div>
 
         <div className="form-grid compact-grid">
@@ -1670,6 +1674,29 @@ function buildLocalStatisticsKey(address) {
   const region = detectSurveyRegion(address);
   const sourceUnit = deriveLocalStatisticsUnit(address, "");
   return region && sourceUnit ? `${region}:${sourceUnit}` : "";
+}
+
+function deriveStatisticsAnnualReportUnit(address) {
+  const text = safe(address);
+  const parts = text.split(/\s+/).map((part) => part.replace(/[^\p{L}\p{N}]/gu, "")).filter(Boolean);
+
+  if (/서울/.test(text)) {
+    return parts.find((part) => /구$/.test(part)) || deriveLocalStatisticsUnit(address, "");
+  }
+
+  if (/경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주/.test(text)) {
+    return parts.find((part) => /(시|군)$/.test(part) && !/도$/.test(part)) || deriveLocalStatisticsUnit(address, "");
+  }
+
+  return deriveLocalStatisticsUnit(address, "");
+}
+
+function buildStatisticsAnnualReportLink(address) {
+  const unit = deriveStatisticsAnnualReportUnit(address);
+  const query = unit
+    ? `${unit} 통계연보 PDF 지목별 토지현황 용도지역`
+    : "통계연보 PDF 지목별 토지현황 용도지역";
+  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 }
 
 function findLocalStatisticsData(address) {
