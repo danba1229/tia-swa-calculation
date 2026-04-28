@@ -828,9 +828,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   function fillSeoulSampleData() {
+    const siteAddress = "서울특별시 중구 세종대로 110";
+    const sourceBase = deriveLocalStatisticsUnit(siteAddress, "중구");
+
     applySampleState({
       basics: {
-        siteAddress: "서울특별시 중구 세종대로 110",
+        siteAddress,
         rectWidth: "1200",
         rectHeight: "900",
         centerLat: "",
@@ -842,8 +845,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         createRoadRow({ roadClass: "로", name: "덕수궁길", startAddress: "", endAddress: "", source: "서울특별시 도로명주소" }),
       ],
       surveyPoints: [createSurveyRow()],
-      landuseSource: "서울특별시 통계연보 예시",
-      zoningSource: "서울특별시 도시계획 자료 예시",
+      landuseSource: `${sourceBase} 통계연보 2025`,
+      zoningSource: `${sourceBase} 통계연보 2025`,
       landuseAreas: { 전: "0", 답: "0", 임야: "0", 대지: "540123", 도로: "210456", 하천: "12078", 학교: "6450", 공원: "38220", 기타: "94112" },
       zoningRows: [
         createZoningRow({ name: "주거지역", area: "120000" }),
@@ -863,9 +866,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   function fillGyeonggiSampleData() {
+    const siteAddress = "경기도 수원시 팔달구 효원로 241";
+    const sourceBase = deriveLocalStatisticsUnit(siteAddress, "수원시");
+
     applySampleState({
       basics: {
-        siteAddress: "경기도 수원시 팔달구 효원로 241",
+        siteAddress,
         rectWidth: "1200",
         rectHeight: "800",
         centerLat: "",
@@ -898,8 +904,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           downloadLink: "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=Y8Y8YVLJQYM4K5GJ56GV32744671&infSeq=2",
         }),
       ],
-      landuseSource: "수원시 통계연보 2025",
-      zoningSource: "수원시 도시계획 자료 2025",
+      landuseSource: `${sourceBase} 통계연보 2025`,
+      zoningSource: `${sourceBase} 통계연보 2025`,
       landuseAreas: { 전: "220315", 답: "135482", 임야: "180764", 대지: "460219", 도로: "290638", 하천: "64275", 학교: "38410", 공원: "52796", 기타: "91854" },
       zoningRows: [
         createZoningRow({ name: "주거지역", area: "510000" }),
@@ -1134,11 +1140,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div className="form-grid compact-grid">
           <label>
             <span>토지이용 출처</span>
-            <input value={form.landuseSource} onChange={(event) => setForm((current) => ({ ...current, landuseSource: event.target.value }))} placeholder="예: 수원시 통계연보 2025" />
+            <input value={form.landuseSource} onChange={(event) => setForm((current) => ({ ...current, landuseSource: event.target.value }))} placeholder="예: 중구 통계연보 2025 / 수원시 통계연보 2025" />
           </label>
           <label>
             <span>용도지역 출처</span>
-            <input value={form.zoningSource} onChange={(event) => setForm((current) => ({ ...current, zoningSource: event.target.value }))} placeholder="예: 수원시 도시계획 자료 2025" />
+            <input value={form.zoningSource} onChange={(event) => setForm((current) => ({ ...current, zoningSource: event.target.value }))} placeholder="예: 중구 통계연보 2025 / 수원시 통계연보 2025" />
           </label>
         </div>
 
@@ -1525,6 +1531,24 @@ function deriveJurisdictionName(address, fallback) {
   }
 
   return adminParts.length ? adminParts.join(" ") : deriveCityName(address, fallback);
+}
+
+function deriveLocalStatisticsUnit(address, fallback) {
+  const normalized = normalizeAddress(address);
+  if (!normalized) return fallback;
+
+  const region = detectSurveyRegion(address);
+  const parts = normalized.split(" ").filter(Boolean);
+
+  if (region === "seoul") {
+    return parts.find((part) => /[구군]$/.test(part) && !/(특별시|광역시)$/.test(part)) || fallback;
+  }
+
+  if (region === "gyeonggi") {
+    return parts.find((part) => /[시군]$/.test(part) && part !== "경기도") || fallback;
+  }
+
+  return deriveCityName(address, fallback);
 }
 
 function detectSurveyRegion(address) {
