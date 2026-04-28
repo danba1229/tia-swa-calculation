@@ -666,7 +666,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   ]);
 
   function updateBasics(field, value) {
-    const statisticsData = field === "siteAddress" ? findLocalStatisticsData(value) : null;
+    const statisticsData = null;
 
     setForm((current) => {
       const next = {
@@ -680,20 +680,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       if (field === "siteAddress") {
         const sourcePatch = buildLocalStatisticsSources(value);
-        if (statisticsData) {
-          applyLocalStatisticsData(next, statisticsData);
-        } else {
-          if (sourcePatch.landuseSource && shouldUpdateLocalStatisticsSource(current.landuseSource)) {
-            next.landuseSource = sourcePatch.landuseSource;
-          }
-          if (sourcePatch.zoningSource && shouldUpdateLocalStatisticsSource(current.zoningSource)) {
-            next.zoningSource = sourcePatch.zoningSource;
-          }
-          if (current.statisticsDataKey) {
-            next.statisticsDataKey = "";
-            next.landuseAreas = createBlankLanduseAreas();
-            next.zoningRows = ZONING_DEFAULTS.map((name) => createZoningRow({ name }));
-          }
+        if (sourcePatch.landuseSource && shouldUpdateLocalStatisticsSource(current.landuseSource)) {
+          next.landuseSource = sourcePatch.landuseSource;
+        }
+        if (sourcePatch.zoningSource && shouldUpdateLocalStatisticsSource(current.zoningSource)) {
+          next.zoningSource = sourcePatch.zoningSource;
+        }
+        if (current.statisticsDataKey) {
+          next.statisticsDataKey = "";
+          next.landuseAreas = createBlankLanduseAreas();
+          next.zoningRows = ZONING_DEFAULTS.map((name) => createZoningRow({ name }));
         }
       }
 
@@ -711,7 +707,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       );
     }
   }
-
   function updateListItem(listName, index, patch) {
     setForm((current) => ({
       ...current,
@@ -788,6 +783,47 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       downloadLink: "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do",
     }));
     setStatusText(`${candidate.pointCode} 지점번호 후보를 사전조사지점 표에 추가했습니다.`);
+  }
+
+  async function fetchLocalStatistics(address) {
+    try {
+      const response = await fetch("/api/local-statistics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "KOSIS 자료를 조회하지 못했습니다.");
+      }
+
+      const patch = {};
+      const messages = [];
+
+      if (payload.landuse?.areas) {
+        patch.landuseAreas = { ...createBlankLanduseAreas(), ...payload.landuse.areas };
+        patch.landuseSource = payload.landuse.source || "";
+        patch.statisticsDataKey = `kosis-landuse:${payload.landuse.regionName || payload.target}:${payload.landuse.year || ""}`;
+        messages.push(`지목별 토지이용은 ${payload.landuse.regionName || payload.target} 기준 KOSIS ${payload.landuse.year || "최신"}년 자료로 채웠습니다.`);
+      }
+
+      if (Array.isArray(payload.zoning?.rows) && payload.zoning.rows.length) {
+        patch.zoningRows = payload.zoning.rows.map((row) => createZoningRow(row));
+        patch.zoningSource = payload.zoning.source || "";
+        patch.statisticsDataKey = patch.statisticsDataKey || `kosis-zoning:${payload.zoning.regionName || payload.target}:${payload.zoning.year || ""}`;
+        messages.push(`용도지역은 ${payload.zoning.regionName || payload.target} 기준 KOSIS ${payload.zoning.year || "최신"}년 자료로 채웠습니다.`);
+      }
+
+      if (!messages.length) {
+        return { patch: {}, message: "KOSIS에서 자동 채움 가능한 토지이용/용도지역 자료를 찾지 못했습니다." };
+      }
+
+      return { patch, message: messages.join(" ") };
+    } catch (error) {
+      console.error(error);
+      return { patch: {}, message: "KOSIS 자동 조회에 실패했습니다. 인증키 또는 KOSIS 응답 상태를 확인해 주세요." };
+    }
   }
 
   async function renderScopeMap() {
@@ -872,6 +908,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         width,
         height,
       });
+      const statisticsResult = await fetchLocalStatistics(address);
 
       setForm((current) => ({
         ...current,
@@ -881,9 +918,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           centerLng: lng.toFixed(6),
         },
         roads: autoRoadRows.length ? autoRoadRows : [createRoadRow({ roadClass: "로" })],
+        ...statisticsResult.patch,
       }));
       setMapStatus(`"${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위를 지도에 표시했고, 범위에 걸친 도로 ${autoRoadRows.length}건을 자동 조사했습니다.`);
-      setStatusText(autoRoadRows.length ? "지도 범위와 가로망 자동조사를 갱신했습니다." : "지도 범위는 표시했지만 범위에 걸친 도로를 찾지 못했습니다.");
+      setStatusText(`${autoRoadRows.length ? "지도 범위와 가로망 자동조사를 갱신했습니다." : "지도 범위는 표시했지만 범위에 걸친 도로를 찾지 못했습니다."} ${statisticsResult.message}`);
     } catch (error) {
       console.error(error);
       setMapStatus(error.message || "지도 표시 중 오류가 발생했습니다.");
