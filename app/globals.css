@@ -604,9 +604,9 @@ button.mini-button {
 
 @media (min-width: 992px) {
   .app-shell {
-    max-width: 1680px;
+    max-width: 1360px;
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 20px;
     align-items: start;
     padding: 28px 22px 72px;
