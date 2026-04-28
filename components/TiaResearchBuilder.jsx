@@ -69,12 +69,44 @@ function createBlankState() {
     surveyPoints: [createSurveyRow()],
     landuseSource: "",
     zoningSource: "",
+    statisticsDataKey: "",
     landuseAreas: createBlankLanduseAreas(),
     zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
     trafficPlans: [createTrafficPlanRow()],
     constructionPlans: [createConstructionPlanRow()],
   };
 }
+
+const LOCAL_STATISTICS_DATA = {
+  "seoul:중구": {
+    label: "서울특별시 중구",
+    sourceUnit: "중구",
+    year: "2025",
+    landuseAreas: { 전: "0", 답: "0", 임야: "0", 대지: "540123", 도로: "210456", 하천: "12078", 학교: "6450", 공원: "38220", 기타: "94112" },
+    zoningRows: [
+      { name: "주거지역", area: "120000" },
+      { name: "상업지역", area: "410000" },
+      { name: "공업지역", area: "0" },
+      { name: "녹지지역", area: "46000" },
+      { name: "관리지역", area: "0" },
+      { name: "기타", area: "108000" },
+    ],
+  },
+  "gyeonggi:수원시": {
+    label: "경기도 수원시",
+    sourceUnit: "수원시",
+    year: "2025",
+    landuseAreas: { 전: "220315", 답: "135482", 임야: "180764", 대지: "460219", 도로: "290638", 하천: "64275", 학교: "38410", 공원: "52796", 기타: "91854" },
+    zoningRows: [
+      { name: "주거지역", area: "510000" },
+      { name: "상업지역", area: "120000" },
+      { name: "공업지역", area: "90000" },
+      { name: "녹지지역", area: "310000" },
+      { name: "관리지역", area: "70000" },
+      { name: "기타", area: "110000" },
+    ],
+  },
+};
 
 function safe(value) {
   return String(value || "").trim();
@@ -634,6 +666,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   ]);
 
   function updateBasics(field, value) {
+    const statisticsData = field === "siteAddress" ? findLocalStatisticsData(value) : null;
+
     setForm((current) => {
       const next = {
         ...current,
@@ -646,11 +680,20 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       if (field === "siteAddress") {
         const sourcePatch = buildLocalStatisticsSources(value);
-        if (sourcePatch.landuseSource && shouldUpdateLocalStatisticsSource(current.landuseSource)) {
-          next.landuseSource = sourcePatch.landuseSource;
-        }
-        if (sourcePatch.zoningSource && shouldUpdateLocalStatisticsSource(current.zoningSource)) {
-          next.zoningSource = sourcePatch.zoningSource;
+        if (statisticsData) {
+          applyLocalStatisticsData(next, statisticsData);
+        } else {
+          if (sourcePatch.landuseSource && shouldUpdateLocalStatisticsSource(current.landuseSource)) {
+            next.landuseSource = sourcePatch.landuseSource;
+          }
+          if (sourcePatch.zoningSource && shouldUpdateLocalStatisticsSource(current.zoningSource)) {
+            next.zoningSource = sourcePatch.zoningSource;
+          }
+          if (current.statisticsDataKey) {
+            next.statisticsDataKey = "";
+            next.landuseAreas = createBlankLanduseAreas();
+            next.zoningRows = ZONING_DEFAULTS.map((name) => createZoningRow({ name }));
+          }
         }
       }
 
@@ -660,11 +703,19 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     if (field === "siteAddress" || field === "rectWidth" || field === "rectHeight") {
       setMapStatus('입력값이 바뀌었습니다. "조사 시작" 버튼을 눌러 다시 반영해 주세요.');
     }
+    if (field === "siteAddress") {
+      setStatusText(
+        statisticsData
+          ? `${statisticsData.label} 기준 지목별 토지이용현황과 용도지역 현황을 자동 채움했습니다.`
+          : "아직 자동 채움 가능한 토지이용·용도지역 데이터가 없는 관할입니다. 필요한 값은 수동 조사로 입력해 주세요.",
+      );
+    }
   }
 
   function updateListItem(listName, index, patch) {
     setForm((current) => ({
       ...current,
+      ...(listName === "zoningRows" ? { statisticsDataKey: "" } : {}),
       [listName]: current[listName].map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
     }));
   }
@@ -672,6 +723,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function addRow(listName, factory) {
     setForm((current) => ({
       ...current,
+      ...(listName === "zoningRows" ? { statisticsDataKey: "" } : {}),
       [listName]: [...current[listName], factory()],
     }));
   }
@@ -679,13 +731,18 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function removeRow(listName, index, factory) {
     setForm((current) => {
       const next = current[listName].filter((_, itemIndex) => itemIndex !== index);
-      return { ...current, [listName]: next.length ? next : [factory()] };
+      return {
+        ...current,
+        ...(listName === "zoningRows" ? { statisticsDataKey: "" } : {}),
+        [listName]: next.length ? next : [factory()],
+      };
     });
   }
 
   function updateLanduseArea(category, value) {
     setForm((current) => ({
       ...current,
+      statisticsDataKey: "",
       landuseAreas: { ...current.landuseAreas, [category]: value },
     }));
   }
@@ -843,9 +900,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function fillSeoulSampleData() {
     const siteAddress = "서울특별시 중구 세종대로 110";
-    const sourceBase = deriveLocalStatisticsUnit(siteAddress, "중구");
+    const statisticsData = findLocalStatisticsData(siteAddress);
 
-    applySampleState({
+    const nextForm = {
       basics: {
         siteAddress,
         rectWidth: "1200",
@@ -859,31 +916,28 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         createRoadRow({ roadClass: "로", name: "덕수궁길", startAddress: "", endAddress: "", source: "서울특별시 도로명주소" }),
       ],
       surveyPoints: [createSurveyRow()],
-      landuseSource: `${sourceBase} 통계연보 2025`,
-      zoningSource: `${sourceBase} 통계연보 2025`,
-      landuseAreas: { 전: "0", 답: "0", 임야: "0", 대지: "540123", 도로: "210456", 하천: "12078", 학교: "6450", 공원: "38220", 기타: "94112" },
-      zoningRows: [
-        createZoningRow({ name: "주거지역", area: "120000" }),
-        createZoningRow({ name: "상업지역", area: "410000" }),
-        createZoningRow({ name: "공업지역", area: "0" }),
-        createZoningRow({ name: "녹지지역", area: "46000" }),
-        createZoningRow({ name: "관리지역", area: "0" }),
-        createZoningRow({ name: "기타", area: "108000" }),
-      ],
+      landuseSource: "",
+      zoningSource: "",
+      statisticsDataKey: "",
+      landuseAreas: createBlankLanduseAreas(),
+      zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
       trafficPlans: [
         createTrafficPlanRow({ title: "도심부 보행 및 대중교통 우선체계 검토", relatedPlan: "서울특별시 도시기본계획 예시", description: "세종대로 일대 차량 흐름과 보행 동선을 함께 검토하는 예시 계획입니다.", source: "서울시 계획자료 예시" }),
       ],
       constructionPlans: [
         createConstructionPlanRow({ title: "도심권 교차로 운영개선 사업 예시", location: "세종대로 일원", status: "계획 검토", source: "서울시 보도자료 예시" }),
       ],
-    }, "서울");
+    };
+
+    if (statisticsData) applyLocalStatisticsData(nextForm, statisticsData);
+    applySampleState(nextForm, "서울");
   }
 
   function fillGyeonggiSampleData() {
     const siteAddress = "경기도 수원시 팔달구 효원로 241";
-    const sourceBase = deriveLocalStatisticsUnit(siteAddress, "수원시");
+    const statisticsData = findLocalStatisticsData(siteAddress);
 
-    applySampleState({
+    const nextForm = {
       basics: {
         siteAddress,
         rectWidth: "1200",
@@ -918,24 +972,21 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           downloadLink: "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=Y8Y8YVLJQYM4K5GJ56GV32744671&infSeq=2",
         }),
       ],
-      landuseSource: `${sourceBase} 통계연보 2025`,
-      zoningSource: `${sourceBase} 통계연보 2025`,
-      landuseAreas: { 전: "220315", 답: "135482", 임야: "180764", 대지: "460219", 도로: "290638", 하천: "64275", 학교: "38410", 공원: "52796", 기타: "91854" },
-      zoningRows: [
-        createZoningRow({ name: "주거지역", area: "510000" }),
-        createZoningRow({ name: "상업지역", area: "120000" }),
-        createZoningRow({ name: "공업지역", area: "90000" }),
-        createZoningRow({ name: "녹지지역", area: "310000" }),
-        createZoningRow({ name: "관리지역", area: "70000" }),
-        createZoningRow({ name: "기타", area: "110000" }),
-      ],
+      landuseSource: "",
+      zoningSource: "",
+      statisticsDataKey: "",
+      landuseAreas: createBlankLanduseAreas(),
+      zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
       trafficPlans: [
         createTrafficPlanRow({ title: "시내부 간선도로 체계 정비", relatedPlan: "2030 수원시 도시기본계획", description: "주요 간선축 교차로 운영 개선 및 연결성 강화", source: "수원시 도시계획 보고서" }),
       ],
       constructionPlans: [
         createConstructionPlanRow({ title: "경수대로 확장공사", location: "수원시청 일원", status: "공사중", source: "도로과 보도자료" }),
       ],
-    }, "경기도");
+    };
+
+    if (statisticsData) applyLocalStatisticsData(nextForm, statisticsData);
+    applySampleState(nextForm, "경기도");
   }
 
   function resetAll() {
@@ -1575,6 +1626,27 @@ function buildLocalStatisticsSources(address) {
     landuseSource: `${sourceBase} 통계연보 2025`,
     zoningSource: `${sourceBase} 통계연보 2025`,
   };
+}
+
+function buildLocalStatisticsKey(address) {
+  const region = detectSurveyRegion(address);
+  const sourceUnit = deriveLocalStatisticsUnit(address, "");
+  return region && sourceUnit ? `${region}:${sourceUnit}` : "";
+}
+
+function findLocalStatisticsData(address) {
+  const key = buildLocalStatisticsKey(address);
+  const data = key ? LOCAL_STATISTICS_DATA[key] : null;
+  return data ? { ...data, key } : null;
+}
+
+function applyLocalStatisticsData(target, data) {
+  target.statisticsDataKey = data.key;
+  target.landuseSource = `${data.sourceUnit} 통계연보 ${data.year}`;
+  target.zoningSource = `${data.sourceUnit} 통계연보 ${data.year}`;
+  target.landuseAreas = { ...createBlankLanduseAreas(), ...data.landuseAreas };
+  target.zoningRows = data.zoningRows.map((row) => createZoningRow(row));
+  return target;
 }
 
 function shouldUpdateLocalStatisticsSource(value) {
