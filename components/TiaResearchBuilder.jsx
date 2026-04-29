@@ -16,12 +16,15 @@ const SURVEY_TYPES = [
 ];
 const CHART_COLORS = ["#0b4f8a", "#2f6fa5", "#5e90bb", "#8fb4d0", "#b7cbdd", "#d5dfeb", "#7f9c7a", "#c68f58", "#8a6b5c", "#b9a79d"];
 const MANUAL_RESEARCH_PLACEHOLDER = "수동 조사필요";
+const DEFAULT_SCOPE_WIDTH = "2300";
+const DEFAULT_SCOPE_HEIGHT = "3200";
+const ROAD_SAMPLE_INTERVAL_METERS = 180;
 
 function createBlankBasics() {
   return {
     siteAddress: "",
-    rectWidth: "",
-    rectHeight: "",
+    rectWidth: DEFAULT_SCOPE_WIDTH,
+    rectHeight: DEFAULT_SCOPE_HEIGHT,
     centerLat: "",
     centerLng: "",
   };
@@ -119,6 +122,12 @@ function isFilled(value) {
 function toNumber(value) {
   const num = Number(value);
   return Number.isFinite(num) ? num : 0;
+}
+
+function getScopeDimensions(basics) {
+  const width = toNumber(basics?.rectWidth) || Number(DEFAULT_SCOPE_WIDTH);
+  const height = toNumber(basics?.rectHeight) || Number(DEFAULT_SCOPE_HEIGHT);
+  return { width, height };
 }
 
 function toSortableNumber(value) {
@@ -317,10 +326,15 @@ function pieBackground(slices) {
 
 function mergeLoadedState(parsed) {
   const base = createBlankState();
+  const loadedBasics = { ...base.basics, ...(parsed.basics || {}) };
   return {
     ...base,
     ...parsed,
-    basics: { ...base.basics, ...(parsed.basics || {}) },
+    basics: {
+      ...loadedBasics,
+      rectWidth: String(loadedBasics.rectWidth || "").trim() || DEFAULT_SCOPE_WIDTH,
+      rectHeight: String(loadedBasics.rectHeight || "").trim() || DEFAULT_SCOPE_HEIGHT,
+    },
     landuseAreas: { ...base.landuseAreas, ...(parsed.landuseAreas || {}) },
     roads: Array.isArray(parsed.roads) && parsed.roads.length ? parsed.roads : base.roads,
     surveyPoints: Array.isArray(parsed.surveyPoints) && parsed.surveyPoints.length ? parsed.surveyPoints : base.surveyPoints,
@@ -838,8 +852,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   async function renderScopeMap() {
     const address = safe(form.basics.siteAddress);
-    const width = toNumber(form.basics.rectWidth);
-    const height = toNumber(form.basics.rectHeight);
+    const { width, height } = getScopeDimensions(form.basics);
 
     if (!kakaoJsKey) {
       setMapStatus("앱 설정에 카카오 지도 JavaScript 키가 없습니다. 배포 환경변수 KAKAO_JS_KEY를 설정해 주세요.");
@@ -924,6 +937,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         ...current,
         basics: {
           ...current.basics,
+          rectWidth: String(width),
+          rectHeight: String(height),
           centerLat: lat.toFixed(6),
           centerLng: lng.toFixed(6),
         },
@@ -953,8 +968,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     const nextForm = {
       basics: {
         siteAddress,
-        rectWidth: "1200",
-        rectHeight: "900",
+        rectWidth: DEFAULT_SCOPE_WIDTH,
+        rectHeight: DEFAULT_SCOPE_HEIGHT,
         centerLat: "",
         centerLng: "",
       },
@@ -988,8 +1003,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     const nextForm = {
       basics: {
         siteAddress,
-        rectWidth: "1200",
-        rectHeight: "800",
+        rectWidth: DEFAULT_SCOPE_WIDTH,
+        rectHeight: DEFAULT_SCOPE_HEIGHT,
         centerLat: "",
         centerLng: "",
       },
@@ -1504,8 +1519,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
 function buildScopeData(basics) {
   const address = safe(basics.siteAddress);
-  const width = toNumber(basics.rectWidth);
-  const height = toNumber(basics.rectHeight);
+  const { width, height } = getScopeDimensions(basics);
   const cityName = deriveCityName(address, "대상 도시");
   const jurisdictionName = deriveJurisdictionName(address, cityName);
   const meta = [];
@@ -1538,8 +1552,7 @@ function buildScopeData(basics) {
 function buildRoadSummary(form) {
   const lines = [];
   const address = safe(form.basics.siteAddress);
-  const width = toNumber(form.basics.rectWidth);
-  const height = toNumber(form.basics.rectHeight);
+  const { width, height } = getScopeDimensions(form.basics);
   const cityName = deriveCityName(address, "대상지");
   const jurisdictionName = deriveJurisdictionName(address, cityName);
   const filledRoads = form.roads.filter((row) => isFilled(row.name) || isFilled(row.startAddress) || isFilled(row.endAddress));
@@ -1900,8 +1913,8 @@ function buildSampleRatios(count) {
 
 function buildScopeSamplePoints(lat, lng, widthMeters, heightMeters) {
   const bounds = computeRectangleBounds(lat, lng, widthMeters, heightMeters);
-  const xCount = Math.min(Math.max(Math.ceil(widthMeters / 250) + 1, 5), 15);
-  const yCount = Math.min(Math.max(Math.ceil(heightMeters / 250) + 1, 5), 15);
+  const xCount = Math.min(Math.max(Math.ceil(widthMeters / ROAD_SAMPLE_INTERVAL_METERS) + 1, 5), 21);
+  const yCount = Math.min(Math.max(Math.ceil(heightMeters / ROAD_SAMPLE_INTERVAL_METERS) + 1, 5), 21);
   const xRatios = buildSampleRatios(xCount);
   const yRatios = buildSampleRatios(yCount);
   const points = [];
@@ -2084,8 +2097,7 @@ function syncSurveyCandidateOverlays({
 
   const lat = Number(centerLat);
   const lng = Number(centerLng);
-  const width = toNumber(rectWidth);
-  const height = toNumber(rectHeight);
+  const { width, height } = getScopeDimensions({ rectWidth, rectHeight });
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || width <= 0 || height <= 0) return;
 
