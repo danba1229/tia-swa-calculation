@@ -6,6 +6,9 @@ export const runtime = "nodejs";
 const LANDUSE_CATEGORIES = ["전", "답", "임야", "대지", "도로", "하천", "학교", "공원"];
 const ZONING_NAMES = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "농림지역", "자연환경보전지역", "미세분지역", "미지정지역"];
 const MAX_FILE_SIZE = 35 * 1024 * 1024;
+const VALID_LANDUSE_TITLES = ["토지지목별 현황", "지목별 토지현황", "지목별 면적"];
+const EXCLUDED_LANDUSE_TITLES = ["도시계획시설", "공원녹지", "공원현황"];
+const EXCLUDED_ZONING_NAMES = ["도시지역", "비도시지역", "합계", "계"];
 
 function safe(value) {
   return String(value ?? "").trim();
@@ -15,6 +18,67 @@ function toNumberString(value) {
   const numeric = safe(value).replace(/[^\d.-]/g, "");
   const parsed = Number(numeric);
   return Number.isFinite(parsed) ? String(Math.round(parsed)) : "";
+}
+
+function toNumber(value) {
+  const parsed = Number(String(value ?? "").replace(/,/g, "").replace(/[^\d.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : NaN;
+}
+
+function extractYear(value) {
+  return safe(value).match(/(20\d{2}|19\d{2})/)?.[1] || "";
+}
+
+function extractFileYear(fileName, fallbackYear = "") {
+  return extractYear(fileName) || fallbackYear;
+}
+
+function extractBaseYear(text, fallbackYear = "") {
+  const patterns = [
+    /(20\d{2}|19\d{2})\s*[.년-]\s*12\s*[.월-]\s*31\s*[.일]?\s*기준/,
+    /기준\s*[:：]?\s*(20\d{2}|19\d{2})\s*[.년-]\s*12\s*[.월-]\s*31/,
+    /(20\d{2}|19\d{2})\s*년\s*말\s*기준/,
+    /(20\d{2}|19\d{2})\s*\.?\s*12\s*\.?\s*31/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+
+  return fallbackYear;
+}
+
+function extractAdminName(text, fileName = "") {
+  const source = `${fileName}\n${text.slice(0, 5000)}`;
+  const match = source.match(/([가-힣]+(?:시|군|구))/);
+  return match?.[1] || "";
+}
+
+function detectUnit(windowText) {
+  const unitMatch = windowText.match(/단위\s*[:：]?\s*(천?\s*㎡|천?\s*m²|천?\s*m2|㎢|km²|km2|ha|헥타르|㎡|m²|m2)/i);
+  return safe(unitMatch?.[1]).replace(/\s+/g, "") || "㎡";
+}
+
+function convertAreaToM2(rawValue, sourceUnit) {
+  const rawNumber = toNumber(rawValue);
+  const unit = safe(sourceUnit) || "㎡";
+  const normalizedUnit = unit.replace(/\s+/g, "");
+  let beforeRound = Number.isFinite(rawNumber) ? rawNumber : 0;
+
+  if (/km²|㎢|km2/i.test(normalizedUnit)) beforeRound *= 1000000;
+  else if (/천㎡|천m²|천m2|1000㎡|1000m²|1000m2/i.test(normalizedUnit)) beforeRound *= 1000;
+  else if (/ha|헥타르/i.test(normalizedUnit)) beforeRound *= 10000;
+
+  const rounded = Math.round(beforeRound);
+  return {
+    rawValue: safe(rawValue),
+    sourceUnit: unit,
+    convertedM2BeforeRound: beforeRound,
+    convertedM2: rounded,
+    convertedKm2: beforeRound / 1000000,
+    roundedM2: rounded,
+  };
 }
 
 function normalizeText(value) {
@@ -146,7 +210,7 @@ function buildSearchWindows(text, keywords) {
   return windows.length ? windows : [text.slice(0, 6000)];
 }
 
-function findAreaValue(windowText, label) {
+function findAreaEntry(windowText, label, sourceUnit) {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const patterns = [
     new RegExp(`(?:^|[\\s|,])${escaped}(?:[\\s:：|,]+)([0-9][0-9,\\.\\s]{1,18})`, "m"),
@@ -155,22 +219,32 @@ function findAreaValue(windowText, label) {
 
   for (const pattern of patterns) {
     const match = windowText.match(pattern);
-    const value = toNumberString(match?.[1]);
-    if (value) return value;
+    const rawValue = match?.[1];
+    const converted = convertAreaToM2(rawValue, sourceUnit);
+    const value = toNumberString(converted.convertedM2);
+    if (value) return { value, conversion: converted };
   }
 
-  return "";
+  return null;
 }
 
-function parseLanduseCandidate(text) {
-  const windows = buildSearchWindows(text, ["토지지목별", "지목별", "지목", "토지"]);
+function parseLanduseCandidate(text, context) {
+  const windows = buildSearchWindows(text, VALID_LANDUSE_TITLES);
   let best = null;
 
   windows.forEach((windowText, index) => {
+    const sourceTableTitle = VALID_LANDUSE_TITLES.find((title) => windowText.includes(title)) || "";
+    if (!sourceTableTitle || EXCLUDED_LANDUSE_TITLES.some((title) => windowText.includes(title))) return;
+
+    const sourceUnit = detectUnit(windowText);
     const areas = {};
+    const conversionLogs = [];
     LANDUSE_CATEGORIES.forEach((category) => {
-      const value = findAreaValue(windowText, category);
-      if (value) areas[category] = value;
+      const entry = findAreaEntry(windowText, category, sourceUnit);
+      if (entry?.value) {
+        areas[category] = entry.value;
+        conversionLogs.push({ category, ...entry.conversion });
+      }
     });
 
     const foundCount = Object.keys(areas).length;
@@ -183,6 +257,10 @@ function parseLanduseCandidate(text) {
         foundCount,
         landuseAreas: areas,
         zoningRows: [],
+        sourceTableTitle,
+        sourceUnit,
+        conversionLogs,
+        ...context,
         preview: normalizeText(windowText).slice(0, 600),
       };
     }
@@ -191,13 +269,20 @@ function parseLanduseCandidate(text) {
   return best;
 }
 
-function parseZoningCandidate(text) {
+function parseZoningCandidate(text, context) {
   const windows = buildSearchWindows(text, ["용도지역", "도시지역", "관리지역", "녹지지역"]);
   let best = null;
 
   windows.forEach((windowText, index) => {
+    const sourceTableTitle = windowText.includes("용도지역") ? "용도지역 현황" : "용도지역 후보";
+    const sourceUnit = detectUnit(windowText);
     const rows = ZONING_NAMES
-      .map((name) => ({ name, area: findAreaValue(windowText, name) }))
+      .filter((name) => !EXCLUDED_ZONING_NAMES.includes(name))
+      .map((name) => {
+        const entry = findAreaEntry(windowText, name, sourceUnit);
+        return entry?.value ? { name, area: entry.value, sourceUnit, conversion: entry.conversion } : null;
+      })
+      .filter(Boolean)
       .filter((row) => row.area);
 
     if (rows.length >= 2 && (!best || rows.length > best.foundCount)) {
@@ -209,6 +294,10 @@ function parseZoningCandidate(text) {
         foundCount: rows.length,
         landuseAreas: {},
         zoningRows: rows,
+        sourceTableTitle,
+        sourceUnit,
+        conversionLogs: rows.map((row) => ({ category: row.name, ...row.conversion })),
+        ...context,
         preview: normalizeText(windowText).slice(0, 600),
       };
     }
@@ -232,7 +321,15 @@ export async function POST(request) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const text = extractPdfText(buffer);
-    const candidates = [parseLanduseCandidate(text), parseZoningCandidate(text)].filter(Boolean);
+    const fileYear = extractFileYear(file.name, year);
+    const baseYear = extractBaseYear(text, fileYear);
+    const adminName = extractAdminName(text, file.name);
+    const context = {
+      yearbookFileYear: fileYear,
+      yearbookBaseYear: baseYear,
+      yearbookAdminName: adminName,
+    };
+    const candidates = [parseLanduseCandidate(text, context), parseZoningCandidate(text, context)].filter(Boolean);
     const source = `${file.name || "업로드 통계연보 PDF"}${year ? ` / ${year}년` : ""}`;
 
     return NextResponse.json({

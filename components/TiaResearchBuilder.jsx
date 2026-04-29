@@ -382,6 +382,95 @@ function buildZoningReportRows(form, stats) {
   ];
 }
 
+function normalizeComparableName(value) {
+  return safe(value).replace(/\s+/g, "").replace(/특별시|광역시|특별자치시|특별자치도|경기도|서울시|서울/g, "");
+}
+
+function validationStatus({ diffPct, sourceUnit, isYearMismatch, isAdminMismatch, isCategoryMismatch }) {
+  if (isAdminMismatch) return "ADMIN_LEVEL_MISMATCH";
+  if (isYearMismatch) return "YEAR_MISMATCH";
+  if (isCategoryMismatch) return "CATEGORY_MISMATCH";
+  if (diffPct <= 0.1) return "PASS";
+  if (diffPct <= 1 && /km²|㎢|km2|ha|헥타르/i.test(sourceUnit || "")) return "WARN_ROUNDING";
+  return "FAIL";
+}
+
+function buildValidationNote(status, diffPct) {
+  if (status === "ADMIN_LEVEL_MISMATCH") return "KOSIS 행정구역명과 통계연보 행정구역명이 달라 검증하지 않았습니다.";
+  if (status === "YEAR_MISMATCH") return "KOSIS 조회연도와 통계연보 표 기준연도가 다릅니다.";
+  if (status === "CATEGORY_MISMATCH") return "허용된 표 제목 또는 항목명과 일치하지 않습니다.";
+  if (status === "WARN_ROUNDING") return "차이가 있으나 km²/ha 단위 반올림 영향 가능성이 있습니다.";
+  if (status === "PASS") return "허용오차 0.1% 이내입니다.";
+  return `차이율 ${diffPct.toFixed(2)}%로 허용 기준을 초과합니다.`;
+}
+
+function buildPdfValidation(candidate, form) {
+  const kosisYear = form.statisticsYear || DEFAULT_STATISTICS_YEAR;
+  const yearbookBaseYear = candidate.yearbookBaseYear || candidate.yearbookFileYear || "";
+  const kosisAdminName = deriveStatisticsAnnualReportUnit(form.basics.siteAddress);
+  const yearbookAdminName = candidate.yearbookAdminName || "";
+  const isYearMismatch = Boolean(yearbookBaseYear && kosisYear !== yearbookBaseYear);
+  const isAdminMismatch = Boolean(kosisAdminName && yearbookAdminName && normalizeComparableName(kosisAdminName) !== normalizeComparableName(yearbookAdminName));
+  const rows = candidate.kind === "landuse"
+    ? Object.entries(candidate.landuseAreas || {}).map(([name, area]) => ({ name, kosis: form.landuseAreas[name], yearbook: area }))
+    : (candidate.zoningRows || []).map((row) => {
+      const kosisRow = form.zoningRows.find((item) => normalizeComparableName(item.name) === normalizeComparableName(row.name));
+      return { name: row.name, kosis: kosisRow?.area, yearbook: row.area };
+    });
+  const conversionByName = new Map((candidate.conversionLogs || []).map((log) => [log.category, log]));
+  const checks = rows.map((row) => {
+    const kosisM2 = toNumber(row.kosis);
+    const yearbookM2 = toNumber(row.yearbook);
+    const diffM2 = Math.abs(kosisM2 - yearbookM2);
+    const diffPct = kosisM2 > 0 ? (diffM2 / kosisM2) * 100 : (yearbookM2 > 0 ? 100 : 0);
+    const log = conversionByName.get(row.name) || {};
+    const status = validationStatus({
+      diffPct,
+      sourceUnit: log.sourceUnit || candidate.sourceUnit,
+      isYearMismatch,
+      isAdminMismatch,
+      isCategoryMismatch: false,
+    });
+
+    return {
+      name: row.name,
+      kosis: String(Math.round(kosisM2 || 0)),
+      annualReport: String(Math.round(yearbookM2 || 0)),
+      difference: String(Math.round(diffM2 || 0)),
+      diffPct,
+      matched: status === "PASS",
+      kosis_year: kosisYear,
+      yearbook_file_year: candidate.yearbookFileYear || "",
+      yearbook_base_year: yearbookBaseYear,
+      kosis_admin_name: kosisAdminName,
+      yearbook_admin_name: yearbookAdminName,
+      source_table_title: candidate.sourceTableTitle || "",
+      source_unit: log.sourceUnit || candidate.sourceUnit || "",
+      converted_m2: String(log.convertedM2 || Math.round(yearbookM2 || 0)),
+      converted_km2: formatSquareKilometers(log.convertedM2 || yearbookM2 || 0),
+      raw_value: log.rawValue || "",
+      converted_m2_before_round: String(log.convertedM2BeforeRound ?? ""),
+      rounded_m2: String(log.roundedM2 ?? Math.round(yearbookM2 || 0)),
+      diff_m2: String(Math.round(diffM2 || 0)),
+      diff_pct: diffPct.toFixed(2),
+      validation_status: status,
+      validation_note: buildValidationNote(status, diffPct),
+    };
+  });
+  const statusOrder = ["ADMIN_LEVEL_MISMATCH", "YEAR_MISMATCH", "CATEGORY_MISMATCH", "FAIL", "WARN_ROUNDING", "PASS"];
+  const summaryStatus = statusOrder.find((status) => checks.some((item) => item.validation_status === status)) || "NO_SOURCE";
+
+  return {
+    status: summaryStatus === "PASS" ? "matched" : "mismatch",
+    year: yearbookBaseYear || kosisYear,
+    source: candidate.source || "",
+    sourceLink: "",
+    message: `${candidate.title} 검증 결과: ${summaryStatus}`,
+    landuse: candidate.kind === "landuse" ? checks : [],
+    zoning: candidate.kind === "zoning" ? checks : [],
+  };
+}
+
 function topLabels(entries, total) {
   return entries
     .filter((entry) => entry.value > 0)
@@ -927,26 +1016,20 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function applyPdfCandidate(candidate) {
     setForm((current) => {
+      const verification = buildPdfValidation(candidate, current);
       const next = {
         ...current,
-        statisticsDataKey: "",
-        statisticsVerification: null,
+        statisticsVerification: verification,
       };
 
-      if (candidate.landuseAreas && Object.keys(candidate.landuseAreas).length) {
-        next.landuseAreas = { ...current.landuseAreas, ...candidate.landuseAreas };
-        next.landuseSource = candidate.source || current.landuseSource;
-      }
-
-      if (Array.isArray(candidate.zoningRows) && candidate.zoningRows.length) {
-        next.zoningRows = candidate.zoningRows.map((row) => createZoningRow(row));
-        next.zoningSource = candidate.source || current.zoningSource;
+      if (candidate.yearbookBaseYear && current.statisticsYear !== candidate.yearbookBaseYear) {
+        next.statisticsYear = candidate.yearbookBaseYear;
       }
 
       return next;
     });
 
-    setPdfImportStatus(`${candidate.title}을 현재 양식에 반영했습니다. 추출값은 PDF 원문 표와 한 번 비교해 주세요.`);
+    setPdfImportStatus(`${candidate.title}을 통계연보 검증자료로 비교했습니다. 기준연도가 바뀌었다면 조사 시작을 눌러 KOSIS를 같은 연도로 다시 조회해 주세요.`);
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -1487,7 +1570,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <div className="verification-list">
               {verification.landuse.map((item) => (
                 <span key={`landuse-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
-                  지목 {item.name}: KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                  지목 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                  {item.diff_pct ? ` / 차이율 ${item.diff_pct}%` : ""}
+                  {item.validation_note ? ` / ${item.validation_note}` : ""}
                 </span>
               ))}
             </div>
@@ -1496,7 +1581,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <div className="verification-list">
               {verification.zoning.map((item) => (
                 <span key={`zoning-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
-                  용도지역 {item.name}: KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                  용도지역 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                  {item.diff_pct ? ` / 차이율 ${item.diff_pct}%` : ""}
+                  {item.validation_note ? ` / ${item.validation_note}` : ""}
                 </span>
               ))}
             </div>
@@ -1524,8 +1611,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <strong>{candidate.title}</strong>
                   </div>
                   <p>{candidate.kind === "landuse" ? `추출 지목 ${Object.keys(candidate.landuseAreas || {}).length}개` : `추출 용도지역 ${candidate.zoningRows?.length || 0}개`}</p>
+                  <p>파일연도 {candidate.yearbookFileYear || "-"} / 표 기준연도 {candidate.yearbookBaseYear || "-"} / 행정구역 {candidate.yearbookAdminName || "-"}</p>
+                  <p>표 제목 {candidate.sourceTableTitle || "-"} / 단위 {candidate.sourceUnit || "㎡"}</p>
                   <pre>{candidate.preview}</pre>
-                  <button type="button" className="secondary" onClick={() => applyPdfCandidate(candidate)}>이 후보 반영</button>
+                  <button type="button" className="secondary" onClick={() => applyPdfCandidate(candidate)}>검증자료로 비교</button>
                 </article>
               ))}
             </div>
