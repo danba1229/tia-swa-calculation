@@ -1345,6 +1345,15 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <td className="total-cell">{formatNumber(zoningStats.total)}</td>
                   </tr>
                   <tr>
+                    <th className="row-heading">면적(km²)</th>
+                    {form.zoningRows.map((row, index) => (
+                      <td key={`zoning-km2-${index}`} className={rankClass(zoningStats.rankMap.get(index))}>
+                        {formatSquareKilometers(row.area)}
+                      </td>
+                    ))}
+                    <td className="total-cell">{formatSquareKilometers(zoningStats.total)}</td>
+                  </tr>
+                  <tr>
                     <th className="row-heading">구성비(%)</th>
                     {form.zoningRows.map((row, index) => (
                       <td key={`zoning-ratio-${index}`} className={rankClass(zoningStats.rankMap.get(index))}>{formatPercent(zoningStats.ratioMap.get(index))}</td>
