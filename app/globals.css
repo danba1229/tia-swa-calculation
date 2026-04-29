@@ -583,6 +583,21 @@ button.mini-button {
   min-width: 960px;
 }
 
+.report-table {
+  min-width: 1180px;
+}
+
+.report-table th,
+.report-table td {
+  vertical-align: middle;
+}
+
+.report-table td:nth-child(5),
+.report-table td:nth-child(6) {
+  min-width: 180px;
+  color: var(--muted);
+}
+
 .data-table th.rank-1,
 .data-table td.rank-1 {
   background: rgba(11, 79, 138, 0.22);

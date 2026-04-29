@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 
 const KOSIS_BASE = "http://kosis.kr/openapi";
 const LANDUSE_TABLE = { orgId: "116", tblId: "DT_MLTM_2300" };
+const ZONING_TABLE = { orgId: "460", tblId: "TX_315_2009_H1500" };
 const URBAN_ZONING_TABLE = { orgId: "460", tblId: "TX_315_2009_H1440" };
 const NON_URBAN_ZONING_TABLE = { orgId: "460", tblId: "TX_315_2009_H1443" };
 const DEFAULT_STATISTICS_YEAR = "2024";
@@ -23,6 +24,16 @@ const LANDUSE_TARGETS = {
 
 const URBAN_ZONING_NAMES = ["주거지역", "상업지역", "공업지역", "녹지지역"];
 const NON_URBAN_ZONING_NAMES = ["관리지역", "농림지역", "자연환경보전지역", "미세분지역"];
+const ZONING_REPORT_TARGETS = {
+  주거: ["주거지역"],
+  상업: ["상업지역"],
+  공업: ["공업지역"],
+  녹지: ["녹지지역"],
+  관리: ["관리지역"],
+  농림: ["농림지역"],
+  자연환경보전: ["자연환경보전지역"],
+  미지정: ["미지정", "미지정지역"],
+};
 
 const PROVINCES = [
   { full: "서울특별시", short: "서울", aliases: ["서울특별시", "서울시", "서울"] },
@@ -63,6 +74,16 @@ function toNumber(value) {
 function toAreaString(value) {
   const rounded = Math.round(toNumber(value));
   return rounded > 0 ? String(rounded) : "0";
+}
+
+function areaToM2(row) {
+  const value = toNumber(row?.DT);
+  const unit = normalizeName(row?.UNIT_NM);
+  if (!Number.isFinite(value)) return 0;
+  if (/km²|㎢|제곱킬로미터|km2/i.test(unit)) return value * 1000000;
+  if (/천.*㎡|천.*m²|천.*m2|1000.*㎡|1000.*m²|1000.*m2/i.test(unit)) return value * 1000;
+  if (/ha|헥타르/i.test(unit)) return value * 10000;
+  return value;
 }
 
 function normalizeYear(value) {
@@ -260,7 +281,7 @@ function pickItemCodes(meta, objectName, names) {
 function sumAreas(rows, categoryName) {
   return rows
     .filter((row) => normalizeName(row.C3_NM || row.C2_NM) === normalizeName(categoryName))
-    .reduce((sum, row) => sum + toNumber(row.DT), 0);
+    .reduce((sum, row) => sum + areaToM2(row), 0);
 }
 
 async function buildLanduse(address, target, province, year = "") {
@@ -320,7 +341,74 @@ async function fetchZoningPart(table, target, province, names, year = "") {
   });
 }
 
+function pickObjectName(meta, candidates) {
+  return candidates.find((name) => meta.some((row) => row.OBJ_NM === name)) || "";
+}
+
+function pickAnyItemCode(meta, objectName, aliases) {
+  return aliases.map((name) => pickItemCode(meta, objectName, name)).find(Boolean) || null;
+}
+
+async function buildZoningFromUnifiedTable(address, target, province, year = "") {
+  const meta = await getMeta(ZONING_TABLE);
+  const itemObject = pickObjectName(meta, ["항목"]);
+  const regionObject = pickObjectName(meta, ["소재지(시군구)별", "시군구", "행정구역별"]);
+  const zoningObject = pickObjectName(meta, ["용도지역별", "용도지역계", "용도지역"]);
+  const item = pickAnyItemCode(meta, itemObject, ["면적"]);
+  const localCode = pickLocalMetaCode(meta, regionObject, target.preferred, province);
+  const zoningAliases = Object.values(ZONING_REPORT_TARGETS).flat();
+  const zoningCodes = pickItemCodes(meta, zoningObject, ["계", ...zoningAliases]);
+
+  if (!item || !localCode || !zoningCodes.length) {
+    return null;
+  }
+
+  const rows = await fetchKosisRows(ZONING_TABLE, {
+    itemId: item.ITM_ID,
+    objL1: localCode.ITM_ID,
+    objL2: zoningCodes.map((row) => row.ITM_ID).join("+"),
+    year,
+  });
+  const rawName = (row) => row.C2_NM || row.C1_NM || row.ITM_NM || "";
+  const total = rows
+    .filter((row) => normalizeName(rawName(row)) === normalizeName("계"))
+    .reduce((sum, row) => sum + areaToM2(row), 0);
+  const reportRows = Object.entries(ZONING_REPORT_TARGETS).map(([name, aliases]) => {
+    const area = aliases.reduce((sum, alias) => (
+      sum + rows
+        .filter((row) => normalizeName(rawName(row)) === normalizeName(alias))
+        .reduce((innerSum, row) => innerSum + areaToM2(row), 0)
+    ), 0);
+    return {
+      name,
+      area: toAreaString(area),
+      rawItems: aliases.join(", "),
+    };
+  });
+  const selectedTotal = reportRows.reduce((sum, row) => sum + toNumber(row.area), 0);
+  const finalRows = [
+    ...reportRows,
+    { name: "기타", area: toAreaString(Math.max(0, total - selectedTotal)), rawItems: "전체 계 - 주요 항목 합계" },
+  ].filter((row) => toNumber(row.area) > 0 || row.name !== "기타");
+
+  if (!finalRows.length) return null;
+
+  const dataYear = rows.find((row) => row.PRD_DE)?.PRD_DE || year;
+  const regionName = rows.find((row) => row.C1_NM)?.C1_NM || rows.find((row) => row.C2_NM)?.C2_NM || target.preferred;
+
+  return {
+    rows: finalRows,
+    year: dataYear,
+    regionName,
+    source: `${regionName} 용도지역현황(KOSIS 도시계획현황 ${dataYear})`,
+    tableId: ZONING_TABLE.tblId,
+  };
+}
+
 async function buildZoning(address, target, province, year = "") {
+  const unified = await buildZoningFromUnifiedTable(address, target, province, year).catch(() => null);
+  if (unified?.rows?.length) return unified;
+
   const [urbanRows, nonUrbanRows] = await Promise.all([
     fetchZoningPart(URBAN_ZONING_TABLE, target, province, URBAN_ZONING_NAMES, year),
     fetchZoningPart(NON_URBAN_ZONING_TABLE, target, province, NON_URBAN_ZONING_NAMES, year),
@@ -330,7 +418,7 @@ async function buildZoning(address, target, province, year = "") {
     .filter((row) => row.C2_NM && row.ITM_NM === "면적")
     .map((row) => ({
       name: row.C2_NM,
-      area: toAreaString(row.DT),
+      area: toAreaString(areaToM2(row)),
     }));
 
   if (!rows.length) return null;
