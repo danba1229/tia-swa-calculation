@@ -1887,19 +1887,30 @@ function classifyRoadClass(roadName) {
   return null;
 }
 
+function buildSampleRatios(count) {
+  const anchorRatios = count >= 7 ? [0, 0.5, 1] : [0, 0.25, 0.5, 0.75, 1];
+  const ratios = new Set(anchorRatios);
+
+  for (let index = 0; index < count; index += 1) {
+    ratios.add(Number((index / Math.max(count - 1, 1)).toFixed(6)));
+  }
+
+  return Array.from(ratios).sort((a, b) => a - b);
+}
+
 function buildScopeSamplePoints(lat, lng, widthMeters, heightMeters) {
   const bounds = computeRectangleBounds(lat, lng, widthMeters, heightMeters);
-  const xCount = Math.min(Math.max(Math.ceil(widthMeters / 180) + 1, 4), 7);
-  const yCount = Math.min(Math.max(Math.ceil(heightMeters / 180) + 1, 4), 7);
+  const xCount = Math.min(Math.max(Math.ceil(widthMeters / 250) + 1, 5), 15);
+  const yCount = Math.min(Math.max(Math.ceil(heightMeters / 250) + 1, 5), 15);
+  const xRatios = buildSampleRatios(xCount);
+  const yRatios = buildSampleRatios(yCount);
   const points = [];
   const seen = new Set();
 
-  for (let yIndex = 0; yIndex < yCount; yIndex += 1) {
-    const yRatio = yCount === 1 ? 0.5 : yIndex / (yCount - 1);
+  for (const yRatio of yRatios) {
     const sampleLat = bounds.south + ((bounds.north - bounds.south) * yRatio);
 
-    for (let xIndex = 0; xIndex < xCount; xIndex += 1) {
-      const xRatio = xCount === 1 ? 0.5 : xIndex / (xCount - 1);
+    for (const xRatio of xRatios) {
       const sampleLng = bounds.west + ((bounds.east - bounds.west) * xRatio);
       const key = `${sampleLat.toFixed(6)}:${sampleLng.toFixed(6)}`;
 
