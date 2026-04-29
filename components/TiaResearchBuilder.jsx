@@ -358,6 +358,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [topisStatus, setTopisStatus] = useState("");
   const [gyeonggiCandidates, setGyeonggiCandidates] = useState([]);
   const [gyeonggiStatus, setGyeonggiStatus] = useState("");
+  const [pdfImportStatus, setPdfImportStatus] = useState("통계연보 PDF를 업로드하면 표 후보를 추출해 현재 양식에 반영할 수 있습니다.");
+  const [pdfImportCandidates, setPdfImportCandidates] = useState([]);
+  const [isPdfImporting, setIsPdfImporting] = useState(false);
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
   const mapRuntimeRef = useRef({
@@ -789,6 +792,69 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
     }));
     setStatusText("기준연도가 바뀌었습니다. 조사 시작 버튼을 눌러 해당 연도 자료로 다시 조회해 주세요.");
+  }
+
+  async function handleStatisticsPdfUpload(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (file.type && file.type !== "application/pdf") {
+      setPdfImportStatus("PDF 파일만 업로드할 수 있습니다.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("year", form.statisticsYear || DEFAULT_STATISTICS_YEAR);
+
+    try {
+      setIsPdfImporting(true);
+      setPdfImportCandidates([]);
+      setPdfImportStatus(`${file.name} 파일에서 통계연보 표를 읽는 중입니다.`);
+
+      const response = await fetch("/api/statistics-pdf", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "PDF 분석에 실패했습니다.");
+      }
+
+      setPdfImportCandidates(payload.candidates || []);
+      setPdfImportStatus(payload.message || "PDF 분석을 완료했습니다.");
+    } catch (error) {
+      console.error(error);
+      setPdfImportStatus(error.message || "PDF 분석 중 오류가 발생했습니다.");
+    } finally {
+      setIsPdfImporting(false);
+    }
+  }
+
+  function applyPdfCandidate(candidate) {
+    setForm((current) => {
+      const next = {
+        ...current,
+        statisticsDataKey: "",
+        statisticsVerification: null,
+      };
+
+      if (candidate.landuseAreas && Object.keys(candidate.landuseAreas).length) {
+        next.landuseAreas = { ...current.landuseAreas, ...candidate.landuseAreas };
+        next.landuseSource = candidate.source || current.landuseSource;
+      }
+
+      if (Array.isArray(candidate.zoningRows) && candidate.zoningRows.length) {
+        next.zoningRows = candidate.zoningRows.map((row) => createZoningRow(row));
+        next.zoningSource = candidate.source || current.zoningSource;
+      }
+
+      return next;
+    });
+
+    setPdfImportStatus(`${candidate.title}을 현재 양식에 반영했습니다. 추출값은 PDF 원문 표와 한 번 비교해 주세요.`);
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -1340,6 +1406,35 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 <span key={`zoning-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
                   용도지역 {item.name}: KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
                 </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="pdf-import-card">
+          <div className="pdf-import-top">
+            <div>
+              <p className="eyebrow">PDF Import</p>
+              <h3>통계연보 PDF에서 표 후보 가져오기</h3>
+            </div>
+            <label className="file-upload-button">
+              <input type="file" accept="application/pdf" onChange={handleStatisticsPdfUpload} disabled={isPdfImporting} />
+              {isPdfImporting ? "분석 중" : "PDF 업로드"}
+            </label>
+          </div>
+          <p className="pdf-import-status">{pdfImportStatus}</p>
+          {pdfImportCandidates.length ? (
+            <div className="pdf-candidate-grid">
+              {pdfImportCandidates.map((candidate) => (
+                <article key={candidate.id} className="pdf-candidate-card">
+                  <div className="pdf-candidate-header">
+                    <span className="status-badge">{candidate.confidence}</span>
+                    <strong>{candidate.title}</strong>
+                  </div>
+                  <p>{candidate.kind === "landuse" ? `추출 지목 ${Object.keys(candidate.landuseAreas || {}).length}개` : `추출 용도지역 ${candidate.zoningRows?.length || 0}개`}</p>
+                  <pre>{candidate.preview}</pre>
+                  <button type="button" className="secondary" onClick={() => applyPdfCandidate(candidate)}>이 후보 반영</button>
+                </article>
               ))}
             </div>
           ) : null}
