@@ -1564,7 +1564,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Annual Report Check</p>
             <h3>구/시 통계연보 자동 검증</h3>
           </div>
-          <p>{verification?.message || "조사 시작 후 선택한 기준연도의 KOSIS 값과 내장된 구/시 통계연보 기준값을 비교합니다."}</p>
+          <p>{verification?.message || "조사 시작 후 KOSIS 값을 생성하고, 공식 지자체 통계연보 PDF/XLS 자료를 자동 탐색해 검증을 시도합니다."}</p>
           {verification?.source ? <p className="verification-source">검증 기준: {verification.source}</p> : null}
           {verification?.landuse?.length ? (
             <div className="verification-list">

@@ -306,6 +306,30 @@ function parseZoningCandidate(text, context) {
   return best;
 }
 
+export function analyzeYearbookPdfBuffer(buffer, { fileName = "", year = "", source = "" } = {}) {
+  const text = extractPdfText(buffer);
+  const fileYear = extractFileYear(fileName, year);
+  const baseYear = extractBaseYear(text, fileYear);
+  const adminName = extractAdminName(text, fileName);
+  const context = {
+    yearbookFileYear: fileYear,
+    yearbookBaseYear: baseYear,
+    yearbookAdminName: adminName,
+  };
+  const candidates = [parseLanduseCandidate(text, context), parseZoningCandidate(text, context)].filter(Boolean);
+  const resolvedSource = source || `${fileName || "통계연보 PDF"}${year ? ` / ${year}년` : ""}`;
+
+  return {
+    fileName,
+    source: resolvedSource,
+    textLength: text.length,
+    candidates: candidates.map((candidate) => ({ ...candidate, source: resolvedSource })),
+    message: candidates.length
+      ? `${candidates.length}개의 표 후보를 찾았습니다. 후보를 확인한 뒤 현재 양식에 반영해 주세요.`
+      : "PDF에서 현재 양식에 맞는 표 후보를 찾지 못했습니다. 스캔 PDF이거나 표 구조가 복잡하면 직접 입력이 필요합니다.",
+  };
+}
+
 export async function POST(request) {
   try {
     const formData = await request.formData();
@@ -319,27 +343,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "PDF 파일이 너무 큽니다. 35MB 이하 파일로 다시 업로드해 주세요." }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const text = extractPdfText(buffer);
-    const fileYear = extractFileYear(file.name, year);
-    const baseYear = extractBaseYear(text, fileYear);
-    const adminName = extractAdminName(text, file.name);
-    const context = {
-      yearbookFileYear: fileYear,
-      yearbookBaseYear: baseYear,
-      yearbookAdminName: adminName,
-    };
-    const candidates = [parseLanduseCandidate(text, context), parseZoningCandidate(text, context)].filter(Boolean);
-    const source = `${file.name || "업로드 통계연보 PDF"}${year ? ` / ${year}년` : ""}`;
+    const result = analyzeYearbookPdfBuffer(Buffer.from(await file.arrayBuffer()), {
+      fileName: file.name || "",
+      year,
+      source: `${file.name || "업로드 통계연보 PDF"}${year ? ` / ${year}년` : ""}`,
+    });
 
     return NextResponse.json({
-      fileName: file.name || "",
-      source,
-      textLength: text.length,
-      candidates: candidates.map((candidate) => ({ ...candidate, source })),
-      message: candidates.length
-        ? `${candidates.length}개의 표 후보를 찾았습니다. 후보를 확인한 뒤 현재 양식에 반영해 주세요.`
-        : "PDF에서 현재 양식에 맞는 표 후보를 찾지 못했습니다. 스캔 PDF이거나 표 구조가 복잡하면 직접 입력이 필요합니다.",
+      ...result,
     });
   } catch (error) {
     return NextResponse.json({ error: error.message || "PDF 분석 중 오류가 발생했습니다." }, { status: 500 });
