@@ -20,6 +20,15 @@ const YEARBOOK_OFFICIAL_PAGES = [
 ];
 const YEARBOOK_DOC_PATTERN = /\.(pdf|xls|xlsx|csv|hwp|hwpx)(?:[?#]|$)|download|down|file|attach|atch/i;
 const YEARBOOK_MANUAL_PATTERN = /\.(hwp|hwpx|xls|xlsx|csv)(?:[?#]|$)|hwp|hwpx|xls|xlsx|csv/i;
+const OFFICIAL_DOMAIN_PATTERN = /(^|\.)go\.kr$/i;
+const SEARCH_ENGINE_HOSTS = new Set([
+  "www.google.com",
+  "google.com",
+  "www.bing.com",
+  "bing.com",
+  "search.naver.com",
+  "search.daum.net",
+]);
 
 const LANDUSE_TARGETS = {
   전: "전",
@@ -499,8 +508,35 @@ function resolveLink(href, baseUrl) {
   }
 }
 
-function extractYearbookLinks(html, pageUrl) {
-  const links = [];
+function unwrapSearchResultUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const wrapped = parsed.searchParams.get("q")
+      || parsed.searchParams.get("url")
+      || parsed.searchParams.get("u")
+      || parsed.searchParams.get("target")
+      || parsed.searchParams.get("where");
+    if ((SEARCH_ENGINE_HOSTS.has(host) || host.endsWith(".google.com")) && wrapped && /^https?:\/\//i.test(wrapped)) {
+      return new URL(wrapped).toString();
+    }
+    return parsed.toString();
+  } catch {
+    return "";
+  }
+}
+
+function isOfficialDomain(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return OFFICIAL_DOMAIN_PATTERN.test(host);
+  } catch {
+    return false;
+  }
+}
+
+function extractAnchors(html, pageUrl) {
+  const anchors = [];
   const anchorPattern = /<a\b[^>]*href\s*=\s*["']?([^"'\s>]+)["']?[^>]*>([\s\S]*?)<\/a>/gi;
   let match;
   while ((match = anchorPattern.exec(html))) {
@@ -508,10 +544,17 @@ function extractYearbookLinks(html, pageUrl) {
     if (!url) continue;
     const context = stripTags(html.slice(Math.max(0, match.index - 120), Math.min(html.length, match.index + match[0].length + 160)));
     const text = stripTags(match[2]);
-    if (!YEARBOOK_DOC_PATTERN.test(`${url} ${text} ${context}`)) continue;
-    links.push({ url, text, context });
+    anchors.push({ url, text, context });
   }
-  return links;
+  return anchors;
+}
+
+function extractYearbookLinks(html, pageUrl) {
+  return extractAnchors(html, pageUrl).filter(({ url, text, context }) => {
+    const source = `${url} ${text} ${context}`;
+    return YEARBOOK_DOC_PATTERN.test(source)
+      && /통계|연보|statistics|statistical|yearbook|토지|용도지역/i.test(source);
+  });
 }
 
 function inferFileType(link) {
@@ -530,15 +573,24 @@ function getKnownYearbookPages(target) {
 
 function buildYearbookSearchUrls(target, year) {
   const region = safe(target?.preferred);
+  const queries = [
+    `${region} ${year} 통계연보 PDF`,
+    `${region} 통계연보 ${year}`,
+    `site:go.kr ${region} ${year} 통계연보`,
+    `site:go.kr ${region} 지목별 토지현황 용도지역 통계연보`,
+  ];
   return [
-    `https://www.google.com/search?q=${encodeURIComponent(`${region} ${year} 통계연보 PDF`)}`,
-    `https://www.google.com/search?q=${encodeURIComponent(`${region} 통계연보 ${year}`)}`,
+    ...queries.map((query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`),
+    ...queries.map((query) => `https://www.bing.com/search?q=${encodeURIComponent(query)}`),
+    ...queries.map((query) => `https://search.daum.net/search?w=tot&q=${encodeURIComponent(query)}`),
+    ...queries.map((query) => `https://search.naver.com/search.naver?query=${encodeURIComponent(query)}`),
   ];
 }
 
-async function fetchTextDocument(url) {
+async function fetchTextDocument(url, timeoutMs = 4500) {
   const response = await fetch(url, {
     cache: "no-store",
+    signal: typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(timeoutMs) : undefined,
     headers: {
       Accept: "text/html,application/xhtml+xml,*/*",
       "User-Agent": "Mozilla/5.0 tia-support/1.0",
@@ -548,34 +600,99 @@ async function fetchTextDocument(url) {
   return response.text();
 }
 
+function makeYearbookCandidate(link, { year, sourcePage = "", officialDomain = "" }) {
+  const yearSource = safe(`${link.context} ${link.text} ${link.url}`);
+  const years = [...yearSource.matchAll(/(20\d{2}|19\d{2})/g)].map((match) => match[1]);
+  const fileYear = years.includes(safe(year)) ? safe(year) : (years.at(-1) || "");
+  const fileType = inferFileType(link);
+  const exactYear = fileYear === safe(year) || link.context.includes(`${year}년`) || link.text.includes(`${year}년`);
+  const isPdf = fileType === "pdf" || /\.pdf(?:[?#]|$)/i.test(link.url);
+  return {
+    ...link,
+    fileYear,
+    fileType: fileType || (isPdf ? "pdf" : ""),
+    sourcePage,
+    officialDomain,
+    score: (exactYear ? 100 : 0)
+      + (isPdf ? 30 : 0)
+      + (/통계|연보/.test(yearSource) ? 15 : 0)
+      + (isOfficialDomain(link.url) ? 10 : 0),
+  };
+}
+
+function extractSearchResultUrls(html, searchUrl) {
+  const urls = new Set();
+  extractAnchors(html, searchUrl).forEach((anchor) => {
+    const unwrapped = unwrapSearchResultUrl(anchor.url);
+    if (!unwrapped || urls.has(unwrapped)) return;
+    if (!isOfficialDomain(unwrapped)) return;
+    if (/\/search|google|bing|naver|daum/i.test(new URL(unwrapped).hostname)) return;
+    urls.add(unwrapped);
+  });
+  return [...urls];
+}
+
+async function scanYearbookPage(page, year, found) {
+  if (YEARBOOK_DOC_PATTERN.test(page.url)) {
+    found.push(makeYearbookCandidate({
+      url: page.url,
+      text: page.text || "",
+      context: page.context || "",
+    }, { year, sourcePage: page.sourcePage || page.url, officialDomain: page.officialDomain || "" }));
+    return;
+  }
+
+  const html = await fetchTextDocument(page.url);
+  const links = extractYearbookLinks(html, page.url);
+  links.forEach((link) => {
+    found.push(makeYearbookCandidate(link, {
+      year,
+      sourcePage: page.url,
+      officialDomain: page.officialDomain || "",
+    }));
+  });
+}
+
 async function findYearbookFile(target, year) {
-  const pages = getKnownYearbookPages(target);
   const searchUrls = buildYearbookSearchUrls(target, year);
+  const knownPages = getKnownYearbookPages(target).map((item) => ({
+    url: item.page,
+    sourcePage: item.page,
+    officialDomain: item.domain,
+  }));
+  const pages = [...knownPages];
+  const seenPages = new Set(pages.map((page) => page.url));
   const found = [];
 
-  for (const item of pages) {
+  const searchResults = await Promise.allSettled(searchUrls.slice(0, 12).map(async (searchUrl) => {
+    const html = await fetchTextDocument(searchUrl, 3500);
+    return { searchUrl, urls: extractSearchResultUrls(html, searchUrl).slice(0, 8) };
+  }));
+
+  searchResults.forEach((result) => {
+    if (result.status !== "fulfilled") return;
+    result.value.urls.forEach((url) => {
+      if (seenPages.has(url)) return;
+      seenPages.add(url);
+      pages.push({ url, sourcePage: result.value.searchUrl, officialDomain: new URL(url).hostname });
+    });
+  });
+
+  for (const searchUrl of searchUrls.slice(12)) {
     try {
-      const html = await fetchTextDocument(item.page);
-      const links = extractYearbookLinks(html, item.page);
-      links.forEach((link) => {
-        const yearSource = safe(`${link.context} ${link.text} ${link.url}`);
-        const years = [...yearSource.matchAll(/(20\d{2}|19\d{2})/g)].map((match) => match[1]);
-        const fileYear = years.includes(safe(year)) ? safe(year) : (years.at(-1) || "");
-        const fileType = inferFileType(link);
-        const exactYear = fileYear === safe(year) || link.context.includes(`${year}년`) || link.text.includes(`${year}년`);
-        found.push({
-          ...link,
-          fileYear,
-          fileType,
-          sourcePage: item.page,
-          officialDomain: item.domain,
-          score: (exactYear ? 100 : 0) + (fileType === "pdf" ? 20 : 0) + (/통계|연보/.test(link.context) ? 10 : 0),
-        });
+      const html = await fetchTextDocument(searchUrl);
+      extractSearchResultUrls(html, searchUrl).slice(0, 8).forEach((url) => {
+        if (seenPages.has(url)) return;
+        seenPages.add(url);
+        pages.push({ url, sourcePage: searchUrl, officialDomain: new URL(url).hostname });
       });
     } catch {
-      // 다른 후보 페이지가 있으면 계속 탐색합니다.
+      // 검색엔진이 차단되거나 응답 구조가 바뀌어도 다른 검색 후보와 알려진 공식 페이지를 계속 시도합니다.
     }
+    if (pages.length >= 20) break;
   }
+
+  await Promise.allSettled(pages.slice(0, 20).map((page) => scanYearbookPage(page, year, found)));
 
   const selected = found
     .filter((link) => link.score > 0)
@@ -584,10 +701,10 @@ async function findYearbookFile(target, year) {
   if (!selected) {
     return {
       status: "NO_SOURCE",
-      message: `내장 검증값은 사용하지 않습니다. ${target.preferred} ${year}년 통계연보를 공식 홈페이지에서 자동 탐색했지만 자동 다운로드 가능한 PDF/XLS 링크를 찾지 못했습니다.`,
+      message: `내장 검증값은 사용하지 않습니다. ${target.preferred} ${year}년 통계연보를 공식 홈페이지와 검색 후보에서 자동 탐색했지만 자동 다운로드 가능한 PDF/XLS 링크를 찾지 못했습니다.`,
       searchUrls,
       yearbookUrl: "",
-      sourcePage: pages[0]?.page || "",
+      sourcePage: pages[0]?.url || "",
     };
   }
 
