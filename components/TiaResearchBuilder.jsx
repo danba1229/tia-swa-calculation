@@ -1255,30 +1255,36 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </label>
         </div>
 
-        <div className="subpanel-grid">
+        <div className="subpanel-grid landuse-layout">
           <section className="subpanel">
             <div className="subpanel-header"><h3>지목별 토지이용현황</h3></div>
             <div className="table-wrap">
-              <table className="data-table">
+              <table className="data-table horizontal-table">
                 <thead>
                   <tr>
-                    <th>지목</th>
-                    <th>면적(㎡)</th>
-                    <th>구성비(%)</th>
+                    <th className="row-heading">항목</th>
+                    {LANDUSE_CATEGORIES.map((category) => (
+                      <th key={`landuse-head-${category}`} className={rankClass(landuseStats.rankMap.get(category))}>{category}</th>
+                    ))}
+                    <th>계</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {LANDUSE_CATEGORIES.map((category) => (
-                    <tr key={category} className={rankClass(landuseStats.rankMap.get(category))}>
-                      <td>{category}</td>
-                      <td><input className="table-input" type="number" value={form.landuseAreas[category]} onChange={(event) => updateLanduseArea(category, event.target.value)} placeholder="면적 입력" /></td>
-                      <td>{formatPercent(landuseStats.ratioMap.get(category))}</td>
-                    </tr>
-                  ))}
-                  <tr className="total-row">
-                    <td>계</td>
-                    <td>{formatNumber(landuseStats.total)}</td>
-                    <td>{landuseStats.total > 0 ? "100.0%" : "-"}</td>
+                  <tr>
+                    <th className="row-heading">면적(㎡)</th>
+                    {LANDUSE_CATEGORIES.map((category) => (
+                      <td key={`landuse-area-${category}`} className={rankClass(landuseStats.rankMap.get(category))}>
+                        <input className="table-input" type="number" value={form.landuseAreas[category]} onChange={(event) => updateLanduseArea(category, event.target.value)} placeholder="면적 입력" />
+                      </td>
+                    ))}
+                    <td className="total-cell">{formatNumber(landuseStats.total)}</td>
+                  </tr>
+                  <tr>
+                    <th className="row-heading">구성비(%)</th>
+                    {LANDUSE_CATEGORIES.map((category) => (
+                      <td key={`landuse-ratio-${category}`} className={rankClass(landuseStats.rankMap.get(category))}>{formatPercent(landuseStats.ratioMap.get(category))}</td>
+                    ))}
+                    <td className="total-cell">{landuseStats.total > 0 ? "100.0%" : "-"}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1291,28 +1297,49 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               <button type="button" className="secondary" onClick={() => addRow("zoningRows", createZoningRow)}>용도지역 추가</button>
             </div>
             <div className="table-wrap">
-              <table className="data-table">
+              <table className="data-table horizontal-table zoning-horizontal-table">
                 <thead>
                   <tr>
-                    <th>용도지역</th>
-                    <th>면적(㎡)</th>
-                    <th>구성비(%)</th>
-                    <th>관리</th>
+                    <th className="row-heading">항목</th>
+                    {form.zoningRows.map((row, index) => (
+                      <th key={`zoning-head-${index}`} className={rankClass(zoningStats.rankMap.get(index))}>{`용도지역 ${index + 1}`}</th>
+                    ))}
+                    <th>계</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {form.zoningRows.map((row, index) => (
-                    <tr key={`zoning-${index}`} className={rankClass(zoningStats.rankMap.get(index))}>
-                      <td><input className="table-input" value={row.name} onChange={(event) => updateListItem("zoningRows", index, { name: event.target.value })} placeholder="예: 주거지역" /></td>
-                      <td><input className="table-input" type="number" value={row.area} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" /></td>
-                      <td>{formatPercent(zoningStats.ratioMap.get(index))}</td>
-                      <td className="actions"><button type="button" className="mini-button" onClick={() => removeRow("zoningRows", index, createZoningRow)}>삭제</button></td>
-                    </tr>
-                  ))}
-                  <tr className="total-row">
-                    <td>계</td>
-                    <td>{formatNumber(zoningStats.total)}</td>
-                    <td>{zoningStats.total > 0 ? "100.0%" : "-"}</td>
+                  <tr>
+                    <th className="row-heading">용도지역</th>
+                    {form.zoningRows.map((row, index) => (
+                      <td key={`zoning-name-${index}`} className={rankClass(zoningStats.rankMap.get(index))}>
+                        <input className="table-input" value={row.name} onChange={(event) => updateListItem("zoningRows", index, { name: event.target.value })} placeholder="예: 주거지역" />
+                      </td>
+                    ))}
+                    <td className="total-cell">계</td>
+                  </tr>
+                  <tr>
+                    <th className="row-heading">면적(㎡)</th>
+                    {form.zoningRows.map((row, index) => (
+                      <td key={`zoning-area-${index}`} className={rankClass(zoningStats.rankMap.get(index))}>
+                        <input className="table-input" type="number" value={row.area} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />
+                      </td>
+                    ))}
+                    <td className="total-cell">{formatNumber(zoningStats.total)}</td>
+                  </tr>
+                  <tr>
+                    <th className="row-heading">구성비(%)</th>
+                    {form.zoningRows.map((row, index) => (
+                      <td key={`zoning-ratio-${index}`} className={rankClass(zoningStats.rankMap.get(index))}>{formatPercent(zoningStats.ratioMap.get(index))}</td>
+                    ))}
+                    <td className="total-cell">{zoningStats.total > 0 ? "100.0%" : "-"}</td>
+                  </tr>
+                  <tr>
+                    <th className="row-heading">관리</th>
+                    {form.zoningRows.map((row, index) => (
+                      <td key={`zoning-action-${index}`} className="actions">
+                        <button type="button" className="mini-button" onClick={() => removeRow("zoningRows", index, createZoningRow)}>삭제</button>
+                      </td>
+                    ))}
                     <td />
                   </tr>
                 </tbody>

@@ -413,6 +413,53 @@ button.mini-button {
   width: 92px;
 }
 
+.horizontal-table {
+  min-width: 1180px;
+  table-layout: fixed;
+}
+
+.horizontal-table th,
+.horizontal-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.horizontal-table .row-heading {
+  width: 128px;
+  text-align: left;
+  font-weight: 800;
+  background: rgba(160, 79, 47, 0.08);
+}
+
+.horizontal-table .table-input {
+  min-width: 108px;
+  text-align: center;
+}
+
+.zoning-horizontal-table {
+  min-width: 960px;
+}
+
+.data-table th.rank-1,
+.data-table td.rank-1 {
+  background: rgba(11, 79, 138, 0.22);
+}
+
+.data-table th.rank-2,
+.data-table td.rank-2 {
+  background: rgba(47, 111, 165, 0.18);
+}
+
+.data-table th.rank-3,
+.data-table td.rank-3 {
+  background: rgba(94, 144, 187, 0.14);
+}
+
+.total-cell {
+  font-weight: 800;
+  background: rgba(64, 49, 34, 0.06) !important;
+}
+
 .table-input,
 .table-textarea,
 .table-select {
@@ -554,6 +601,10 @@ button.mini-button {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+
+.landuse-layout {
+  grid-template-columns: 1fr;
 }
 
 .subpanel,
