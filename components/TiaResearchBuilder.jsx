@@ -130,6 +130,15 @@ function formatNumber(value) {
   return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(toNumber(value));
 }
 
+function formatSquareKilometers(value) {
+  const squareKilometers = toNumber(value) / 1000000;
+  if (!Number.isFinite(squareKilometers) || squareKilometers <= 0) return "-";
+  return new Intl.NumberFormat("ko-KR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(squareKilometers);
+}
+
 function formatPercent(value) {
   const num = Number(value);
   if (!Number.isFinite(num) || num <= 0) return "-";
@@ -1278,6 +1287,15 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                       </td>
                     ))}
                     <td className="total-cell">{formatNumber(landuseStats.total)}</td>
+                  </tr>
+                  <tr>
+                    <th className="row-heading">면적(km²)</th>
+                    {LANDUSE_CATEGORIES.map((category) => (
+                      <td key={`landuse-km2-${category}`} className={rankClass(landuseStats.rankMap.get(category))}>
+                        {formatSquareKilometers(form.landuseAreas[category])}
+                      </td>
+                    ))}
+                    <td className="total-cell">{formatSquareKilometers(landuseStats.total)}</td>
                   </tr>
                   <tr>
                     <th className="row-heading">구성비(%)</th>
