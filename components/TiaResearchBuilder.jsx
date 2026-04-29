@@ -19,6 +19,8 @@ const MANUAL_RESEARCH_PLACEHOLDER = "수동 조사필요";
 const DEFAULT_SCOPE_WIDTH = "2300";
 const DEFAULT_SCOPE_HEIGHT = "3200";
 const ROAD_SAMPLE_INTERVAL_METERS = 180;
+const DEFAULT_STATISTICS_YEAR = "2024";
+const STATISTICS_YEAR_OPTIONS = ["2025", "2024", "2023", "2022", "2021"];
 
 function createBlankBasics() {
   return {
@@ -70,6 +72,8 @@ function createBlankState() {
     basics: createBlankBasics(),
     roads: ROAD_CLASSES.map((roadClass) => createRoadRow({ roadClass })),
     surveyPoints: [createSurveyRow()],
+    statisticsYear: DEFAULT_STATISTICS_YEAR,
+    statisticsVerification: null,
     landuseSource: "",
     zoningSource: "",
     statisticsDataKey: "",
@@ -335,6 +339,8 @@ function mergeLoadedState(parsed) {
       rectWidth: String(loadedBasics.rectWidth || "").trim() || DEFAULT_SCOPE_WIDTH,
       rectHeight: String(loadedBasics.rectHeight || "").trim() || DEFAULT_SCOPE_HEIGHT,
     },
+    statisticsYear: String(parsed.statisticsYear || "").trim() || DEFAULT_STATISTICS_YEAR,
+    statisticsVerification: parsed.statisticsVerification || null,
     landuseAreas: { ...base.landuseAreas, ...(parsed.landuseAreas || {}) },
     roads: Array.isArray(parsed.roads) && parsed.roads.length ? parsed.roads : base.roads,
     surveyPoints: Array.isArray(parsed.surveyPoints) && parsed.surveyPoints.length ? parsed.surveyPoints : base.surveyPoints,
@@ -422,6 +428,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
   const annualReportLink = buildStatisticsAnnualReportLink(form.basics.siteAddress);
+  const verification = form.statisticsVerification;
 
   useEffect(() => {
     let cancelled = false;
@@ -703,7 +710,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       };
 
       if (field === "siteAddress") {
-        const sourcePatch = buildLocalStatisticsSources(value);
+        const sourcePatch = buildLocalStatisticsSources(value, current.statisticsYear || DEFAULT_STATISTICS_YEAR);
         if (sourcePatch.landuseSource && shouldUpdateLocalStatisticsSource(current.landuseSource)) {
           next.landuseSource = sourcePatch.landuseSource;
         }
@@ -712,6 +719,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         }
         if (current.statisticsDataKey) {
           next.statisticsDataKey = "";
+          next.statisticsVerification = null;
           next.landuseAreas = createBlankLanduseAreas();
           next.zoningRows = ZONING_DEFAULTS.map((name) => createZoningRow({ name }));
         }
@@ -734,7 +742,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function updateListItem(listName, index, patch) {
     setForm((current) => ({
       ...current,
-      ...(listName === "zoningRows" ? { statisticsDataKey: "" } : {}),
+      ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null } : {}),
       [listName]: current[listName].map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
     }));
   }
@@ -742,7 +750,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function addRow(listName, factory) {
     setForm((current) => ({
       ...current,
-      ...(listName === "zoningRows" ? { statisticsDataKey: "" } : {}),
+      ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null } : {}),
       [listName]: [...current[listName], factory()],
     }));
   }
@@ -752,7 +760,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       const next = current[listName].filter((_, itemIndex) => itemIndex !== index);
       return {
         ...current,
-        ...(listName === "zoningRows" ? { statisticsDataKey: "" } : {}),
+        ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null } : {}),
         [listName]: next.length ? next : [factory()],
       };
     });
@@ -762,8 +770,25 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     setForm((current) => ({
       ...current,
       statisticsDataKey: "",
+      statisticsVerification: null,
       landuseAreas: { ...current.landuseAreas, [category]: value },
     }));
+  }
+
+  function updateStatisticsYear(value) {
+    const nextYear = value || DEFAULT_STATISTICS_YEAR;
+    setForm((current) => ({
+      ...current,
+      statisticsYear: nextYear,
+      statisticsDataKey: "",
+      statisticsVerification: null,
+      ...(shouldUpdateLocalStatisticsSource(current.landuseSource) || shouldUpdateLocalStatisticsSource(current.zoningSource)
+        ? buildLocalStatisticsSources(current.basics.siteAddress, nextYear)
+        : {}),
+      landuseAreas: createBlankLanduseAreas(),
+      zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
+    }));
+    setStatusText("기준연도가 바뀌었습니다. 조사 시작 버튼을 눌러 해당 연도 자료로 다시 조회해 주세요.");
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -814,7 +839,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       const response = await fetch("/api/local-statistics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
+        body: JSON.stringify({ address, year: form.statisticsYear || DEFAULT_STATISTICS_YEAR }),
       });
       const payload = await response.json();
 
@@ -837,6 +862,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         patch.zoningSource = payload.zoning.source || "";
         patch.statisticsDataKey = patch.statisticsDataKey || `kosis-zoning:${payload.zoning.regionName || payload.target}:${payload.zoning.year || ""}`;
         messages.push(`용도지역은 ${payload.zoning.regionName || payload.target} 기준 KOSIS ${payload.zoning.year || "최신"}년 자료로 채웠습니다.`);
+      }
+      patch.statisticsVerification = payload.verification || null;
+      if (payload.verification?.message) {
+        messages.push(payload.verification.message);
       }
 
       if (!messages.length) {
@@ -979,6 +1008,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         createRoadRow({ roadClass: "로", name: "덕수궁길", startAddress: "", endAddress: "", source: "서울특별시 도로명주소" }),
       ],
       surveyPoints: [createSurveyRow()],
+      statisticsYear: DEFAULT_STATISTICS_YEAR,
+      statisticsVerification: null,
       landuseSource: "",
       zoningSource: "",
       statisticsDataKey: "",
@@ -1035,6 +1066,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           downloadLink: "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=Y8Y8YVLJQYM4K5GJ56GV32744671&infSeq=2",
         }),
       ],
+      statisticsYear: DEFAULT_STATISTICS_YEAR,
+      statisticsVerification: null,
       landuseSource: "",
       zoningSource: "",
       statisticsDataKey: "",
@@ -1270,6 +1303,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
         <div className="form-grid compact-grid">
           <label>
+            <span>기준연도</span>
+            <select value={form.statisticsYear || DEFAULT_STATISTICS_YEAR} onChange={(event) => updateStatisticsYear(event.target.value)}>
+              {STATISTICS_YEAR_OPTIONS.map((year) => <option key={year} value={year}>{year}년</option>)}
+            </select>
+          </label>
+          <label>
             <span>토지이용 출처</span>
             <input value={form.landuseSource} onChange={(event) => setForm((current) => ({ ...current, landuseSource: event.target.value }))} placeholder="예: 중구 통계연보 2025 / 수원시 통계연보 2025" />
           </label>
@@ -1277,6 +1316,33 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <span>용도지역 출처</span>
             <input value={form.zoningSource} onChange={(event) => setForm((current) => ({ ...current, zoningSource: event.target.value }))} placeholder="예: 중구 통계연보 2025 / 수원시 통계연보 2025" />
           </label>
+        </div>
+
+        <div className={`verification-card ${verification?.status || "idle"}`}>
+          <div>
+            <p className="eyebrow">Annual Report Check</p>
+            <h3>구/시 통계연보 자동 검증</h3>
+          </div>
+          <p>{verification?.message || "조사 시작 후 선택한 기준연도의 KOSIS 값과 내장된 구/시 통계연보 기준값을 비교합니다."}</p>
+          {verification?.source ? <p className="verification-source">검증 기준: {verification.source}</p> : null}
+          {verification?.landuse?.length ? (
+            <div className="verification-list">
+              {verification.landuse.map((item) => (
+                <span key={`landuse-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
+                  지목 {item.name}: KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                </span>
+              ))}
+            </div>
+          ) : null}
+          {verification?.zoning?.length ? (
+            <div className="verification-list">
+              {verification.zoning.map((item) => (
+                <span key={`zoning-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
+                  용도지역 {item.name}: KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                </span>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className="subpanel-grid landuse-layout">
@@ -1725,15 +1791,15 @@ function deriveLocalStatisticsUnit(address, fallback) {
   return deriveCityName(address, fallback);
 }
 
-function buildLocalStatisticsSources(address) {
+function buildLocalStatisticsSources(address, year = DEFAULT_STATISTICS_YEAR) {
   const sourceBase = deriveLocalStatisticsUnit(address, "");
   if (!sourceBase) {
     return { landuseSource: "", zoningSource: "" };
   }
 
   return {
-    landuseSource: `${sourceBase} 통계연보 2025`,
-    zoningSource: `${sourceBase} 통계연보 2025`,
+    landuseSource: `${sourceBase} 통계연보 ${year}`,
+    zoningSource: `${sourceBase} 통계연보 ${year}`,
   };
 }
 

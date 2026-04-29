@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import localStatisticsCache from "../../local-statistics-cache.json";
+import annualStatisticsCache from "../../annual-statistics-cache.json";
 
 export const runtime = "nodejs";
 
@@ -7,6 +8,7 @@ const KOSIS_BASE = "http://kosis.kr/openapi";
 const LANDUSE_TABLE = { orgId: "116", tblId: "DT_MLTM_2300" };
 const URBAN_ZONING_TABLE = { orgId: "460", tblId: "TX_315_2009_H1440" };
 const NON_URBAN_ZONING_TABLE = { orgId: "460", tblId: "TX_315_2009_H1443" };
+const DEFAULT_STATISTICS_YEAR = "2024";
 
 const LANDUSE_TARGETS = {
   전: "전",
@@ -63,6 +65,11 @@ function toAreaString(value) {
   return rounded > 0 ? String(rounded) : "0";
 }
 
+function normalizeYear(value) {
+  const year = safe(value).match(/\d{4}/)?.[0] || DEFAULT_STATISTICS_YEAR;
+  return year;
+}
+
 function matchesProvince(entry, province) {
   if (!entry?.province) return true;
   const provinceNames = new Set([province?.full, province?.short, ...(province?.aliases || [])].map(normalizeName));
@@ -75,14 +82,16 @@ function matchesRegion(entry, target) {
   return matchNames.some((name) => normalizeName(name) === preferred);
 }
 
-function pickCachedEntry(collection, target, province) {
+function pickCachedEntry(collection, target, province, year = "") {
   return (Array.isArray(collection) ? collection : []).find((entry) => (
-    matchesProvince(entry, province) && matchesRegion(entry, target)
+    matchesProvince(entry, province) &&
+    matchesRegion(entry, target) &&
+    (!year || safe(entry.year) === safe(year))
   )) || null;
 }
 
-function buildCachedLanduse(target, province) {
-  const entry = pickCachedEntry(localStatisticsCache.landuse, target, province);
+function buildCachedLanduse(target, province, year = "") {
+  const entry = pickCachedEntry(localStatisticsCache.landuse, target, province, year);
   if (!entry) return null;
   return {
     areas: entry.areas,
@@ -93,8 +102,8 @@ function buildCachedLanduse(target, province) {
   };
 }
 
-function buildCachedZoning(target, province) {
-  const entry = pickCachedEntry(localStatisticsCache.zoning, target, province);
+function buildCachedZoning(target, province, year = "") {
+  const entry = pickCachedEntry(localStatisticsCache.zoning, target, province, year);
   if (!entry) return null;
   return {
     rows: entry.rows,
@@ -157,7 +166,8 @@ async function getMeta(table) {
   return metaCache.get(key);
 }
 
-async function fetchKosisRows(table, { itemId, objL1 = "", objL2 = "", objL3 = "" }) {
+async function fetchKosisRows(table, { itemId, objL1 = "", objL2 = "", objL3 = "", year = "" }) {
+  const selectedYear = safe(year);
   const params = makeParams({
     method: "getList",
     apiKey: process.env.KOSIS_API_KEY,
@@ -173,7 +183,9 @@ async function fetchKosisRows(table, { itemId, objL1 = "", objL2 = "", objL3 = "
     format: "json",
     jsonVD: "Y",
     prdSe: "Y",
-    newEstPrdCnt: "1",
+    startPrdDe: selectedYear,
+    endPrdDe: selectedYear,
+    newEstPrdCnt: selectedYear ? "" : "1",
     orgId: table.orgId,
     tblId: table.tblId,
   });
@@ -251,7 +263,7 @@ function sumAreas(rows, categoryName) {
     .reduce((sum, row) => sum + toNumber(row.DT), 0);
 }
 
-async function buildLanduse(address, target, province) {
+async function buildLanduse(address, target, province, year = "") {
   const meta = await getMeta(LANDUSE_TABLE);
   const item = pickItemCode(meta, "항목", "면적");
   const provinceCode = pickMetaCode(meta, "시도", province.short, province.short);
@@ -267,6 +279,7 @@ async function buildLanduse(address, target, province) {
     objL1: provinceCode.ITM_ID,
     objL2: localCode.ITM_ID,
     objL3: levelCodes.map((row) => row.ITM_ID).join("+"),
+    year,
   });
 
   const areas = {};
@@ -278,18 +291,18 @@ async function buildLanduse(address, target, province) {
   const selectedTotal = Object.values(areas).reduce((sum, value) => sum + toNumber(value), 0);
   areas.기타 = toAreaString(Math.max(0, total - selectedTotal));
 
-  const year = rows.find((row) => row.PRD_DE)?.PRD_DE || "";
+  const dataYear = rows.find((row) => row.PRD_DE)?.PRD_DE || "";
   const regionName = rows.find((row) => row.C2_NM)?.C2_NM || localCode.ITM_NM;
 
   return {
     areas,
-    year,
+    year: dataYear,
     regionName,
-    source: `${regionName} 지목별 국토이용현황(KOSIS 국토교통부 ${year})`,
+    source: `${regionName} 지목별 국토이용현황(KOSIS 국토교통부 ${dataYear})`,
   };
 }
 
-async function fetchZoningPart(table, target, province, names) {
+async function fetchZoningPart(table, target, province, names, year = "") {
   const meta = await getMeta(table);
   const item = pickItemCode(meta, "항목", "면적");
   const localCode = pickLocalMetaCode(meta, "소재지(시군구)별", target.preferred, province);
@@ -303,13 +316,14 @@ async function fetchZoningPart(table, target, province, names) {
     itemId: item.ITM_ID,
     objL1: localCode.ITM_ID,
     objL2: zoningCodes.map((row) => row.ITM_ID).join("+"),
+    year,
   });
 }
 
-async function buildZoning(address, target, province) {
+async function buildZoning(address, target, province, year = "") {
   const [urbanRows, nonUrbanRows] = await Promise.all([
-    fetchZoningPart(URBAN_ZONING_TABLE, target, province, URBAN_ZONING_NAMES),
-    fetchZoningPart(NON_URBAN_ZONING_TABLE, target, province, NON_URBAN_ZONING_NAMES),
+    fetchZoningPart(URBAN_ZONING_TABLE, target, province, URBAN_ZONING_NAMES, year),
+    fetchZoningPart(NON_URBAN_ZONING_TABLE, target, province, NON_URBAN_ZONING_NAMES, year),
   ]);
 
   const rows = [...urbanRows, ...nonUrbanRows]
@@ -321,14 +335,109 @@ async function buildZoning(address, target, province) {
 
   if (!rows.length) return null;
 
-  const year = [...urbanRows, ...nonUrbanRows].find((row) => row.PRD_DE)?.PRD_DE || "";
+  const dataYear = [...urbanRows, ...nonUrbanRows].find((row) => row.PRD_DE)?.PRD_DE || "";
   const regionName = [...urbanRows, ...nonUrbanRows].find((row) => row.C1_NM)?.C1_NM || target.preferred;
 
   return {
     rows,
-    year,
+    year: dataYear,
     regionName,
-    source: `${regionName} 용도지역현황(KOSIS 도시계획현황 ${year})`,
+    source: `${regionName} 용도지역현황(KOSIS 도시계획현황 ${dataYear})`,
+  };
+}
+
+function pickAnnualReportEntry(target, province, year) {
+  return pickCachedEntry(annualStatisticsCache.entries, target, province, year);
+}
+
+function compareAreaMap(kosisMap = {}, reportMap = {}) {
+  return Object.entries(reportMap).map(([name, reportValue]) => {
+    const kosisValue = toNumber(kosisMap[name]);
+    const annualValue = toNumber(reportValue);
+    return {
+      name,
+      kosis: toAreaString(kosisValue),
+      annualReport: toAreaString(annualValue),
+      difference: toAreaString(Math.abs(kosisValue - annualValue)),
+      matched: Math.round(kosisValue) === Math.round(annualValue),
+    };
+  });
+}
+
+function compareZoningRows(kosisRows = [], reportRows = []) {
+  return reportRows.map((reportRow) => {
+    const kosisRow = kosisRows.find((row) => normalizeName(row.name) === normalizeName(reportRow.name));
+    const kosisValue = toNumber(kosisRow?.area);
+    const annualValue = toNumber(reportRow.area);
+    return {
+      name: reportRow.name,
+      kosis: toAreaString(kosisValue),
+      annualReport: toAreaString(annualValue),
+      difference: toAreaString(Math.abs(kosisValue - annualValue)),
+      matched: Math.round(kosisValue) === Math.round(annualValue),
+    };
+  });
+}
+
+function buildAnnualReportVerification(target, province, year, landuse, zoning) {
+  const entry = pickAnnualReportEntry(target, province, year);
+  if (!entry) {
+    return {
+      status: "missing",
+      year,
+      source: "",
+      message: `${target.preferred} ${year}년 구/시 통계연보 검증 기준값이 아직 내장되어 있지 않습니다.`,
+      landuse: [],
+      zoning: [],
+    };
+  }
+
+  if (!landuse?.areas && !zoning?.rows) {
+    return {
+      status: "unchecked",
+      year,
+      source: entry.source,
+      sourceLink: entry.sourceLink || "",
+      message: `${entry.source} 기준값은 있으나, 비교할 KOSIS ${year}년 조회값을 가져오지 못했습니다.`,
+      landuse: [],
+      zoning: [],
+    };
+  }
+
+  const hasLanduseBasis = Object.keys(entry.landuseAreas || {}).length > 0;
+  const hasZoningBasis = Array.isArray(entry.zoningRows) && entry.zoningRows.length > 0;
+  const landuseChecks = landuse?.areas ? compareAreaMap(landuse.areas, entry.landuseAreas || {}) : [];
+  const zoningChecks = zoning?.rows ? compareZoningRows(zoning.rows, entry.zoningRows || []) : [];
+  const checks = [...landuseChecks, ...zoningChecks];
+  const missingTargets = [
+    hasLanduseBasis && !landuse?.areas ? "지목별 토지이용" : "",
+    hasZoningBasis && !zoning?.rows ? "용도지역" : "",
+  ].filter(Boolean);
+
+  if (!checks.length) {
+    return {
+      status: "unchecked",
+      year,
+      source: entry.source,
+      sourceLink: entry.sourceLink || "",
+      message: `${entry.source} 기준값은 있으나, 비교할 KOSIS ${year}년 ${missingTargets.join(", ") || "조회값"}을 가져오지 못했습니다.`,
+      landuse: [],
+      zoning: [],
+    };
+  }
+
+  const mismatches = checks.filter((item) => !item.matched);
+
+  return {
+    status: mismatches.length ? "mismatch" : (missingTargets.length ? "partial" : "matched"),
+    year,
+    source: entry.source,
+    sourceLink: entry.sourceLink || "",
+    message: mismatches.length
+      ? `${entry.source} 기준으로 ${mismatches.length}개 항목이 KOSIS 값과 다릅니다.`
+      : `${entry.source} 기준 검증 항목이 KOSIS 값과 일치합니다.${missingTargets.length ? ` 단, ${missingTargets.join(", ")}은 KOSIS 조회값이 없어 제외했습니다.` : ""}`,
+    landuse: landuseChecks,
+    zoning: zoningChecks,
   };
 }
 
@@ -336,6 +445,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const address = safe(body.address);
+    const year = normalizeYear(body.year);
     if (!address) {
       return NextResponse.json({ error: "주소지가 비어 있습니다." }, { status: 400 });
     }
@@ -350,17 +460,18 @@ export async function POST(request) {
       return NextResponse.json({ error: "주소에서 시군구 단위를 찾지 못했습니다." }, { status: 400 });
     }
 
-    const cachedLanduse = buildCachedLanduse(target, province);
-    const cachedZoning = buildCachedZoning(target, province);
+    const cachedLanduse = buildCachedLanduse(target, province, year);
+    const cachedZoning = buildCachedZoning(target, province, year);
     const [liveLanduse, liveZoning] = process.env.KOSIS_API_KEY
       ? await Promise.all([
-        buildLanduse(address, target, province).catch((error) => ({ error: error.message })),
-        buildZoning(address, target, province).catch((error) => ({ error: error.message })),
+        buildLanduse(address, target, province, year).catch((error) => ({ error: error.message })),
+        buildZoning(address, target, province, year).catch((error) => ({ error: error.message })),
       ])
       : [null, null];
 
     const landuse = liveLanduse?.areas ? liveLanduse : cachedLanduse;
     const zoning = liveZoning?.rows ? liveZoning : cachedZoning;
+    const verification = buildAnnualReportVerification(target, province, year, landuse, zoning);
     const warnings = [
       liveLanduse?.error && cachedLanduse ? "KOSIS 실시간 연결 실패로 내장 캐시의 지목별 토지이용 자료를 사용했습니다." : liveLanduse?.error,
       liveZoning?.error && cachedZoning ? "KOSIS 실시간 연결 실패로 내장 캐시의 용도지역 자료를 사용했습니다." : liveZoning?.error,
@@ -370,8 +481,10 @@ export async function POST(request) {
       address,
       province: province.full,
       target: target.preferred,
+      year,
       landuse: landuse?.areas ? landuse : null,
       zoning: zoning?.rows ? zoning : null,
+      verification,
       warnings,
     });
   } catch (error) {

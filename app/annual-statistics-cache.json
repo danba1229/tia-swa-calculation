@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-04-29T00:00:00.000Z",
+  "description": "구 통계연보와 시 통계연보 원문에서 확인한 검증 기준값입니다. 항목이 있는 값만 자동 검증합니다.",
+  "entries": [
+    {
+      "province": "서울",
+      "region": "송파구",
+      "matchNames": ["송파구"],
+      "year": "2024",
+      "source": "송파구 통계연보 2024",
+      "landuseAreas": {
+        "전": "466494"
+      },
+      "zoningRows": []
+    }
+  ]
+}
