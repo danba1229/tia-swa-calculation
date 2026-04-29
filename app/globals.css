@@ -420,6 +420,8 @@ button.mini-button {
 
 .horizontal-table th,
 .horizontal-table td {
+  min-width: 0;
+  overflow: hidden;
   text-align: center;
   vertical-align: middle;
 }
@@ -432,7 +434,10 @@ button.mini-button {
 }
 
 .horizontal-table .table-input {
-  min-width: 108px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   text-align: center;
 }
 
