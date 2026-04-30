@@ -32,27 +32,6 @@ const ZONING_REPORT_LABELS = {
   미세분지역: "미지정",
   기타: "기타",
 };
-const LANDUSE_TOTAL_LABELS = ["합계", "계", "총계"];
-const LANDUSE_REPORT_MAPPINGS = [
-  { key: "전", labels: ["전"] },
-  { key: "답", labels: ["답"] },
-  { key: "임야", labels: ["임야"] },
-  { key: "대지", labels: ["대지", "대"] },
-  { key: "도로", labels: ["도로"] },
-  { key: "하천", labels: ["하천"] },
-  { key: "학교", labels: ["학교", "학교용지"] },
-  { key: "공원", labels: ["공원"] },
-];
-const ZONING_REPORT_MAPPINGS = [
-  { name: "주거지역", labels: ["주거지역"] },
-  { name: "상업지역", labels: ["상업지역"] },
-  { name: "공업지역", labels: ["공업지역"] },
-  { name: "녹지지역", labels: ["녹지지역"] },
-  { name: "관리지역", labels: ["관리지역"] },
-  { name: "농림지역", labels: ["농림지역"] },
-  { name: "자연환경보전지역", labels: ["자연환경보전지역"] },
-  { name: "미지정지역", labels: ["미지정", "미지정지역", "미세분지역"] },
-];
 const ROAD_CLASSES = ["고속도로", "대로", "로"];
 const SURVEY_TYPES = [
   { value: "time", label: "요일별 시간대별 교통량" },
@@ -421,74 +400,6 @@ function normalizeComparableName(value) {
   return safe(value).replace(/\s+/g, "").replace(/특별시|광역시|특별자치시|특별자치도|경기도|서울시|서울/g, "");
 }
 
-function pickMappedArea(source, labels) {
-  for (const label of labels) {
-    const value = source?.[label];
-    if (value !== undefined && value !== null && value !== "") return value;
-  }
-  return "";
-}
-
-function buildLanduseAreasFromCandidate(candidate) {
-  const areas = createBlankLanduseAreas();
-  LANDUSE_REPORT_MAPPINGS.forEach((item) => {
-    areas[item.key] = pickMappedArea(candidate.landuseAreas || {}, item.labels);
-  });
-  const total = toNullableNumber(pickMappedArea(candidate.landuseAreas || {}, LANDUSE_TOTAL_LABELS));
-  const majorTotal = LANDUSE_REPORT_MAPPINGS.reduce((sum, item) => sum + (toNullableNumber(areas[item.key]) ?? 0), 0);
-  areas.기타 = total === null ? "" : String(Math.max(0, Math.round(total - majorTotal)));
-  return areas;
-}
-
-function buildZoningRowsFromCandidate(candidate) {
-  const sourceRows = candidate.zoningRows || [];
-  const findArea = (labels) => {
-    const row = sourceRows.find((item) => labels.some((label) => normalizeComparableName(item.name) === normalizeComparableName(label)));
-    return row?.area || "";
-  };
-  const rows = ZONING_REPORT_MAPPINGS.map((item) => createZoningRow({
-    name: item.name,
-    area: findArea(item.labels),
-    rawItems: item.labels.join(", "),
-  }));
-  const totalRow = sourceRows.find((item) => LANDUSE_TOTAL_LABELS.some((label) => normalizeComparableName(item.name) === normalizeComparableName(label)));
-  const total = toNullableNumber(totalRow?.area);
-  const majorTotal = rows.reduce((sum, row) => sum + (toNullableNumber(row.area) ?? 0), 0);
-  rows.push(createZoningRow({
-    name: "기타",
-    area: total === null ? "" : String(Math.max(0, Math.round(total - majorTotal))),
-    rawItems: "합계 - 주요 항목 합계",
-  }));
-  return rows.filter((row) => row.name === "기타" || row.area !== "");
-}
-
-function buildExtractionSummaryFromCandidate(candidate, form) {
-  const baseYear = form.statisticsYear || DEFAULT_STATISTICS_YEAR;
-  const status = !candidate.yearbookBaseYear
-    ? "UNKNOWN_BASE_YEAR"
-    : candidate.yearbookBaseYear !== baseYear
-      ? "BASE_YEAR_MISMATCH"
-      : !candidate.sourceUnit
-        ? "UNKNOWN_UNIT"
-        : candidate.yearbookValueExtracted
-          ? "SUCCESS"
-          : "VALUE_PARSE_FAILED";
-  return {
-    status,
-    message: status === "SUCCESS"
-      ? `${candidate.title}을 통계연보 원자료로 결과표에 적용했습니다.`
-      : `통계연보 후보를 읽었지만 상태는 ${status}입니다. 표 기준연도와 값을 확인해 주세요.`,
-    source: candidate.source || "",
-    sourceLink: "",
-    base_year: baseYear,
-    report_year: candidate.yearbookPublicationYear || candidate.yearbookFileYear || "",
-    table_base_year: candidate.yearbookBaseYear || "",
-    yearbook_url: "",
-    landuse_status: candidate.kind === "landuse" ? status : "",
-    zoning_status: candidate.kind === "zoning" ? status : "",
-  };
-}
-
 function topLabels(entries, total) {
   return entries
     .filter((entry) => entry.value > 0)
@@ -558,9 +469,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [topisStatus, setTopisStatus] = useState("");
   const [gyeonggiCandidates, setGyeonggiCandidates] = useState([]);
   const [gyeonggiStatus, setGyeonggiStatus] = useState("");
-  const [pdfImportStatus, setPdfImportStatus] = useState("통계연보 PDF를 업로드하면 토지지목별 현황과 용도지역 현황 표 후보를 추출해 원자료 결과표에 적용할 수 있습니다.");
-  const [pdfImportCandidates, setPdfImportCandidates] = useState([]);
-  const [isPdfImporting, setIsPdfImporting] = useState(false);
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
   const mapRuntimeRef = useRef({
@@ -997,71 +905,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
     }));
     setStatusText("기준연도가 바뀌었습니다. 조사 시작 버튼을 눌러 해당 연도 자료로 다시 조회해 주세요.");
-  }
-
-  async function handleStatisticsPdfUpload(event) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-
-    if (file.type && file.type !== "application/pdf") {
-      setPdfImportStatus("PDF 파일만 업로드할 수 있습니다.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("year", form.statisticsYear || DEFAULT_STATISTICS_YEAR);
-
-    try {
-      setIsPdfImporting(true);
-      setPdfImportCandidates([]);
-      setPdfImportStatus(`${file.name} 파일에서 통계연보 표를 읽는 중입니다.`);
-
-      const response = await fetch("/api/statistics-pdf", {
-        method: "POST",
-        body: formData,
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "PDF 분석에 실패했습니다.");
-      }
-
-      setPdfImportCandidates(payload.candidates || []);
-      setPdfImportStatus(payload.message || "PDF 분석을 완료했습니다.");
-    } catch (error) {
-      console.error(error);
-      setPdfImportStatus(error.message || "PDF 분석 중 오류가 발생했습니다.");
-    } finally {
-      setIsPdfImporting(false);
-    }
-  }
-
-  function applyPdfCandidate(candidate) {
-    setForm((current) => {
-      const extraction = buildExtractionSummaryFromCandidate(candidate, current);
-      const next = {
-        ...current,
-        statisticsVerification: extraction,
-      };
-
-      if (extraction.status === "SUCCESS" && candidate.kind === "landuse") {
-        next.landuseAreas = buildLanduseAreasFromCandidate(candidate);
-        next.landuseSource = candidate.source || `${deriveStatisticsAnnualReportUnit(current.basics.siteAddress)} 통계연보`;
-        next.landuseBaseYear = candidate.yearbookBaseYear || current.statisticsYear;
-      }
-
-      if (extraction.status === "SUCCESS" && candidate.kind === "zoning") {
-        next.zoningRows = buildZoningRowsFromCandidate(candidate);
-        next.zoningSource = candidate.source || `${deriveStatisticsAnnualReportUnit(current.basics.siteAddress)} 통계연보`;
-        next.zoningBaseYear = candidate.yearbookBaseYear || current.statisticsYear;
-      }
-
-      return next;
-    });
-
-    setPdfImportStatus(`${candidate.title} 후보를 통계연보 원자료로 확인했습니다. 기준연도가 일치하고 값 추출에 성공한 경우 결과표에 적용됩니다.`);
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -1612,37 +1455,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           {verification?.source ? <p className="verification-source">원자료: {verification.source}</p> : null}
           {verification?.yearbook_url ? <p className="verification-source">통계연보 URL: {verification.yearbook_url}</p> : null}
           {verification?.table_base_year ? <p className="verification-source">표 기준연도: {verification.table_base_year}</p> : null}
-        </div>
-
-        <div className="pdf-import-card">
-          <div className="pdf-import-top">
-            <div>
-              <p className="eyebrow">Report Import</p>
-              <h3>통계연보 PDF에서 표 후보 가져오기</h3>
-            </div>
-            <label className="file-upload-button">
-              <input type="file" accept="application/pdf" onChange={handleStatisticsPdfUpload} disabled={isPdfImporting} />
-              {isPdfImporting ? "분석 중" : "PDF 업로드"}
-            </label>
-          </div>
-          <p className="pdf-import-status">{pdfImportStatus}</p>
-          {pdfImportCandidates.length ? (
-            <div className="pdf-candidate-grid">
-              {pdfImportCandidates.map((candidate) => (
-                <article key={candidate.id} className="pdf-candidate-card">
-                  <div className="pdf-candidate-header">
-                    <span className="status-badge">{candidate.confidence}</span>
-                    <strong>{candidate.title}</strong>
-                  </div>
-                  <p>{candidate.kind === "landuse" ? `추출 지목 ${Object.keys(candidate.landuseAreas || {}).length}개` : `추출 용도지역 ${candidate.zoningRows?.length || 0}개`}</p>
-                  <p>파일연도 {candidate.yearbookFileYear || "-"} / 표 기준연도 {candidate.yearbookBaseYear || "-"} / 행정구역 {candidate.yearbookAdminName || "-"}</p>
-                  <p>표 제목 {candidate.sourceTableTitle || "-"} / 단위 {candidate.sourceUnit || "㎡"}</p>
-                  <pre>{candidate.preview}</pre>
-                  <button type="button" className="secondary" onClick={() => applyPdfCandidate(candidate)}>결과표에 적용</button>
-                </article>
-              ))}
-            </div>
-          ) : null}
         </div>
 
         <div className="subpanel-grid landuse-layout">
