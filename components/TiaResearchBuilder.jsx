@@ -98,6 +98,9 @@ function createBlankState() {
     surveyPoints: [createSurveyRow()],
     statisticsYear: DEFAULT_STATISTICS_YEAR,
     statisticsVerification: null,
+    kosisStatus: "",
+    landuseKosisYear: "",
+    zoningKosisYear: "",
     landuseSource: "",
     zoningSource: "",
     statisticsDataKey: "",
@@ -333,8 +336,8 @@ function zoningReportLabel(name) {
 }
 
 function buildLanduseReportRows(form, stats) {
-  const source = safe(form.landuseSource) || `KOSIS 국토교통부 ${form.statisticsYear || DEFAULT_STATISTICS_YEAR}`;
-  const year = form.statisticsYear || DEFAULT_STATISTICS_YEAR;
+  const source = safe(form.landuseSource) || "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구";
+  const year = form.landuseKosisYear || form.statisticsYear || DEFAULT_STATISTICS_YEAR;
   const rows = LANDUSE_CATEGORIES.map((category) => {
     const area = toNumber(form.landuseAreas[category]);
     return {
@@ -363,8 +366,8 @@ function buildLanduseReportRows(form, stats) {
 }
 
 function buildZoningReportRows(form, stats) {
-  const source = safe(form.zoningSource) || `KOSIS 도시계획현황 ${form.statisticsYear || DEFAULT_STATISTICS_YEAR}`;
-  const year = form.statisticsYear || DEFAULT_STATISTICS_YEAR;
+  const source = safe(form.zoningSource) || "KOSIS 도시계획현황, 용도지역현황";
+  const year = form.zoningKosisYear || form.statisticsYear || DEFAULT_STATISTICS_YEAR;
   const rows = form.zoningRows.map((row, index) => {
     const area = toNumber(row.area);
     const rawItem = safe(row.rawItems) || safe(row.name) || `용도지역 ${index + 1}`;
@@ -559,6 +562,9 @@ function mergeLoadedState(parsed) {
     },
     statisticsYear: String(parsed.statisticsYear || "").trim() || DEFAULT_STATISTICS_YEAR,
     statisticsVerification: parsed.statisticsVerification || null,
+    kosisStatus: parsed.kosisStatus || "",
+    landuseKosisYear: parsed.landuseKosisYear || "",
+    zoningKosisYear: parsed.zoningKosisYear || "",
     landuseAreas: { ...base.landuseAreas, ...(parsed.landuseAreas || {}) },
     roads: Array.isArray(parsed.roads) && parsed.roads.length ? parsed.roads : base.roads,
     surveyPoints: Array.isArray(parsed.surveyPoints) && parsed.surveyPoints.length ? parsed.surveyPoints : base.surveyPoints,
@@ -576,7 +582,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [topisStatus, setTopisStatus] = useState("");
   const [gyeonggiCandidates, setGyeonggiCandidates] = useState([]);
   const [gyeonggiStatus, setGyeonggiStatus] = useState("");
-  const [pdfImportStatus, setPdfImportStatus] = useState("통계연보 PDF를 업로드하면 표 후보를 추출해 현재 양식에 반영할 수 있습니다.");
+  const [pdfImportStatus, setPdfImportStatus] = useState("KOSIS 기준 결과표는 생성됩니다. 통계연보 PDF 자동 추출이 실패하면 검증값만 수동 입력하거나 PDF를 업로드해 검증할 수 있습니다.");
   const [pdfImportCandidates, setPdfImportCandidates] = useState([]);
   const [isPdfImporting, setIsPdfImporting] = useState(false);
   const hydratedRef = useRef(false);
@@ -1005,6 +1011,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       statisticsYear: nextYear,
       statisticsDataKey: "",
       statisticsVerification: null,
+      kosisStatus: "",
+      landuseKosisYear: "",
+      zoningKosisYear: "",
       ...(shouldUpdateLocalStatisticsSource(current.landuseSource) || shouldUpdateLocalStatisticsSource(current.zoningSource)
         ? buildLocalStatisticsSources(current.basics.siteAddress, nextYear)
         : {}),
@@ -1129,10 +1138,15 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       const patch = {};
       const messages = [];
+      if (payload.debug) {
+        console.info("[TIA KOSIS debug]", payload.debug);
+      }
+      patch.kosisStatus = payload.kosis_status || "";
 
       if (payload.landuse?.areas) {
         patch.landuseAreas = { ...createBlankLanduseAreas(), ...payload.landuse.areas };
         patch.landuseSource = payload.landuse.source || "";
+        patch.landuseKosisYear = payload.landuse.kosisUsedYear || payload.landuse.year || "";
         patch.statisticsDataKey = `kosis-landuse:${payload.landuse.regionName || payload.target}:${payload.landuse.year || ""}`;
         messages.push(`지목별 토지이용은 ${payload.landuse.regionName || payload.target} 기준 KOSIS ${payload.landuse.year || "최신"}년 자료로 채웠습니다.`);
       }
@@ -1140,8 +1154,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       if (Array.isArray(payload.zoning?.rows) && payload.zoning.rows.length) {
         patch.zoningRows = payload.zoning.rows.map((row) => createZoningRow(row));
         patch.zoningSource = payload.zoning.source || "";
+        patch.zoningKosisYear = payload.zoning.kosisUsedYear || payload.zoning.year || "";
         patch.statisticsDataKey = patch.statisticsDataKey || `kosis-zoning:${payload.zoning.regionName || payload.target}:${payload.zoning.year || ""}`;
         messages.push(`용도지역은 ${payload.zoning.regionName || payload.target} 기준 KOSIS ${payload.zoning.year || "최신"}년 자료로 채웠습니다.`);
+      }
+      if (payload.kosis_status === "FAILED") {
+        messages.push("KOSIS에서 해당 행정구역/연도의 자료를 찾지 못했습니다.");
       }
       patch.statisticsVerification = payload.verification || null;
       if (payload.verification?.message) {
@@ -1290,6 +1308,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       surveyPoints: [createSurveyRow()],
       statisticsYear: DEFAULT_STATISTICS_YEAR,
       statisticsVerification: null,
+      kosisStatus: "",
+      landuseKosisYear: "",
+      zoningKosisYear: "",
       landuseSource: "",
       zoningSource: "",
       statisticsDataKey: "",
@@ -1348,6 +1369,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ],
       statisticsYear: DEFAULT_STATISTICS_YEAR,
       statisticsVerification: null,
+      kosisStatus: "",
+      landuseKosisYear: "",
+      zoningKosisYear: "",
       landuseSource: "",
       zoningSource: "",
       statisticsDataKey: "",
@@ -1606,25 +1630,63 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <p>{verification?.message || "조사 시작 후 KOSIS 값을 생성하고, 공식 지자체 통계연보 PDF/XLS 자료를 자동 탐색해 검증을 시도합니다."}</p>
           {verification?.source ? <p className="verification-source">검증 기준: {verification.source}</p> : null}
           {verification?.landuse?.length ? (
-            <div className="verification-list">
-              {verification.landuse.map((item) => (
-                <span key={`landuse-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
-                  지목 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatOptionalNumber(item.kosis)}㎡ / 통계연보 {formatOptionalNumber(item.annualReport)}㎡ / 차이 {formatOptionalNumber(item.difference)}㎡
-                  {item.diff_pct ? ` / 차이율 ${item.diff_pct}%` : ""}
-                  {item.validation_note ? ` / ${item.validation_note}` : ""}
-                </span>
-              ))}
+            <div className="table-wrap verification-table-wrap">
+              <table className="data-table verification-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>kosis_m2</th>
+                    <th>yearbook_m2</th>
+                    <th>diff_m2</th>
+                    <th>diff_pct</th>
+                    <th>validation_status</th>
+                    <th>validation_note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {verification.landuse.map((item) => (
+                    <tr key={`landuse-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
+                      <td>{item.name}</td>
+                      <td>{formatOptionalNumber(item.kosis)}</td>
+                      <td>{formatOptionalNumber(item.annualReport)}</td>
+                      <td>{formatOptionalNumber(item.difference)}</td>
+                      <td>{item.diff_pct || "-"}</td>
+                      <td>{item.validation_status || (item.matched ? "PASS" : "FAIL")}</td>
+                      <td>{item.validation_note || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : null}
           {verification?.zoning?.length ? (
-            <div className="verification-list">
-              {verification.zoning.map((item) => (
-                <span key={`zoning-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
-                  용도지역 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatOptionalNumber(item.kosis)}㎡ / 통계연보 {formatOptionalNumber(item.annualReport)}㎡ / 차이 {formatOptionalNumber(item.difference)}㎡
-                  {item.diff_pct ? ` / 차이율 ${item.diff_pct}%` : ""}
-                  {item.validation_note ? ` / ${item.validation_note}` : ""}
-                </span>
-              ))}
+            <div className="table-wrap verification-table-wrap">
+              <table className="data-table verification-table">
+                <thead>
+                  <tr>
+                    <th>구분</th>
+                    <th>kosis_m2</th>
+                    <th>yearbook_m2</th>
+                    <th>diff_m2</th>
+                    <th>diff_pct</th>
+                    <th>validation_status</th>
+                    <th>validation_note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {verification.zoning.map((item) => (
+                    <tr key={`zoning-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
+                      <td>{item.name}</td>
+                      <td>{formatOptionalNumber(item.kosis)}</td>
+                      <td>{formatOptionalNumber(item.annualReport)}</td>
+                      <td>{formatOptionalNumber(item.difference)}</td>
+                      <td>{item.diff_pct || "-"}</td>
+                      <td>{item.validation_status || (item.matched ? "PASS" : "FAIL")}</td>
+                      <td>{item.validation_note || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : null}
         </div>
@@ -1682,7 +1744,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                       <td>{row.label}</td>
                       <td>
                         {row.isTotal ? formatNumber(row.area) : (
-                          <input className="table-input" type="number" value={form.landuseAreas[row.key]} onChange={(event) => updateLanduseArea(row.key, event.target.value)} placeholder="면적 입력" />
+                          <input className="table-input" type="number" value={form.landuseAreas[row.key] || ""} onChange={(event) => updateLanduseArea(row.key, event.target.value)} placeholder="면적 입력" />
                         )}
                       </td>
                       <td>{formatSquareKilometers(row.area)}</td>
@@ -2077,8 +2139,8 @@ function buildLocalStatisticsSources(address, year = DEFAULT_STATISTICS_YEAR) {
   }
 
   return {
-    landuseSource: `${sourceBase} 통계연보 ${year}`,
-    zoningSource: `${sourceBase} 통계연보 ${year}`,
+    landuseSource: "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구",
+    zoningSource: "KOSIS 도시계획현황, 용도지역현황",
   };
 }
 
@@ -2119,8 +2181,11 @@ function findLocalStatisticsData(address) {
 
 function applyLocalStatisticsData(target, data) {
   target.statisticsDataKey = data.key;
-  target.landuseSource = `${data.sourceUnit} 통계연보 ${data.year}`;
-  target.zoningSource = `${data.sourceUnit} 통계연보 ${data.year}`;
+  target.kosisStatus = "SUCCESS";
+  target.landuseKosisYear = data.year;
+  target.zoningKosisYear = data.year;
+  target.landuseSource = "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구";
+  target.zoningSource = "KOSIS 도시계획현황, 용도지역현황";
   target.landuseAreas = { ...createBlankLanduseAreas(), ...data.landuseAreas };
   target.zoningRows = data.zoningRows.map((row) => createZoningRow(row));
   return target;

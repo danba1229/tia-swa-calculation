@@ -152,7 +152,7 @@ function buildCachedLanduse(target, province, year = "") {
     kosisAvailableYear: entry.year,
     kosisUsedYear: entry.year,
     regionName: entry.region,
-    source: entry.source,
+    source: "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구",
     cached: true,
   };
 }
@@ -172,7 +172,7 @@ function buildCachedZoning(target, province, year = "", { allowLatest = false } 
     kosisUsedYear: entry.year,
     validationNote: fallbackNote,
     regionName: entry.region,
-    source: entry.source,
+    source: "KOSIS 도시계획현황, 용도지역현황",
     cached: true,
   };
 }
@@ -364,7 +364,8 @@ async function buildLanduse(address, target, province, year = "") {
     kosisAvailableYear: dataYear,
     kosisUsedYear: dataYear,
     regionName,
-    source: `${regionName} 지목별 국토이용현황(KOSIS 국토교통부 ${dataYear})`,
+    source: "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구",
+    rowCount: rows.length,
   };
 }
 
@@ -448,8 +449,9 @@ async function buildZoningFromUnifiedTable(address, target, province, year = "")
     kosisAvailableYear: dataYear,
     kosisUsedYear: dataYear,
     regionName,
-    source: `${regionName} 용도지역현황(KOSIS 도시계획현황 ${dataYear})`,
+    source: "KOSIS 도시계획현황, 용도지역현황",
     tableId: ZONING_TABLE.tblId,
+    rowCount: rows.length,
   };
 }
 
@@ -481,7 +483,8 @@ async function buildZoning(address, target, province, year = "") {
     kosisAvailableYear: dataYear,
     kosisUsedYear: dataYear,
     regionName,
-    source: `${regionName} 용도지역현황(KOSIS 도시계획현황 ${dataYear})`,
+    source: "KOSIS 도시계획현황, 용도지역현황",
+    rowCount: [...urbanRows, ...nonUrbanRows].length,
   };
 }
 
@@ -941,6 +944,8 @@ function compareZoningRows(kosisRows = [], reportRows = []) {
 
 async function buildAnnualReportVerification(target, province, year, landuse, zoning) {
   const yearbookFile = await findYearbookFile(target, year);
+  const hasKosisResult = Boolean(landuse?.areas || zoning?.rows);
+  const kosisResultMessage = hasKosisResult ? "KOSIS 결과는 생성되었습니다." : "KOSIS에서 해당 행정구역/연도의 자료를 찾지 못했습니다.";
   const baseMeta = {
     requestedYear: year,
     kosisAvailableYear: landuse?.kosisAvailableYear || zoning?.kosisAvailableYear || "",
@@ -997,7 +1002,7 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
         source_unit: "",
         source: yearbookFile.sourcePage || "",
         sourceLink: yearbookFile.yearbookUrl || yearbookFile.sourcePage || "",
-        message: `${downloaded?.message || "통계연보 자동 추출에 실패했습니다."} KOSIS 결과는 생성되었으며, 검증상태는 MANUAL_REQUIRED로 저장했습니다.`,
+        message: `${downloaded?.message || "통계연보 자동 추출에 실패했습니다."} ${kosisResultMessage} 검증상태는 MANUAL_REQUIRED입니다.`,
         landuse: [makeNoSourceCheck("지목별 토지이용", "landuse", "MANUAL_REQUIRED", baseMeta, downloaded?.message || "자동 추출 대상 파일이 아닙니다.")],
         zoning: [makeNoSourceCheck("용도지역", "zoning", "MANUAL_REQUIRED", baseMeta, downloaded?.message || "자동 추출 대상 파일이 아닙니다.")],
       };
@@ -1062,10 +1067,10 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
       message: status === "PASS"
         ? `${target.preferred} 통계연보 PDF를 자동 추출해 KOSIS 결과와 비교했습니다.`
         : status === "YEARBOOK_TABLE_NOT_EXTRACTED"
-          ? "KOSIS 결과는 생성되었습니다. 다만 통계연보 PDF에서 해당 표를 자동 추출하지 못해 검증상태는 YEARBOOK_TABLE_NOT_EXTRACTED입니다."
+          ? `${kosisResultMessage} 다만 통계연보 PDF에서 해당 표를 자동 추출하지 못해 검증상태는 YEARBOOK_TABLE_NOT_EXTRACTED입니다.`
           : status === "YEARBOOK_VALUE_NOT_EXTRACTED"
-            ? "KOSIS 결과는 생성되었습니다. 다만 통계연보 PDF에서 항목별 값을 자동 추출하지 못해 검증상태는 YEARBOOK_VALUE_NOT_EXTRACTED입니다."
-            : `KOSIS 결과는 생성되었습니다. 통계연보 자동검증 상태는 ${status}입니다.`,
+            ? `${kosisResultMessage} 다만 통계연보 PDF에서 항목별 값을 자동 추출하지 못해 검증상태는 YEARBOOK_VALUE_NOT_EXTRACTED입니다.`
+            : `${kosisResultMessage} 통계연보 자동검증 상태는 ${status}입니다.`,
       landuse: landuseChecks,
       zoning: zoningChecks,
     };
@@ -1073,7 +1078,7 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
     const fallback = pickAnnualReportEntry(target, province, year);
     const fallbackMessage = fallback
       ? `자동 추출 실패로 선택적 보조 기준값을 확인할 수 있습니다. ${error.message}`
-      : `통계연보 자동 추출에 실패했습니다. KOSIS 결과는 생성되었으며, 검증상태는 MANUAL_REQUIRED로 저장했습니다. ${error.message}`;
+      : `통계연보 자동 추출에 실패했습니다. ${kosisResultMessage} 검증상태는 MANUAL_REQUIRED입니다. ${error.message}`;
     return {
       status: "MANUAL_REQUIRED",
       year,
@@ -1127,11 +1132,15 @@ export async function POST(request) {
 
     const landuse = liveLanduse?.areas ? liveLanduse : cachedLanduse;
     const zoning = liveZoning?.rows ? liveZoning : cachedZoning;
+    const landuseTotal = landuse?.areas ? Object.values(landuse.areas).reduce((sum, value) => sum + toNumber(value), 0) : 0;
+    const zoningTotal = zoning?.rows ? zoning.rows.reduce((sum, row) => sum + toNumber(row.area), 0) : 0;
+    const kosisStatus = landuse?.areas && zoning?.rows ? "SUCCESS" : (landuse?.areas || zoning?.rows ? "PARTIAL" : "FAILED");
     const verification = await buildAnnualReportVerification(target, province, year, landuse, zoning);
     const warnings = [
       liveLanduse?.error && cachedLanduse ? "KOSIS 실시간 연결 실패로 내장 캐시의 지목별 토지이용 자료를 사용했습니다." : liveLanduse?.error,
       liveZoning?.error && cachedZoning ? "KOSIS 실시간 연결 실패로 내장 캐시의 용도지역 자료를 사용했습니다." : liveZoning?.error,
       zoning?.validationNote,
+      kosisStatus === "FAILED" ? "KOSIS에서 해당 행정구역/연도의 자료를 찾지 못했습니다." : "",
     ].filter(Boolean);
 
     return NextResponse.json({
@@ -1139,9 +1148,22 @@ export async function POST(request) {
       province: province.full,
       target: target.preferred,
       year,
+      kosis_status: kosisStatus,
+      yearbook_status: verification?.status || "",
       landuse: landuse?.areas ? landuse : null,
       zoning: zoning?.rows ? zoning : null,
       verification,
+      debug: {
+        kosis_status: kosisStatus,
+        landuse_raw_row_count: landuse?.rowCount ?? 0,
+        zoning_raw_row_count: zoning?.rowCount ?? 0,
+        landuse_report_row_count: landuse?.areas ? Object.keys(landuse.areas).length : 0,
+        zoning_report_row_count: zoning?.rows?.length || 0,
+        landuse_total_m2: landuseTotal,
+        zoning_total_m2: zoningTotal,
+        landuse_areas: landuse?.areas || {},
+        zoning_rows: zoning?.rows || [],
+      },
       warnings,
     });
   } catch (error) {
