@@ -90,6 +90,12 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function toNullableNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(String(value).replace(/,/g, ""));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function toAreaString(value) {
   const rounded = Math.round(toNumber(value));
   return rounded > 0 ? String(rounded) : "0";
@@ -571,13 +577,19 @@ function getKnownYearbookPages(target) {
     .flatMap((source) => source.pages.map((page) => ({ ...source, page })));
 }
 
-function buildYearbookSearchUrls(target, year) {
+function buildYearbookPublicationYears(requestedYear) {
+  const requested = Number(requestedYear);
+  if (!Number.isFinite(requested)) return [safe(requestedYear)].filter(Boolean);
+  return [String(requested + 1), String(requested)];
+}
+
+function buildYearbookSearchUrls(target, publicationYear, requestedYear) {
   const region = safe(target?.preferred);
   const queries = [
-    `${region} ${year} 통계연보 PDF`,
-    `${region} 통계연보 ${year}`,
-    `site:go.kr ${region} ${year} 통계연보`,
-    `site:go.kr ${region} 지목별 토지현황 용도지역 통계연보`,
+    `${region} ${publicationYear} 통계연보 PDF`,
+    `${region} 통계연보 ${publicationYear}`,
+    `site:go.kr ${region} ${publicationYear} 통계연보`,
+    `site:go.kr ${region} ${requestedYear} 기준 통계연보 토지 용도지역`,
   ];
   return [
     ...queries.map((query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`),
@@ -600,20 +612,22 @@ async function fetchTextDocument(url, timeoutMs = 4500) {
   return response.text();
 }
 
-function makeYearbookCandidate(link, { year, sourcePage = "", officialDomain = "" }) {
+function makeYearbookCandidate(link, { publicationYear, requestedYear, sourcePage = "", officialDomain = "" }) {
   const yearSource = safe(`${link.context} ${link.text} ${link.url}`);
   const years = [...yearSource.matchAll(/(20\d{2}|19\d{2})/g)].map((match) => match[1]);
-  const fileYear = years.includes(safe(year)) ? safe(year) : (years.at(-1) || "");
+  const fileYear = years.includes(safe(publicationYear)) ? safe(publicationYear) : (years.at(-1) || "");
   const fileType = inferFileType(link);
-  const exactYear = fileYear === safe(year) || link.context.includes(`${year}년`) || link.text.includes(`${year}년`);
+  const exactPublicationYear = fileYear === safe(publicationYear) || link.context.includes(`${publicationYear}년`) || link.text.includes(`${publicationYear}년`);
   const isPdf = fileType === "pdf" || /\.pdf(?:[?#]|$)/i.test(link.url);
   return {
     ...link,
     fileYear,
+    publicationYear: fileYear,
+    requestedYear,
     fileType: fileType || (isPdf ? "pdf" : ""),
     sourcePage,
     officialDomain,
-    score: (exactYear ? 100 : 0)
+    score: (exactPublicationYear ? 100 : 0)
       + (isPdf ? 30 : 0)
       + (/통계|연보/.test(yearSource) ? 15 : 0)
       + (isOfficialDomain(link.url) ? 10 : 0),
@@ -632,13 +646,13 @@ function extractSearchResultUrls(html, searchUrl) {
   return [...urls];
 }
 
-async function scanYearbookPage(page, year, found) {
+async function scanYearbookPage(page, publicationYear, requestedYear, found) {
   if (YEARBOOK_DOC_PATTERN.test(page.url)) {
     found.push(makeYearbookCandidate({
       url: page.url,
       text: page.text || "",
       context: page.context || "",
-    }, { year, sourcePage: page.sourcePage || page.url, officialDomain: page.officialDomain || "" }));
+    }, { publicationYear, requestedYear, sourcePage: page.sourcePage || page.url, officialDomain: page.officialDomain || "" }));
     return;
   }
 
@@ -646,7 +660,8 @@ async function scanYearbookPage(page, year, found) {
   const links = extractYearbookLinks(html, page.url);
   links.forEach((link) => {
     found.push(makeYearbookCandidate(link, {
-      year,
+      publicationYear,
+      requestedYear,
       sourcePage: page.url,
       officialDomain: page.officialDomain || "",
     }));
@@ -654,7 +669,8 @@ async function scanYearbookPage(page, year, found) {
 }
 
 async function findYearbookFile(target, year) {
-  const searchUrls = buildYearbookSearchUrls(target, year);
+  const publicationYears = buildYearbookPublicationYears(year);
+  const searchUrls = publicationYears.flatMap((publicationYear) => buildYearbookSearchUrls(target, publicationYear, year));
   const knownPages = getKnownYearbookPages(target).map((item) => ({
     url: item.page,
     sourcePage: item.page,
@@ -692,7 +708,9 @@ async function findYearbookFile(target, year) {
     if (pages.length >= 20) break;
   }
 
-  await Promise.allSettled(pages.slice(0, 20).map((page) => scanYearbookPage(page, year, found)));
+  await Promise.allSettled(publicationYears.flatMap((publicationYear) => (
+    pages.slice(0, 20).map((page) => scanYearbookPage(page, publicationYear, year, found))
+  )));
 
   const selected = found
     .filter((link) => link.score > 0)
@@ -700,20 +718,22 @@ async function findYearbookFile(target, year) {
 
   if (!selected) {
     return {
-      status: "NO_SOURCE",
-      message: `내장 검증값은 사용하지 않습니다. ${target.preferred} ${year}년 통계연보를 공식 홈페이지와 검색 후보에서 자동 탐색했지만 자동 다운로드 가능한 PDF/XLS 링크를 찾지 못했습니다.`,
+      status: "NO_YEARBOOK_PUBLISHED",
+      message: `요청 기준연도 ${year}에 대응하는 ${publicationYears[0]} 통계연보가 아직 공개되지 않아 자동검증을 보류했습니다.`,
       searchUrls,
       yearbookUrl: "",
       sourcePage: pages[0]?.url || "",
+      publicationYears,
     };
   }
 
   return {
     status: "FOUND",
-    message: `내장 검증값은 사용하지 않습니다. ${target.preferred} ${year}년 통계연보를 공식 홈페이지에서 자동 탐색합니다.`,
+    message: `내장 검증값은 사용하지 않습니다. 요청 기준연도 ${year}에 대응하는 ${selected.publicationYear || selected.fileYear || ""} 통계연보를 공식 홈페이지에서 자동 탐색합니다.`,
     ...selected,
     yearbookUrl: selected.url,
     searchUrls,
+    publicationYears,
   };
 }
 
@@ -746,16 +766,20 @@ function makeNoSourceCheck(name, kind, status, meta, note) {
   return {
     name,
     kind,
-    kosis: "0",
-    annualReport: "0",
-    difference: "0",
+    kosis: meta.kosisValue ?? null,
+    annualReport: null,
+    difference: null,
+    diff_pct: "",
     matched: false,
     requested_year: meta.requestedYear,
     kosis_available_year: meta.kosisAvailableYear || "",
     kosis_used_year: meta.kosisUsedYear || "",
     yearbook_file_year: meta.yearbookFileYear || "",
+    yearbook_publication_year: meta.yearbookPublicationYear || meta.yearbookFileYear || "",
     yearbook_base_year: meta.yearbookBaseYear || "",
     yearbook_url: meta.yearbookUrl || "",
+    yearbook_table_extracted: Boolean(meta.yearbookTableExtracted),
+    yearbook_value_extracted: Boolean(meta.yearbookValueExtracted),
     source_table_title: meta.sourceTableTitle || "",
     source_unit: meta.sourceUnit || "",
     validation_status: status,
@@ -764,36 +788,58 @@ function makeNoSourceCheck(name, kind, status, meta, note) {
 }
 
 function compareAnnualValue({ name, kosisValue, annualValue, unitAllowsRounding, meta, statusOverride = "" }) {
-  const difference = Math.abs(kosisValue - annualValue);
-  const diffPctValue = kosisValue > 0 ? (difference / kosisValue) * 100 : (annualValue > 0 ? 100 : 0);
+  const parsedKosis = toNullableNumber(kosisValue);
+  const parsedAnnual = toNullableNumber(annualValue);
+  let difference = null;
+  let diffPctValue = null;
   let validationStatus = statusOverride;
+
   if (!validationStatus) {
-    if (diffPctValue <= 0.1) validationStatus = "PASS";
-    else if (diffPctValue <= 1 && unitAllowsRounding) validationStatus = "WARN_ROUNDING";
-    else validationStatus = "FAIL";
+    if (!meta.yearbookTableExtracted) validationStatus = "YEARBOOK_TABLE_NOT_EXTRACTED";
+    else if (!meta.yearbookBaseYear) validationStatus = "UNKNOWN_BASE_YEAR";
+    else if (meta.yearbookBaseYear !== meta.kosisUsedYear) validationStatus = "YEAR_MISMATCH";
+    else if (parsedAnnual === null) validationStatus = "YEARBOOK_VALUE_NOT_EXTRACTED";
+    else if (parsedKosis === null) validationStatus = "MANUAL_REQUIRED";
+    else {
+      difference = Math.abs(parsedKosis - parsedAnnual);
+      diffPctValue = parsedKosis > 0 ? (difference / parsedKosis) * 100 : (parsedAnnual > 0 ? 100 : 0);
+      if (diffPctValue <= 0.1) validationStatus = "PASS";
+      else validationStatus = "FAIL";
+    }
+  }
+
+  if (difference === null && parsedKosis !== null && parsedAnnual !== null && validationStatus === "FAIL") {
+    difference = Math.abs(parsedKosis - parsedAnnual);
+    diffPctValue = parsedKosis > 0 ? (difference / parsedKosis) * 100 : (parsedAnnual > 0 ? 100 : 0);
   }
 
   const validationNote = meta.validationNote
-    || (validationStatus === "PASS" ? "차이율 0.1% 이하입니다."
-      : validationStatus === "WARN_ROUNDING" ? "차이율 0.1~1.0%이며 원자료 단위 반올림 영향 가능성이 있습니다."
-        : validationStatus === "YEAR_MISMATCH" ? "KOSIS 조회연도와 통계연보 표 기준연도가 다릅니다."
-          : validationStatus === "ADMIN_LEVEL_MISMATCH" ? "KOSIS 행정구역명과 통계연보 행정구역명이 달라 검증하지 않았습니다."
-            : validationStatus === "CATEGORY_MISMATCH" ? "허용된 표 제목 또는 항목명과 일치하지 않습니다."
-              : "수치 차이가 허용 기준을 초과합니다.");
+    || (validationStatus === "PASS" ? "표 추출, 기준연도, 행정구역이 일치하고 차이율이 허용오차 이내입니다."
+      : validationStatus === "YEARBOOK_TABLE_NOT_EXTRACTED" ? "통계연보 PDF에서 해당 표를 자동 추출하지 못했습니다."
+        : validationStatus === "YEARBOOK_VALUE_NOT_EXTRACTED" ? "표는 찾았지만 항목별 값을 자동 추출하지 못했습니다."
+          : validationStatus === "UNKNOWN_BASE_YEAR" ? "통계연보 표 안의 기준연도를 확인하지 못해 수치 비교를 보류했습니다."
+            : validationStatus === "YEAR_MISMATCH" ? "KOSIS 기준연도와 통계연보 표 기준연도가 다릅니다."
+              : validationStatus === "ADMIN_LEVEL_MISMATCH" ? "KOSIS 행정구역명과 통계연보 행정구역명이 달라 검증하지 않았습니다."
+                : validationStatus === "CATEGORY_MISMATCH" ? "허용된 표 제목 또는 항목명과 일치하지 않습니다."
+                  : validationStatus === "MANUAL_REQUIRED" ? "자동검증이 어려워 수동 확인이 필요합니다."
+                    : "정상 비교 결과 수치 차이가 허용 기준을 초과합니다.");
 
   return {
     name,
-    kosis: toAreaString(kosisValue),
-    annualReport: toAreaString(annualValue),
-    difference: toAreaString(difference),
-    diff_pct: diffPctValue.toFixed(2),
-    matched: validationStatus === "PASS" || validationStatus === "WARN_ROUNDING",
+    kosis: parsedKosis,
+    annualReport: parsedAnnual,
+    difference,
+    diff_pct: diffPctValue === null ? "" : diffPctValue.toFixed(2),
+    matched: validationStatus === "PASS",
     requested_year: meta.requestedYear,
     kosis_available_year: meta.kosisAvailableYear || "",
     kosis_used_year: meta.kosisUsedYear || "",
     yearbook_file_year: meta.yearbookFileYear || "",
+    yearbook_publication_year: meta.yearbookPublicationYear || meta.yearbookFileYear || "",
     yearbook_base_year: meta.yearbookBaseYear || "",
     yearbook_url: meta.yearbookUrl || "",
+    yearbook_table_extracted: Boolean(meta.yearbookTableExtracted),
+    yearbook_value_extracted: parsedAnnual !== null,
     source_table_title: meta.sourceTableTitle || "",
     source_unit: meta.sourceUnit || "",
     validation_status: validationStatus,
@@ -809,7 +855,7 @@ function adminMatches(kosisAdminName, yearbookAdminName) {
 
 function compareCandidateToKosis({ candidate, kind, kosisData, target, requestedYear, yearbookFile }) {
   const kosisUsedYear = safe(kosisData?.kosisUsedYear || kosisData?.year);
-  const yearbookBaseYear = safe(candidate?.yearbookBaseYear || yearbookFile?.fileYear);
+  const yearbookBaseYear = safe(candidate?.yearbookBaseYear);
   const sourceUnit = candidate?.sourceUnit || "㎡";
   const unitAllowsRounding = /km|ha|천/.test(sourceUnit);
   const commonMeta = {
@@ -817,17 +863,23 @@ function compareCandidateToKosis({ candidate, kind, kosisData, target, requested
     kosisAvailableYear: kosisData?.kosisAvailableYear || kosisData?.year || "",
     kosisUsedYear,
     yearbookFileYear: candidate?.yearbookFileYear || yearbookFile?.fileYear || "",
+    yearbookPublicationYear: candidate?.yearbookPublicationYear || yearbookFile?.publicationYear || yearbookFile?.fileYear || "",
     yearbookBaseYear,
     yearbookUrl: yearbookFile?.yearbookUrl || "",
+    yearbookTableExtracted: Boolean(candidate?.yearbookTableExtracted),
+    yearbookValueExtracted: Boolean(candidate?.yearbookValueExtracted),
     sourceTableTitle: candidate?.sourceTableTitle || "",
     sourceUnit,
   };
 
   if (!candidate) {
-    return [makeNoSourceCheck(kind === "landuse" ? "지목별 토지이용" : "용도지역", kind, "MANUAL_REQUIRED", commonMeta, "통계연보 파일은 찾았지만 해당 표를 자동 추출하지 못했습니다.")];
+    return [makeNoSourceCheck(kind === "landuse" ? "지목별 토지이용" : "용도지역", kind, "YEARBOOK_TABLE_NOT_EXTRACTED", commonMeta, "통계연보 파일은 찾았지만 해당 표를 자동 추출하지 못했습니다.")];
   }
   if (!kosisData) {
-    return [makeNoSourceCheck(kind === "landuse" ? "지목별 토지이용" : "용도지역", kind, "NO_SOURCE", commonMeta, "비교할 KOSIS 결과가 없어 검증하지 않았습니다.")];
+    return [makeNoSourceCheck(kind === "landuse" ? "지목별 토지이용" : "용도지역", kind, "MANUAL_REQUIRED", commonMeta, "비교할 KOSIS 결과가 없어 자동검증을 수행하지 않았습니다.")];
+  }
+  if (!candidate.yearbookValueExtracted) {
+    return [makeNoSourceCheck(kind === "landuse" ? "지목별 토지이용" : "용도지역", kind, "YEARBOOK_VALUE_NOT_EXTRACTED", commonMeta, "표는 찾았지만 항목별 값을 자동 추출하지 못했습니다.")];
   }
 
   const statusOverride = !adminMatches(kosisData.regionName || target.preferred, candidate.yearbookAdminName)
@@ -894,29 +946,35 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
     kosisAvailableYear: landuse?.kosisAvailableYear || zoning?.kosisAvailableYear || "",
     kosisUsedYear: landuse?.kosisUsedYear || zoning?.kosisUsedYear || "",
     yearbookFileYear: yearbookFile.fileYear || "",
+    yearbookPublicationYear: yearbookFile.publicationYear || yearbookFile.fileYear || "",
     yearbookBaseYear: "",
     yearbookUrl: yearbookFile.yearbookUrl || "",
+    yearbookTableExtracted: false,
+    yearbookValueExtracted: false,
     sourceTableTitle: "",
     sourceUnit: "",
   };
 
-  if (yearbookFile.status === "NO_SOURCE") {
+  if (yearbookFile.status === "NO_YEARBOOK_PUBLISHED") {
     return {
-      status: "NO_SOURCE",
+      status: "NO_YEARBOOK_PUBLISHED",
       year,
       requested_year: year,
       kosis_available_year: baseMeta.kosisAvailableYear,
       kosis_used_year: baseMeta.kosisUsedYear,
       yearbook_file_year: "",
+      yearbook_publication_year: yearbookFile.publicationYears?.[0] || "",
       yearbook_base_year: "",
       yearbook_url: "",
+      yearbook_table_extracted: false,
+      yearbook_value_extracted: false,
       source_table_title: "",
       source_unit: "",
       source: yearbookFile.sourcePage || "",
       sourceLink: yearbookFile.sourcePage || yearbookFile.searchUrls?.[0] || "",
-      message: `${yearbookFile.message} KOSIS 결과는 생성되었으며, 검증상태는 NO_SOURCE로 저장했습니다.`,
-      landuse: [makeNoSourceCheck("지목별 토지이용", "landuse", "NO_SOURCE", baseMeta, "통계연보 파일을 자동으로 찾지 못했습니다.")],
-      zoning: [makeNoSourceCheck("용도지역", "zoning", "NO_SOURCE", baseMeta, "통계연보 파일을 자동으로 찾지 못했습니다.")],
+      message: yearbookFile.message,
+      landuse: [makeNoSourceCheck("지목별 토지이용", "landuse", "NO_YEARBOOK_PUBLISHED", baseMeta, "요청 기준연도에 대응하는 통계연보가 아직 확인되지 않았습니다.")],
+      zoning: [makeNoSourceCheck("용도지역", "zoning", "NO_YEARBOOK_PUBLISHED", baseMeta, "요청 기준연도에 대응하는 통계연보가 아직 확인되지 않았습니다.")],
     };
   }
 
@@ -930,8 +988,11 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
         kosis_available_year: baseMeta.kosisAvailableYear,
         kosis_used_year: baseMeta.kosisUsedYear,
         yearbook_file_year: yearbookFile.fileYear || "",
+        yearbook_publication_year: yearbookFile.publicationYear || yearbookFile.fileYear || "",
         yearbook_base_year: "",
         yearbook_url: yearbookFile.yearbookUrl || "",
+        yearbook_table_extracted: false,
+        yearbook_value_extracted: false,
         source_table_title: "",
         source_unit: "",
         source: yearbookFile.sourcePage || "",
@@ -967,14 +1028,20 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
     });
     const checks = [...landuseChecks, ...zoningChecks];
     const statuses = new Set(checks.map((item) => item.validation_status));
-    const status = statuses.has("FAIL") ? "FAIL"
-      : statuses.has("CATEGORY_MISMATCH") ? "CATEGORY_MISMATCH"
-        : statuses.has("ADMIN_LEVEL_MISMATCH") ? "ADMIN_LEVEL_MISMATCH"
-          : statuses.has("YEAR_MISMATCH") ? "YEAR_MISMATCH"
-            : statuses.has("MANUAL_REQUIRED") ? "MANUAL_REQUIRED"
-              : statuses.has("WARN_ROUNDING") ? "WARN_ROUNDING"
-                : "PASS";
+    const statusPriority = [
+      "YEARBOOK_TABLE_NOT_EXTRACTED",
+      "YEARBOOK_VALUE_NOT_EXTRACTED",
+      "UNKNOWN_BASE_YEAR",
+      "YEAR_MISMATCH",
+      "ADMIN_LEVEL_MISMATCH",
+      "CATEGORY_MISMATCH",
+      "MANUAL_REQUIRED",
+      "FAIL",
+    ];
+    const status = statusPriority.find((item) => statuses.has(item)) || "PASS";
     const firstCandidate = landuseCandidate || zoningCandidate;
+    const tableExtracted = checks.some((item) => item.yearbook_table_extracted);
+    const valueExtracted = checks.some((item) => item.yearbook_value_extracted);
 
     return {
       status,
@@ -983,15 +1050,22 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
       kosis_available_year: firstCandidate ? (landuse?.kosisAvailableYear || zoning?.kosisAvailableYear || "") : baseMeta.kosisAvailableYear,
       kosis_used_year: firstCandidate ? (landuse?.kosisUsedYear || zoning?.kosisUsedYear || "") : baseMeta.kosisUsedYear,
       yearbook_file_year: firstCandidate?.yearbookFileYear || yearbookFile.fileYear || "",
+      yearbook_publication_year: firstCandidate?.yearbookPublicationYear || yearbookFile.publicationYear || yearbookFile.fileYear || "",
       yearbook_base_year: firstCandidate?.yearbookBaseYear || "",
       yearbook_url: yearbookFile.yearbookUrl || "",
+      yearbook_table_extracted: tableExtracted,
+      yearbook_value_extracted: valueExtracted,
       source_table_title: firstCandidate?.sourceTableTitle || "",
       source_unit: firstCandidate?.sourceUnit || "",
       source: analysis.source,
       sourceLink: yearbookFile.yearbookUrl || yearbookFile.sourcePage || "",
       message: status === "PASS"
         ? `${target.preferred} 통계연보 PDF를 자동 추출해 KOSIS 결과와 비교했습니다.`
-        : `통계연보 자동 추출을 수행했습니다. KOSIS 결과는 생성되었으며, 검증상태는 ${status}로 저장했습니다.`,
+        : status === "YEARBOOK_TABLE_NOT_EXTRACTED"
+          ? "KOSIS 결과는 생성되었습니다. 다만 통계연보 PDF에서 해당 표를 자동 추출하지 못해 검증상태는 YEARBOOK_TABLE_NOT_EXTRACTED입니다."
+          : status === "YEARBOOK_VALUE_NOT_EXTRACTED"
+            ? "KOSIS 결과는 생성되었습니다. 다만 통계연보 PDF에서 항목별 값을 자동 추출하지 못해 검증상태는 YEARBOOK_VALUE_NOT_EXTRACTED입니다."
+            : `KOSIS 결과는 생성되었습니다. 통계연보 자동검증 상태는 ${status}입니다.`,
       landuse: landuseChecks,
       zoning: zoningChecks,
     };
@@ -1007,8 +1081,11 @@ async function buildAnnualReportVerification(target, province, year, landuse, zo
       kosis_available_year: baseMeta.kosisAvailableYear,
       kosis_used_year: baseMeta.kosisUsedYear,
       yearbook_file_year: yearbookFile.fileYear || "",
+      yearbook_publication_year: yearbookFile.publicationYear || yearbookFile.fileYear || "",
       yearbook_base_year: "",
       yearbook_url: yearbookFile.yearbookUrl || "",
+      yearbook_table_extracted: false,
+      yearbook_value_extracted: false,
       source_table_title: "",
       source_unit: "",
       source: fallback?.source || yearbookFile.sourcePage || "",

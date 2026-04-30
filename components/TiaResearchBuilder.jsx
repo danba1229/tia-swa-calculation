@@ -152,6 +152,12 @@ function toNumber(value) {
   return Number.isFinite(num) ? num : 0;
 }
 
+function toNullableNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
 function getScopeDimensions(basics) {
   const width = toNumber(basics?.rectWidth) || Number(DEFAULT_SCOPE_WIDTH);
   const height = toNumber(basics?.rectHeight) || Number(DEFAULT_SCOPE_HEIGHT);
@@ -165,6 +171,11 @@ function toSortableNumber(value) {
 
 function formatNumber(value) {
   return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 }).format(toNumber(value));
+}
+
+function formatOptionalNumber(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  return formatNumber(value);
 }
 
 function formatSquareKilometers(value) {
@@ -391,7 +402,6 @@ function validationStatus({ diffPct, sourceUnit, isYearMismatch, isAdminMismatch
   if (isYearMismatch) return "YEAR_MISMATCH";
   if (isCategoryMismatch) return "CATEGORY_MISMATCH";
   if (diffPct <= 0.1) return "PASS";
-  if (diffPct <= 1 && /km²|㎢|km2|ha|헥타르/i.test(sourceUnit || "")) return "WARN_ROUNDING";
   return "FAIL";
 }
 
@@ -399,14 +409,13 @@ function buildValidationNote(status, diffPct) {
   if (status === "ADMIN_LEVEL_MISMATCH") return "KOSIS 행정구역명과 통계연보 행정구역명이 달라 검증하지 않았습니다.";
   if (status === "YEAR_MISMATCH") return "KOSIS 조회연도와 통계연보 표 기준연도가 다릅니다.";
   if (status === "CATEGORY_MISMATCH") return "허용된 표 제목 또는 항목명과 일치하지 않습니다.";
-  if (status === "WARN_ROUNDING") return "차이가 있으나 km²/ha 단위 반올림 영향 가능성이 있습니다.";
   if (status === "PASS") return "허용오차 0.1% 이내입니다.";
   return `차이율 ${diffPct.toFixed(2)}%로 허용 기준을 초과합니다.`;
 }
 
 function buildPdfValidation(candidate, form) {
   const kosisYear = form.statisticsYear || DEFAULT_STATISTICS_YEAR;
-  const yearbookBaseYear = candidate.yearbookBaseYear || candidate.yearbookFileYear || "";
+  const yearbookBaseYear = candidate.yearbookBaseYear || "";
   const kosisAdminName = deriveStatisticsAnnualReportUnit(form.basics.siteAddress);
   const yearbookAdminName = candidate.yearbookAdminName || "";
   const isYearMismatch = Boolean(yearbookBaseYear && kosisYear !== yearbookBaseYear);
@@ -417,14 +426,44 @@ function buildPdfValidation(candidate, form) {
       const kosisRow = form.zoningRows.find((item) => normalizeComparableName(item.name) === normalizeComparableName(row.name));
       return { name: row.name, kosis: kosisRow?.area, yearbook: row.area };
     });
+
+  if (!candidate.yearbookTableExtracted || !rows.length) {
+    const status = candidate.yearbookTableExtracted ? "YEARBOOK_VALUE_NOT_EXTRACTED" : "YEARBOOK_TABLE_NOT_EXTRACTED";
+    return {
+      status,
+      year: yearbookBaseYear || kosisYear,
+      source: candidate.source || "",
+      sourceLink: "",
+      message: `KOSIS 결과는 생성되었습니다. 다만 통계연보 PDF에서 해당 표 또는 값을 자동 추출하지 못해 검증상태는 ${status}입니다.`,
+      landuse: candidate.kind === "landuse" ? [{
+        name: "지목별 토지이용",
+        kosis: null,
+        annualReport: null,
+        difference: null,
+        matched: false,
+        validation_status: status,
+        validation_note: "자동 추출 실패로 수치 비교를 수행하지 않았습니다.",
+      }] : [],
+      zoning: candidate.kind === "zoning" ? [{
+        name: "용도지역",
+        kosis: null,
+        annualReport: null,
+        difference: null,
+        matched: false,
+        validation_status: status,
+        validation_note: "자동 추출 실패로 수치 비교를 수행하지 않았습니다.",
+      }] : [],
+    };
+  }
   const conversionByName = new Map((candidate.conversionLogs || []).map((log) => [log.category, log]));
   const checks = rows.map((row) => {
-    const kosisM2 = toNumber(row.kosis);
-    const yearbookM2 = toNumber(row.yearbook);
-    const diffM2 = Math.abs(kosisM2 - yearbookM2);
-    const diffPct = kosisM2 > 0 ? (diffM2 / kosisM2) * 100 : (yearbookM2 > 0 ? 100 : 0);
+    const kosisM2 = toNullableNumber(row.kosis);
+    const yearbookM2 = toNullableNumber(row.yearbook);
+    const canCompare = kosisM2 !== null && yearbookM2 !== null && yearbookBaseYear;
+    const diffM2 = canCompare ? Math.abs(kosisM2 - yearbookM2) : null;
+    const diffPct = canCompare ? (kosisM2 > 0 ? (diffM2 / kosisM2) * 100 : (yearbookM2 > 0 ? 100 : 0)) : null;
     const log = conversionByName.get(row.name) || {};
-    const status = validationStatus({
+    const status = !yearbookBaseYear ? "UNKNOWN_BASE_YEAR" : yearbookM2 === null ? "YEARBOOK_VALUE_NOT_EXTRACTED" : !canCompare ? "MANUAL_REQUIRED" : validationStatus({
       diffPct,
       sourceUnit: log.sourceUnit || candidate.sourceUnit,
       isYearMismatch,
@@ -434,9 +473,9 @@ function buildPdfValidation(candidate, form) {
 
     return {
       name: row.name,
-      kosis: String(Math.round(kosisM2 || 0)),
-      annualReport: String(Math.round(yearbookM2 || 0)),
-      difference: String(Math.round(diffM2 || 0)),
+      kosis: kosisM2,
+      annualReport: yearbookM2,
+      difference: diffM2,
       diffPct,
       matched: status === "PASS",
       kosis_year: kosisYear,
@@ -451,14 +490,14 @@ function buildPdfValidation(candidate, form) {
       raw_value: log.rawValue || "",
       converted_m2_before_round: String(log.convertedM2BeforeRound ?? ""),
       rounded_m2: String(log.roundedM2 ?? Math.round(yearbookM2 || 0)),
-      diff_m2: String(Math.round(diffM2 || 0)),
-      diff_pct: diffPct.toFixed(2),
+      diff_m2: diffM2 === null ? "" : String(Math.round(diffM2 || 0)),
+      diff_pct: diffPct === null ? "" : diffPct.toFixed(2),
       validation_status: status,
-      validation_note: buildValidationNote(status, diffPct),
+      validation_note: diffPct === null ? "기준연도 또는 통계연보 값이 없어 수치 비교를 수행하지 않았습니다." : buildValidationNote(status, diffPct),
     };
   });
-  const statusOrder = ["ADMIN_LEVEL_MISMATCH", "YEAR_MISMATCH", "CATEGORY_MISMATCH", "FAIL", "WARN_ROUNDING", "PASS"];
-  const summaryStatus = statusOrder.find((status) => checks.some((item) => item.validation_status === status)) || "NO_SOURCE";
+  const statusOrder = ["YEARBOOK_TABLE_NOT_EXTRACTED", "YEARBOOK_VALUE_NOT_EXTRACTED", "UNKNOWN_BASE_YEAR", "ADMIN_LEVEL_MISMATCH", "YEAR_MISMATCH", "CATEGORY_MISMATCH", "MANUAL_REQUIRED", "FAIL", "PASS"];
+  const summaryStatus = statusOrder.find((status) => checks.some((item) => item.validation_status === status)) || "MANUAL_REQUIRED";
 
   return {
     status: summaryStatus === "PASS" ? "matched" : "mismatch",
@@ -1570,7 +1609,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <div className="verification-list">
               {verification.landuse.map((item) => (
                 <span key={`landuse-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
-                  지목 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                  지목 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatOptionalNumber(item.kosis)}㎡ / 통계연보 {formatOptionalNumber(item.annualReport)}㎡ / 차이 {formatOptionalNumber(item.difference)}㎡
                   {item.diff_pct ? ` / 차이율 ${item.diff_pct}%` : ""}
                   {item.validation_note ? ` / ${item.validation_note}` : ""}
                 </span>
@@ -1581,7 +1620,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <div className="verification-list">
               {verification.zoning.map((item) => (
                 <span key={`zoning-check-${item.name}`} className={item.matched ? "check-ok" : "check-mismatch"}>
-                  용도지역 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatNumber(item.kosis)}㎡ / 통계연보 {formatNumber(item.annualReport)}㎡ / 차이 {formatNumber(item.difference)}㎡
+                  용도지역 {item.name}: {item.validation_status || (item.matched ? "PASS" : "FAIL")} / KOSIS {formatOptionalNumber(item.kosis)}㎡ / 통계연보 {formatOptionalNumber(item.annualReport)}㎡ / 차이 {formatOptionalNumber(item.difference)}㎡
                   {item.diff_pct ? ` / 차이율 ${item.diff_pct}%` : ""}
                   {item.validation_note ? ` / ${item.validation_note}` : ""}
                 </span>

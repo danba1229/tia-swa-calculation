@@ -33,11 +33,14 @@ function extractFileYear(fileName, fallbackYear = "") {
   return extractYear(fileName) || fallbackYear;
 }
 
-function extractBaseYear(text, fallbackYear = "") {
+function extractBaseYear(text) {
   const patterns = [
-    /(20\d{2}|19\d{2})\s*[.년-]\s*12\s*[.월-]\s*31\s*[.일]?\s*기준/,
-    /기준\s*[:：]?\s*(20\d{2}|19\d{2})\s*[.년-]\s*12\s*[.월-]\s*31/,
+    /(20\d{2}|19\d{2})\s*[.년-]\s*12\s*[.월-]\s*31\s*[.일]?\s*(?:기준|기준일|현재)?/,
+    /(?:기준|기준일|자료기준)\s*[:：]?\s*(20\d{2}|19\d{2})\s*[.년-]\s*12\s*[.월-]\s*31/,
     /(20\d{2}|19\d{2})\s*년\s*말\s*기준/,
+    /(20\d{2}|19\d{2})\s*년\s*(?:각\s*)?연도말\s*현재/,
+    /(?:각\s*)?연도말\s*현재[^0-9]{0,20}(20\d{2}|19\d{2})/,
+    /(?:기준|기준일|자료기준)[^0-9]{0,20}(20\d{2}|19\d{2})/,
     /(20\d{2}|19\d{2})\s*\.?\s*12\s*\.?\s*31/,
   ];
 
@@ -46,7 +49,7 @@ function extractBaseYear(text, fallbackYear = "") {
     if (match?.[1]) return match[1];
   }
 
-  return fallbackYear;
+  return "";
 }
 
 function extractAdminName(text, fileName = "") {
@@ -64,7 +67,18 @@ function convertAreaToM2(rawValue, sourceUnit) {
   const rawNumber = toNumber(rawValue);
   const unit = safe(sourceUnit) || "㎡";
   const normalizedUnit = unit.replace(/\s+/g, "");
-  let beforeRound = Number.isFinite(rawNumber) ? rawNumber : 0;
+  if (!Number.isFinite(rawNumber)) {
+    return {
+      rawValue: safe(rawValue),
+      sourceUnit: unit,
+      convertedM2BeforeRound: null,
+      convertedM2: null,
+      convertedKm2: null,
+      roundedM2: null,
+    };
+  }
+
+  let beforeRound = rawNumber;
 
   if (/km²|㎢|km2/i.test(normalizedUnit)) beforeRound *= 1000000;
   else if (/천㎡|천m²|천m2|1000㎡|1000m²|1000m2/i.test(normalizedUnit)) beforeRound *= 1000;
@@ -220,9 +234,10 @@ function findAreaEntry(windowText, label, sourceUnit) {
   for (const pattern of patterns) {
     const match = windowText.match(pattern);
     const rawValue = match?.[1];
+    if (!rawValue) continue;
     const converted = convertAreaToM2(rawValue, sourceUnit);
     const value = toNumberString(converted.convertedM2);
-    if (value) return { value, conversion: converted };
+    if (value !== "") return { value, conversion: converted };
   }
 
   return null;
@@ -237,6 +252,7 @@ function parseLanduseCandidate(text, context) {
     if (!sourceTableTitle || EXCLUDED_LANDUSE_TITLES.some((title) => windowText.includes(title))) return;
 
     const sourceUnit = detectUnit(windowText);
+    const tableBaseYear = extractBaseYear(windowText) || context.yearbookBaseYear || "";
     const areas = {};
     const conversionLogs = [];
     LANDUSE_CATEGORIES.forEach((category) => {
@@ -248,19 +264,22 @@ function parseLanduseCandidate(text, context) {
     });
 
     const foundCount = Object.keys(areas).length;
-    if (foundCount >= 2 && (!best || foundCount > best.foundCount)) {
+    if (!best || foundCount > best.foundCount) {
       best = {
         id: `landuse-${index}`,
         kind: "landuse",
         title: "지목별 토지이용현황 후보",
         confidence: foundCount >= 5 ? "높음" : "확인 필요",
         foundCount,
+        yearbookTableExtracted: true,
+        yearbookValueExtracted: foundCount >= 2,
         landuseAreas: areas,
         zoningRows: [],
         sourceTableTitle,
         sourceUnit,
         conversionLogs,
         ...context,
+        yearbookBaseYear: tableBaseYear,
         preview: normalizeText(windowText).slice(0, 600),
       };
     }
@@ -274,8 +293,10 @@ function parseZoningCandidate(text, context) {
   let best = null;
 
   windows.forEach((windowText, index) => {
+    if (!/(용도지역|도시계획|관리지역|녹지지역)/.test(windowText)) return;
     const sourceTableTitle = windowText.includes("용도지역") ? "용도지역 현황" : "용도지역 후보";
     const sourceUnit = detectUnit(windowText);
+    const tableBaseYear = extractBaseYear(windowText) || context.yearbookBaseYear || "";
     const rows = ZONING_NAMES
       .filter((name) => !EXCLUDED_ZONING_NAMES.includes(name))
       .map((name) => {
@@ -285,19 +306,22 @@ function parseZoningCandidate(text, context) {
       .filter(Boolean)
       .filter((row) => row.area);
 
-    if (rows.length >= 2 && (!best || rows.length > best.foundCount)) {
+    if (!best || rows.length > best.foundCount) {
       best = {
         id: `zoning-${index}`,
         kind: "zoning",
         title: "용도지역 현황 후보",
         confidence: rows.length >= 4 ? "높음" : "확인 필요",
         foundCount: rows.length,
+        yearbookTableExtracted: true,
+        yearbookValueExtracted: rows.length >= 2,
         landuseAreas: {},
         zoningRows: rows,
         sourceTableTitle,
         sourceUnit,
         conversionLogs: rows.map((row) => ({ category: row.name, ...row.conversion })),
         ...context,
+        yearbookBaseYear: tableBaseYear,
         preview: normalizeText(windowText).slice(0, 600),
       };
     }
@@ -309,10 +333,11 @@ function parseZoningCandidate(text, context) {
 export function analyzeYearbookPdfBuffer(buffer, { fileName = "", year = "", source = "" } = {}) {
   const text = extractPdfText(buffer);
   const fileYear = extractFileYear(fileName, year);
-  const baseYear = extractBaseYear(text, fileYear);
+  const baseYear = extractBaseYear(text);
   const adminName = extractAdminName(text, fileName);
   const context = {
     yearbookFileYear: fileYear,
+    yearbookPublicationYear: fileYear,
     yearbookBaseYear: baseYear,
     yearbookAdminName: adminName,
   };
