@@ -3,8 +3,9 @@ import { inflateRawSync, inflateSync } from "node:zlib";
 
 export const runtime = "nodejs";
 
-const LANDUSE_CATEGORIES = ["전", "답", "임야", "대지", "도로", "하천", "학교", "공원"];
+const LANDUSE_CATEGORIES = ["전", "답", "임야", "대", "대지", "도로", "하천", "학교", "학교용지", "공원"];
 const ZONING_NAMES = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "농림지역", "자연환경보전지역", "미세분지역", "미지정지역"];
+const TOTAL_LABELS = ["계", "합계", "총계"];
 const MAX_FILE_SIZE = 35 * 1024 * 1024;
 const VALID_LANDUSE_TITLES = ["토지지목별 현황", "지목별 토지현황", "지목별 면적"];
 const EXCLUDED_LANDUSE_TITLES = ["도시계획시설", "공원녹지", "공원현황"];
@@ -15,7 +16,10 @@ function safe(value) {
 }
 
 function toNumberString(value) {
-  const numeric = safe(value).replace(/[^\d.-]/g, "");
+  const raw = safe(value);
+  if (!raw) return "";
+  const numeric = raw.replace(/[^\d.-]/g, "");
+  if (!numeric) return "";
   const parsed = Number(numeric);
   return Number.isFinite(parsed) ? String(Math.round(parsed)) : "";
 }
@@ -60,14 +64,14 @@ function extractAdminName(text, fileName = "") {
 
 function detectUnit(windowText) {
   const unitMatch = windowText.match(/단위\s*[:：]?\s*(천?\s*㎡|천?\s*m²|천?\s*m2|㎢|km²|km2|ha|헥타르|㎡|m²|m2)/i);
-  return safe(unitMatch?.[1]).replace(/\s+/g, "") || "㎡";
+  return safe(unitMatch?.[1]).replace(/\s+/g, "");
 }
 
 function convertAreaToM2(rawValue, sourceUnit) {
   const rawNumber = toNumber(rawValue);
-  const unit = safe(sourceUnit) || "㎡";
+  const unit = safe(sourceUnit);
   const normalizedUnit = unit.replace(/\s+/g, "");
-  if (!Number.isFinite(rawNumber)) {
+  if (!normalizedUnit || !Number.isFinite(rawNumber)) {
     return {
       rawValue: safe(rawValue),
       sourceUnit: unit,
@@ -262,6 +266,15 @@ function parseLanduseCandidate(text, context) {
         conversionLogs.push({ category, ...entry.conversion });
       }
     });
+    TOTAL_LABELS.some((label) => {
+      const entry = findAreaEntry(windowText, label, sourceUnit);
+      if (entry?.value) {
+        areas.합계 = entry.value;
+        conversionLogs.push({ category: "합계", ...entry.conversion });
+        return true;
+      }
+      return false;
+    });
 
     const foundCount = Object.keys(areas).length;
     if (!best || foundCount > best.foundCount) {
@@ -305,6 +318,14 @@ function parseZoningCandidate(text, context) {
       })
       .filter(Boolean)
       .filter((row) => row.area);
+    TOTAL_LABELS.some((label) => {
+      const entry = findAreaEntry(windowText, label, sourceUnit);
+      if (entry?.value) {
+        rows.push({ name: "합계", area: entry.value, sourceUnit, conversion: entry.conversion });
+        return true;
+      }
+      return false;
+    });
 
     if (!best || rows.length > best.foundCount) {
       best = {
@@ -330,8 +351,7 @@ function parseZoningCandidate(text, context) {
   return best;
 }
 
-export function analyzeYearbookPdfBuffer(buffer, { fileName = "", year = "", source = "" } = {}) {
-  const text = extractPdfText(buffer);
+export function analyzeYearbookText(text, { fileName = "", year = "", source = "" } = {}) {
   const fileYear = extractFileYear(fileName, year);
   const baseYear = extractBaseYear(text);
   const adminName = extractAdminName(text, fileName);
@@ -353,6 +373,10 @@ export function analyzeYearbookPdfBuffer(buffer, { fileName = "", year = "", sou
       ? `${candidates.length}개의 표 후보를 찾았습니다. 후보를 확인한 뒤 현재 양식에 반영해 주세요.`
       : "PDF에서 현재 양식에 맞는 표 후보를 찾지 못했습니다. 스캔 PDF이거나 표 구조가 복잡하면 직접 입력이 필요합니다.",
   };
+}
+
+export function analyzeYearbookPdfBuffer(buffer, { fileName = "", year = "", source = "" } = {}) {
+  return analyzeYearbookText(extractPdfText(buffer), { fileName, year, source });
 }
 
 export async function POST(request) {
