@@ -120,9 +120,14 @@ function toAreaString(value) {
   return parsed === null ? "" : String(Math.round(parsed));
 }
 
-function makeKosisUrl(table, params) {
-  const apiKey = process.env.KOSIS_API_KEY;
+function readKosisApiKey() {
+  const apiKey = safe(process.env.KOSIS_API_KEY).replace(/^["']|["']$/g, "");
   if (!apiKey) throw new Error("KOSIS_API_KEY 환경변수가 설정되어 있지 않습니다.");
+  return apiKey;
+}
+
+function makeKosisUrl(table, params) {
+  const apiKey = readKosisApiKey();
 
   const url = new URL(KOSIS_ENDPOINT);
   url.searchParams.set("apiKey", apiKey);
@@ -217,8 +222,7 @@ async function fetchKosisJson(table, params) {
 }
 
 async function fetchMeta(table) {
-  const apiKey = process.env.KOSIS_API_KEY;
-  if (!apiKey) throw new Error("KOSIS_API_KEY 환경변수가 설정되어 있지 않습니다.");
+  const apiKey = readKosisApiKey();
 
   const url = new URL(KOSIS_META_ENDPOINT);
   url.searchParams.set("apiKey", apiKey);
