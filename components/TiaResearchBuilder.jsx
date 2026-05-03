@@ -509,7 +509,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
   const landuseReportRows = buildLanduseReportRows(form, landuseStats);
   const zoningReportRows = buildZoningReportRows(form, zoningStats);
-  const annualReportLink = buildStatisticsAnnualReportLink(form.basics.siteAddress);
   const verification = form.statisticsVerification;
 
   useEffect(() => {
@@ -954,14 +953,69 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       }
 
       if (!messages.length) {
-        return { patch: {}, message: "KOSIS에서 자동 채움 가능한 토지이용/용도지역 자료를 찾지 못했습니다." };
+        return {
+          patch: {
+            reportStatus: payload.extraction?.status || "DATA_NOT_FOUND",
+            statisticsVerification: payload.extraction || payload.verification || {
+              status: "DATA_NOT_FOUND",
+              message: "KOSIS에서 자동 채움 가능한 토지이용/용도지역 자료를 찾지 못했습니다.",
+            },
+          },
+          message: "KOSIS에서 자동 채움 가능한 토지이용/용도지역 자료를 찾지 못했습니다.",
+        };
       }
 
       return { patch, message: messages.join(" ") };
     } catch (error) {
       console.error(error);
-      return { patch: {}, message: "KOSIS 자동 추출에 실패했습니다. 환경변수 KOSIS_API_KEY와 선택한 수록기간을 확인해 주세요." };
+      const message = error.message || "KOSIS 자동 추출에 실패했습니다. 환경변수 KOSIS_API_KEY와 선택한 수록기간을 확인해 주세요.";
+      return {
+        patch: {
+          reportStatus: "FAILED",
+          statisticsVerification: {
+            status: "FAILED",
+            message,
+            source: "KOSIS OpenAPI",
+          },
+        },
+        message,
+      };
     }
+  }
+
+  async function refreshLocalStatisticsOnly() {
+    const address = safe(form.basics.siteAddress);
+    if (!address) {
+      setStatusText("KOSIS 자료를 조회하려면 먼저 주소지를 입력해 주세요.");
+      setForm((current) => ({
+        ...current,
+        reportStatus: "FAILED",
+        statisticsVerification: {
+          status: "FAILED",
+          message: "주소지가 비어 있어 KOSIS 행정구역을 판단하지 못했습니다.",
+          source: "KOSIS OpenAPI",
+        },
+      }));
+      return;
+    }
+
+    setStatusText(`${address} 기준 ${form.statisticsYear || DEFAULT_STATISTICS_YEAR}년 KOSIS 자료를 조회하는 중입니다.`);
+    setForm((current) => ({
+      ...current,
+      reportStatus: "LOADING",
+      statisticsVerification: {
+        status: "LOADING",
+        message: "KOSIS에서 지목별 국토이용현황과 용도지역 시군구 자료를 조회하는 중입니다.",
+        source: "KOSIS OpenAPI",
+      },
+    }));
+
+    const result = await fetchLocalStatistics(address);
+    setForm((current) => ({
+      ...current,
+      ...result.patch,
+    }));
+    setStatusText(result.message);
   }
 
   async function renderScopeMap() {
@@ -1383,9 +1437,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 3</p>
             <h2>토지이용 현황 및 계획</h2>
           </div>
-          <a className="button-link secondary" href={annualReportLink} target="_blank" rel="noreferrer">
-            KOSIS 자료 확인
-          </a>
+          <button type="button" className="secondary" onClick={refreshLocalStatisticsOnly}>
+            KOSIS 자료 추출
+          </button>
         </div>
 
         <div className="form-grid compact-grid">
@@ -1836,29 +1890,6 @@ function buildLocalStatisticsSources(address, year = DEFAULT_STATISTICS_YEAR) {
     landuseSource: "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구",
     zoningSource: "KOSIS 도시계획현황, 용도지역(시군구)",
   };
-}
-
-function deriveStatisticsAnnualReportUnit(address) {
-  const text = safe(address);
-  const parts = text.split(/\s+/).map((part) => part.replace(/[^\p{L}\p{N}]/gu, "")).filter(Boolean);
-
-  if (/서울/.test(text)) {
-    return parts.find((part) => /구$/.test(part)) || deriveLocalStatisticsUnit(address, "");
-  }
-
-  if (/경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주/.test(text)) {
-    return parts.find((part) => /(시|군)$/.test(part) && !/도$/.test(part)) || deriveLocalStatisticsUnit(address, "");
-  }
-
-  return deriveLocalStatisticsUnit(address, "");
-}
-
-function buildStatisticsAnnualReportLink(address) {
-  const unit = deriveStatisticsAnnualReportUnit(address);
-  const query = unit
-    ? `${unit} KOSIS 지목별 국토이용현황 용도지역`
-    : "KOSIS 지목별 국토이용현황 용도지역";
-  return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
 }
 
 function shouldUpdateLocalStatisticsSource(value) {
