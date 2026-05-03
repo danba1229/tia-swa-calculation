@@ -524,20 +524,22 @@ button.mini-button {
 }
 
 .horizontal-report-table {
-  min-width: 1320px;
+  min-width: 100%;
   table-layout: fixed;
 }
 
 .horizontal-report-table th,
 .horizontal-report-table td {
-  min-width: 112px;
+  min-width: 0;
+  padding: 8px 7px;
   text-align: center;
   vertical-align: middle;
   word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .horizontal-report-table tbody th {
-  width: 128px;
+  width: 96px;
   text-align: left;
   font-weight: 800;
   background: rgba(160, 79, 47, 0.08);
@@ -548,12 +550,13 @@ button.mini-button {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
+  padding: 8px 6px;
   text-align: center;
 }
 
 .horizontal-report-table td:nth-child(5),
 .horizontal-report-table td:nth-child(6) {
-  min-width: 112px;
+  min-width: 0;
   color: inherit;
 }
 
