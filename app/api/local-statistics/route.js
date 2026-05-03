@@ -204,7 +204,7 @@ async function fetchTextWithRetry(url, label) {
   throw new Error(`${label} 연결 실패: ${cause}. 요청 URL: ${redactApiKey(url)}`);
 }
 
-async function fetchKosisJson(table, params) {
+async function fetchKosisJson(table, params, options = {}) {
   const text = await fetchTextWithRetry(makeKosisUrl(table, params), `KOSIS ${table.name} 자료 조회`);
 
   let data;
@@ -216,7 +216,10 @@ async function fetchKosisJson(table, params) {
 
   if (Array.isArray(data)) return data;
   if (data?.err || data?.error || data?.message) {
-    throw new Error(safe(data.err || data.error || data.message) || "KOSIS 오류 응답을 받았습니다.");
+    const code = safe(data.err || data.error);
+    const message = safe(data.errMsg || data.message || data.err || data.error);
+    if (options.allowNoResult && code === "30") return [];
+    throw new Error(message || "KOSIS 오류 응답을 받았습니다.");
   }
   return [];
 }
@@ -256,7 +259,7 @@ async function fetchDataRows(table, year, objectParams) {
     startPrdDe: year,
     endPrdDe: year,
     ...objectParams,
-  });
+  }, { allowNoResult: true });
 }
 
 function detectProvince(address) {
