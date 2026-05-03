@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import seoulTopisPoints from "../app/seoul-topis-points.json";
 
-const STORAGE_KEY = "tia-research-builder-next-v2-yearbook";
+const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
 const GYEONGGI_POINT_CACHE_KEY = "tia-gyeonggi-point-coordinates-v1";
 const LANDUSE_CATEGORIES = ["전", "답", "임야", "대지", "도로", "하천", "학교", "공원", "기타"];
@@ -18,7 +18,7 @@ const LANDUSE_RAW_ITEMS = {
   공원: "공원",
   기타: "전체 계 - 주요 항목 합계",
 };
-const ZONING_DEFAULTS = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "기타"];
+const ZONING_DEFAULTS = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "농림지역", "자연환경보전지역", "미지정지역", "기타"];
 const ZONING_REPORT_LABELS = {
   주거지역: "주거",
   상업지역: "상업",
@@ -110,37 +110,6 @@ function createBlankState() {
     constructionPlans: [createConstructionPlanRow()],
   };
 }
-
-const LOCAL_STATISTICS_DATA = {
-  "seoul:중구": {
-    label: "서울특별시 중구",
-    sourceUnit: "중구",
-    year: "2025",
-    landuseAreas: { 전: "0", 답: "0", 임야: "0", 대지: "540123", 도로: "210456", 하천: "12078", 학교: "6450", 공원: "38220", 기타: "94112" },
-    zoningRows: [
-      { name: "주거지역", area: "120000" },
-      { name: "상업지역", area: "410000" },
-      { name: "공업지역", area: "0" },
-      { name: "녹지지역", area: "46000" },
-      { name: "관리지역", area: "0" },
-      { name: "기타", area: "108000" },
-    ],
-  },
-  "gyeonggi:수원시": {
-    label: "경기도 수원시",
-    sourceUnit: "수원시",
-    year: "2025",
-    landuseAreas: { 전: "220315", 답: "135482", 임야: "180764", 대지: "460219", 도로: "290638", 하천: "64275", 학교: "38410", 공원: "52796", 기타: "91854" },
-    zoningRows: [
-      { name: "주거지역", area: "510000" },
-      { name: "상업지역", area: "120000" },
-      { name: "공업지역", area: "90000" },
-      { name: "녹지지역", area: "310000" },
-      { name: "관리지역", area: "70000" },
-      { name: "기타", area: "110000" },
-    ],
-  },
-};
 
 function safe(value) {
   return String(value || "").trim();
@@ -336,7 +305,7 @@ function zoningReportLabel(name) {
 }
 
 function buildLanduseReportRows(form, stats) {
-  const source = safe(form.landuseSource) || "통계연보 원자료";
+  const source = safe(form.landuseSource) || "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구";
   const year = form.landuseBaseYear || form.statisticsYear || DEFAULT_STATISTICS_YEAR;
   const rows = LANDUSE_CATEGORIES.map((category) => {
     const area = toNumber(form.landuseAreas[category]);
@@ -366,7 +335,7 @@ function buildLanduseReportRows(form, stats) {
 }
 
 function buildZoningReportRows(form, stats) {
-  const source = safe(form.zoningSource) || "통계연보 원자료";
+  const source = safe(form.zoningSource) || "KOSIS 도시계획현황, 용도지역(시군구)";
   const year = form.zoningBaseYear || form.statisticsYear || DEFAULT_STATISTICS_YEAR;
   const rows = form.zoningRows.map((row, index) => {
     const area = toNumber(row.area);
@@ -810,8 +779,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   ]);
 
   function updateBasics(field, value) {
-    const statisticsData = null;
-
     setForm((current) => {
       const next = {
         ...current,
@@ -845,11 +812,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       setMapStatus('입력값이 바뀌었습니다. "조사 시작" 버튼을 눌러 다시 반영해 주세요.');
     }
     if (field === "siteAddress") {
-      setStatusText(
-        statisticsData
-          ? `${statisticsData.label} 기준 지목별 토지이용현황과 용도지역 현황을 자동 채움했습니다.`
-          : "아직 자동 채움 가능한 토지이용·용도지역 데이터가 없는 관할입니다. 필요한 값은 수동 조사로 입력해 주세요.",
-      );
+      setStatusText("주소가 바뀌었습니다. 조사 시작 버튼을 누르면 KOSIS에서 해당 행정구역과 수록기간 자료를 다시 조회합니다.");
     }
   }
   function updateListItem(listName, index, patch) {
@@ -960,13 +923,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error || "통계연보 자료를 추출하지 못했습니다.");
+        throw new Error(payload.error || "KOSIS 자료를 추출하지 못했습니다.");
       }
 
       const patch = {};
       const messages = [];
       if (payload.debug) {
-        console.info("[TIA annual report extraction debug]", payload.debug);
+        console.info("[TIA KOSIS extraction debug]", payload.debug);
       }
       patch.reportStatus = payload.extraction?.status || "";
 
@@ -974,16 +937,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         patch.landuseAreas = { ...createBlankLanduseAreas(), ...payload.landuse.areas };
         patch.landuseSource = payload.landuse.source || "";
         patch.landuseBaseYear = payload.landuse.tableBaseYear || payload.landuse.year || "";
-        patch.statisticsDataKey = `yearbook-landuse:${payload.landuse.regionName || payload.target}:${payload.landuse.year || ""}`;
-        messages.push(`지목별 토지이용은 ${payload.landuse.regionName || payload.target} 통계연보 ${payload.landuse.year || "기준연도"} 자료로 채웠습니다.`);
+        patch.statisticsDataKey = `kosis-landuse:${payload.landuse.regionName || payload.target}:${payload.landuse.year || ""}`;
+        messages.push(`지목별 토지이용은 ${payload.landuse.regionName || payload.target} KOSIS ${payload.landuse.year || "수록기간"} 자료로 채웠습니다.`);
       }
 
       if (Array.isArray(payload.zoning?.rows) && payload.zoning.rows.length) {
         patch.zoningRows = payload.zoning.rows.map((row) => createZoningRow(row));
         patch.zoningSource = payload.zoning.source || "";
         patch.zoningBaseYear = payload.zoning.tableBaseYear || payload.zoning.year || "";
-        patch.statisticsDataKey = patch.statisticsDataKey || `yearbook-zoning:${payload.zoning.regionName || payload.target}:${payload.zoning.year || ""}`;
-        messages.push(`용도지역은 ${payload.zoning.regionName || payload.target} 통계연보 ${payload.zoning.year || "기준연도"} 자료로 채웠습니다.`);
+        patch.statisticsDataKey = patch.statisticsDataKey || `kosis-zoning:${payload.zoning.regionName || payload.target}:${payload.zoning.year || ""}`;
+        messages.push(`용도지역은 ${payload.zoning.regionName || payload.target} KOSIS ${payload.zoning.year || "수록기간"} 자료로 채웠습니다.`);
       }
       patch.statisticsVerification = payload.extraction || payload.verification || null;
       if (patch.statisticsVerification?.message) {
@@ -991,13 +954,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       }
 
       if (!messages.length) {
-        return { patch: {}, message: "통계연보에서 자동 채움 가능한 토지이용/용도지역 표를 찾지 못했습니다." };
+        return { patch: {}, message: "KOSIS에서 자동 채움 가능한 토지이용/용도지역 자료를 찾지 못했습니다." };
       }
 
       return { patch, message: messages.join(" ") };
     } catch (error) {
       console.error(error);
-      return { patch: {}, message: "통계연보 자동 추출에 실패했습니다. 통계연보 파일을 직접 업로드하거나 수동 입력해 주세요." };
+      return { patch: {}, message: "KOSIS 자동 추출에 실패했습니다. 환경변수 KOSIS_API_KEY와 선택한 수록기간을 확인해 주세요." };
     }
   }
 
@@ -1114,7 +1077,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function fillSeoulSampleData() {
     const siteAddress = "서울특별시 중구 세종대로 110";
-    const statisticsData = findLocalStatisticsData(siteAddress);
 
     const nextForm = {
       basics: {
@@ -1148,13 +1110,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ],
     };
 
-    if (statisticsData) applyLocalStatisticsData(nextForm, statisticsData);
     applySampleState(nextForm, "서울");
   }
 
   function fillGyeonggiSampleData() {
     const siteAddress = "경기도 수원시 팔달구 효원로 241";
-    const statisticsData = findLocalStatisticsData(siteAddress);
 
     const nextForm = {
       basics: {
@@ -1209,7 +1169,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ],
     };
 
-    if (statisticsData) applyLocalStatisticsData(nextForm, statisticsData);
     applySampleState(nextForm, "경기도");
   }
 
@@ -1425,7 +1384,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <h2>토지이용 현황 및 계획</h2>
           </div>
           <a className="button-link secondary" href={annualReportLink} target="_blank" rel="noreferrer">
-            통계연보 파일 찾기
+            KOSIS 자료 확인
           </a>
         </div>
 
@@ -1438,23 +1397,23 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </label>
           <label>
             <span>토지이용 출처</span>
-            <input value={form.landuseSource} onChange={(event) => setForm((current) => ({ ...current, landuseSource: event.target.value }))} placeholder="예: 중구 통계연보 2025 / 수원시 통계연보 2025" />
+            <input value={form.landuseSource} onChange={(event) => setForm((current) => ({ ...current, landuseSource: event.target.value }))} placeholder="KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구" />
           </label>
           <label>
             <span>용도지역 출처</span>
-            <input value={form.zoningSource} onChange={(event) => setForm((current) => ({ ...current, zoningSource: event.target.value }))} placeholder="예: 중구 통계연보 2025 / 수원시 통계연보 2025" />
+            <input value={form.zoningSource} onChange={(event) => setForm((current) => ({ ...current, zoningSource: event.target.value }))} placeholder="KOSIS 도시계획현황, 용도지역(시군구)" />
           </label>
         </div>
 
         <div className={`verification-card ${verification?.status || "idle"}`}>
           <div>
-            <p className="eyebrow">Annual Report Extraction</p>
-            <h3>통계연보 원자료 자동 추출</h3>
+            <p className="eyebrow">KOSIS Extraction</p>
+            <h3>KOSIS 수록기간 자동 추출</h3>
           </div>
-          <p>{verification?.message || "조사 시작 후 공식 지자체 통계연보를 찾고, 표 안의 기준연도가 선택한 기준연도와 일치할 때 결과표를 생성합니다."}</p>
+          <p>{verification?.message || "조사 시작 후 주소지 행정구역과 선택한 수록기간으로 KOSIS 지목별 국토이용현황 및 용도지역 시군구 통계표를 조회합니다."}</p>
           {verification?.source ? <p className="verification-source">원자료: {verification.source}</p> : null}
-          {verification?.yearbook_url ? <p className="verification-source">통계연보 URL: {verification.yearbook_url}</p> : null}
-          {verification?.table_base_year ? <p className="verification-source">표 기준연도: {verification.table_base_year}</p> : null}
+          {verification?.sourceLink ? <p className="verification-source">KOSIS 링크: {verification.sourceLink}</p> : null}
+          {verification?.period ? <p className="verification-source">수록기간: {verification.period}</p> : null}
         </div>
 
         <div className="subpanel-grid landuse-layout">
@@ -1874,15 +1833,9 @@ function buildLocalStatisticsSources(address, year = DEFAULT_STATISTICS_YEAR) {
   }
 
   return {
-    landuseSource: `${sourceBase} 통계연보`,
-    zoningSource: `${sourceBase} 통계연보`,
+    landuseSource: "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구",
+    zoningSource: "KOSIS 도시계획현황, 용도지역(시군구)",
   };
-}
-
-function buildLocalStatisticsKey(address) {
-  const region = detectSurveyRegion(address);
-  const sourceUnit = deriveLocalStatisticsUnit(address, "");
-  return region && sourceUnit ? `${region}:${sourceUnit}` : "";
 }
 
 function deriveStatisticsAnnualReportUnit(address) {
@@ -1903,27 +1856,9 @@ function deriveStatisticsAnnualReportUnit(address) {
 function buildStatisticsAnnualReportLink(address) {
   const unit = deriveStatisticsAnnualReportUnit(address);
   const query = unit
-    ? `${unit} 통계연보 PDF 지목별 토지현황 용도지역`
-    : "통계연보 PDF 지목별 토지현황 용도지역";
+    ? `${unit} KOSIS 지목별 국토이용현황 용도지역`
+    : "KOSIS 지목별 국토이용현황 용도지역";
   return `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-}
-
-function findLocalStatisticsData(address) {
-  const key = buildLocalStatisticsKey(address);
-  const data = key ? LOCAL_STATISTICS_DATA[key] : null;
-  return data ? { ...data, key } : null;
-}
-
-function applyLocalStatisticsData(target, data) {
-  target.statisticsDataKey = data.key;
-  target.reportStatus = "SUCCESS";
-  target.landuseBaseYear = data.year;
-  target.zoningBaseYear = data.year;
-  target.landuseSource = `${data.sourceUnit} 통계연보`;
-  target.zoningSource = `${data.sourceUnit} 통계연보`;
-  target.landuseAreas = { ...createBlankLanduseAreas(), ...data.landuseAreas };
-  target.zoningRows = data.zoningRows.map((row) => createZoningRow(row));
-  return target;
 }
 
 function shouldUpdateLocalStatisticsSource(value) {
@@ -1933,7 +1868,8 @@ function shouldUpdateLocalStatisticsSource(value) {
     /통계연보 예시$/.test(source) ||
     /도시계획 자료 예시$/.test(source) ||
     /^[^\s]+ 통계연보 \d{4}$/.test(source) ||
-    /^[^\s]+ 도시계획 자료 \d{4}$/.test(source)
+    /^[^\s]+ 도시계획 자료 \d{4}$/.test(source) ||
+    /^KOSIS /.test(source)
   );
 }
 

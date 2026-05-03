@@ -1,20 +1,49 @@
 import { NextResponse } from "next/server";
-import { analyzeYearbookPdfBuffer, analyzeYearbookText } from "../statistics-pdf/route";
 
 export const runtime = "nodejs";
 
 const DEFAULT_STATISTICS_YEAR = "2024";
-const YEARBOOK_OFFICIAL_PAGES = [
-  {
-    region: "송파구",
-    domain: "www.songpa.go.kr",
-    pages: ["https://www.songpa.go.kr/www/contents.do?key=2233"],
-  },
-];
-const YEARBOOK_DOC_PATTERN = /\.(pdf|xlsx|xls|csv|hwp|hwpx)(?:[?#]|$)|download|down|file|attach|atch/i;
-const YEARBOOK_MANUAL_PATTERN = /\.(hwp|hwpx)(?:[?#]|$)|hwp|hwpx/i;
-const OFFICIAL_DOMAIN_PATTERN = /(^|\.)go\.kr$/i;
-const SEARCH_ENGINE_HOSTS = new Set(["www.google.com", "google.com", "www.bing.com", "bing.com", "search.naver.com", "search.daum.net"]);
+const KOSIS_ENDPOINT = "https://kosis.kr/openapi/Param/statisticsParameterData.do";
+const KOSIS_META_ENDPOINT = "https://kosis.kr/openapi/statisticsData.do";
+const KOSIS_STAT_HTML = "https://kosis.kr/statHtml/statHtml.do";
+
+const LANDUSE_TABLE = {
+  orgId: "116",
+  tblId: "DT_MLTM_2300",
+  name: "행정구역별·지목별 국토이용현황_시군구",
+  source: "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구",
+  areaItemId: "13103874596T1",
+  provinceObjKey: "objL1",
+  provinceObjId: "13101874596A",
+  regionObjKey: "objL2",
+  regionObjId: "13101874596B",
+  categoryObjKey: "objL3",
+  categoryObjId: "13101874596C",
+};
+
+const ZONING_URBAN_TABLE = {
+  orgId: "460",
+  tblId: "TX_315_2009_H1440",
+  name: "용도지역(시군구)-도시지역",
+  source: "KOSIS 도시계획현황, 용도지역(시군구)-도시지역",
+  areaItemId: "16315T2009_046",
+  regionObjKey: "objL1",
+  regionObjId: "15315SGG",
+  categoryObjKey: "objL2",
+  categoryObjId: "15315JYB",
+};
+
+const ZONING_NON_URBAN_TABLE = {
+  orgId: "460",
+  tblId: "TX_315_2009_H1443",
+  name: "용도지역(시군구)-비도시지역",
+  source: "KOSIS 도시계획현황, 용도지역(시군구)-비도시지역",
+  areaItemId: "16315T2009_184",
+  regionObjKey: "objL1",
+  regionObjId: "15315SGG",
+  categoryObjKey: "objL2",
+  categoryObjId: "15315JYB",
+};
 
 const PROVINCES = [
   { full: "서울특별시", short: "서울", aliases: ["서울특별시", "서울시", "서울"] },
@@ -35,137 +64,160 @@ const PROVINCES = [
   { full: "경상남도", short: "경남", aliases: ["경상남도", "경남"] },
   { full: "제주특별자치도", short: "제주", aliases: ["제주특별자치도", "제주도", "제주"] },
 ];
-const METRO_SHORT_NAMES = new Set(["서울", "부산", "대구", "인천", "광주", "대전", "울산"]);
 
-const LANDUSE_REPORT_ITEMS = [
-  { key: "전", labels: ["전"] },
-  { key: "답", labels: ["답"] },
-  { key: "임야", labels: ["임야"] },
-  { key: "대지", labels: ["대지", "대"] },
-  { key: "도로", labels: ["도로"] },
-  { key: "하천", labels: ["하천"] },
-  { key: "학교", labels: ["학교", "학교용지"] },
-  { key: "공원", labels: ["공원"] },
-];
-const ZONING_REPORT_ITEMS = [
-  { key: "주거지역", labels: ["주거지역"] },
-  { key: "상업지역", labels: ["상업지역"] },
-  { key: "공업지역", labels: ["공업지역"] },
-  { key: "녹지지역", labels: ["녹지지역"] },
-  { key: "관리지역", labels: ["관리지역"] },
-  { key: "농림지역", labels: ["농림지역"] },
-  { key: "자연환경보전지역", labels: ["자연환경보전지역"] },
-  { key: "미지정지역", labels: ["미지정", "미지정지역", "미세분지역"] },
-];
-const TOTAL_LABELS = ["합계", "계", "총계"];
+const METRO_SHORT_NAMES = new Set(["서울", "부산", "대구", "인천", "광주", "대전", "울산"]);
+const LANDUSE_CATEGORY_CODES = {
+  계: "13102874596C.0001",
+  전: "13102874596C.0002",
+  답: "13102874596C.0003",
+  임야: "13102874596C.0006",
+  대지: "13102874596C.0009",
+  학교: "13102874596C.0011",
+  도로: "13102874596C.0015",
+  하천: "13102874596C.0018",
+  공원: "13102874596C.0023",
+};
+const ZONING_CATEGORY_CODES = {
+  도시지역: "15315JYB001",
+  주거지역: "15315JYB002",
+  상업지역: "15315JYB003",
+  공업지역: "15315JYB004",
+  녹지지역: "15315JYB005",
+  미지정지역: "15315JYB006",
+  비도시지역: "15315JYB007",
+  관리지역: "15315JYB008",
+  농림지역: "15315JYB009",
+  자연환경보전지역: "15315JYB010",
+};
+
+const LANDUSE_REPORT_ITEMS = ["전", "답", "임야", "대지", "도로", "하천", "학교", "공원"];
+const ZONING_REPORT_ITEMS = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "농림지역", "자연환경보전지역", "미지정지역"];
 
 function safe(value) {
   return String(value ?? "").trim();
 }
 
 function normalizeName(value) {
-  return safe(value).replace(/\s+/g, "").replace(/[()]/g, "");
+  return safe(value)
+    .replace(/\s+/g, "")
+    .replace(/[()]/g, "")
+    .replace(/특별자치도|특별자치시|특별시|광역시/g, "")
+    .replace(/경기도/g, "경기");
 }
 
 function normalizeYear(value) {
   return safe(value).match(/\d{4}/)?.[0] || DEFAULT_STATISTICS_YEAR;
 }
 
-function toNullableNumber(value) {
-  if (value === null || value === undefined || value === "") return null;
+function toNumber(value) {
+  if (value === null || value === undefined || value === "" || value === "-") return null;
   const parsed = Number(String(value).replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : null;
 }
 
 function toAreaString(value) {
-  const parsed = toNullableNumber(value);
+  const parsed = toNumber(value);
   return parsed === null ? "" : String(Math.round(parsed));
 }
 
-function sumKnown(values) {
-  return values.reduce((sum, value) => {
-    const parsed = toNullableNumber(value);
-    return parsed === null ? sum : sum + parsed;
-  }, 0);
-}
+function makeKosisUrl(table, params) {
+  const apiKey = process.env.KOSIS_API_KEY;
+  if (!apiKey) throw new Error("KOSIS_API_KEY 환경변수가 설정되어 있지 않습니다.");
 
-function decodeHtml(value) {
-  return safe(value)
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, "\"")
-    .replace(/&#39;/g, "'");
-}
+  const url = new URL(KOSIS_ENDPOINT);
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("method", params.method || "getList");
+  url.searchParams.set("format", "json");
+  url.searchParams.set("jsonVD", "Y");
+  url.searchParams.set("orgId", table.orgId);
+  url.searchParams.set("tblId", table.tblId);
 
-function stripTags(value) {
-  return decodeHtml(safe(value).replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function resolveLink(href, baseUrl) {
-  const decoded = decodeHtml(href);
-  if (!decoded || /^javascript:/i.test(decoded)) return "";
-  try {
-    return new URL(decoded, baseUrl).toString();
-  } catch {
-    return "";
-  }
-}
-
-function unwrapSearchResultUrl(url) {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.toLowerCase();
-    const wrapped = parsed.searchParams.get("q")
-      || parsed.searchParams.get("url")
-      || parsed.searchParams.get("u")
-      || parsed.searchParams.get("target")
-      || parsed.searchParams.get("where");
-    if ((SEARCH_ENGINE_HOSTS.has(host) || host.endsWith(".google.com")) && wrapped && /^https?:\/\//i.test(wrapped)) {
-      return new URL(wrapped).toString();
+  Object.entries(params).forEach(([key, value]) => {
+    if (key !== "method" && value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
     }
-    return parsed.toString();
-  } catch {
-    return "";
-  }
-}
-
-function isOfficialDomain(url) {
-  try {
-    return OFFICIAL_DOMAIN_PATTERN.test(new URL(url).hostname.toLowerCase());
-  } catch {
-    return false;
-  }
-}
-
-function extractAnchors(html, pageUrl) {
-  const anchors = [];
-  const anchorPattern = /<a\b[^>]*href\s*=\s*["']?([^"'\s>]+)["']?[^>]*>([\s\S]*?)<\/a>/gi;
-  let match;
-  while ((match = anchorPattern.exec(html))) {
-    const url = resolveLink(match[1], pageUrl);
-    if (!url) continue;
-    const context = stripTags(html.slice(Math.max(0, match.index - 120), Math.min(html.length, match.index + match[0].length + 160)));
-    anchors.push({ url, text: stripTags(match[2]), context });
-  }
-  return anchors;
-}
-
-function extractYearbookLinks(html, pageUrl) {
-  return extractAnchors(html, pageUrl).filter(({ url, text, context }) => {
-    const source = `${url} ${text} ${context}`;
-    return YEARBOOK_DOC_PATTERN.test(source)
-      && /통계|연보|statistics|statistical|yearbook|토지|지적|용도지역/i.test(source);
   });
+
+  return url;
 }
 
-function inferFileType(link) {
-  const source = `${link.url} ${link.text} ${link.context}`.toLowerCase();
-  return source.match(/\b(pdf|xlsx|xls|csv|hwpx|hwp)\b|\.([a-z0-9]+)(?:[?#]|$)/)?.[1]
-    || source.match(/\.([a-z0-9]+)(?:[?#]|$)/)?.[1]
-    || (source.includes("pdf") ? "pdf" : "");
+function statHtmlUrl(table) {
+  const url = new URL(KOSIS_STAT_HTML);
+  url.searchParams.set("orgId", table.orgId);
+  url.searchParams.set("tblId", table.tblId);
+  return url.toString();
+}
+
+async function fetchKosisJson(table, params) {
+  const response = await fetch(makeKosisUrl(table, params), {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json,text/plain,*/*",
+      "User-Agent": "Mozilla/5.0 tia-support/3.0",
+    },
+  });
+  const text = await response.text();
+  if (!response.ok) throw new Error(`KOSIS 조회 실패: ${response.status}`);
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`KOSIS 응답을 JSON으로 읽지 못했습니다: ${text.slice(0, 120)}`);
+  }
+
+  if (Array.isArray(data)) return data;
+  if (data?.err || data?.error || data?.message) {
+    throw new Error(safe(data.err || data.error || data.message) || "KOSIS 오류 응답을 받았습니다.");
+  }
+  return [];
+}
+
+async function fetchMeta(table) {
+  const apiKey = process.env.KOSIS_API_KEY;
+  if (!apiKey) throw new Error("KOSIS_API_KEY 환경변수가 설정되어 있지 않습니다.");
+
+  const url = new URL(KOSIS_META_ENDPOINT);
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("method", "getMeta");
+  url.searchParams.set("format", "json");
+  url.searchParams.set("jsonVD", "Y");
+  url.searchParams.set("type", "ITM");
+  url.searchParams.set("orgId", table.orgId);
+  url.searchParams.set("tblId", table.tblId);
+
+  const response = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json,text/plain,*/*",
+      "User-Agent": "Mozilla/5.0 tia-support/3.0",
+    },
+  });
+  const text = await response.text();
+  if (!response.ok) throw new Error(`KOSIS 메타데이터 조회 실패: ${response.status}`);
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`KOSIS 메타데이터 응답을 JSON으로 읽지 못했습니다: ${text.slice(0, 120)}`);
+  }
+
+  if (Array.isArray(data)) return data;
+  if (data?.err || data?.error || data?.message) {
+    throw new Error(safe(data.errMsg || data.err || data.error || data.message) || "KOSIS 메타데이터 오류 응답을 받았습니다.");
+  }
+  return [];
+}
+
+async function fetchDataRows(table, year, objectParams) {
+  return fetchKosisJson(table, {
+    itmId: table.areaItemId,
+    prdSe: "Y",
+    startPrdDe: year,
+    endPrdDe: year,
+    ...objectParams,
+  });
 }
 
 function detectProvince(address) {
@@ -183,273 +235,250 @@ function resolveAdminArea(address) {
   const city = localParts.find((part) => /(시|군)$/.test(part) && !/도$/.test(part)) || "";
   const district = localParts.find((part) => /구$/.test(part)) || "";
 
-  if (province.short === "세종") return { province, preferred: "세종특별자치시", city, district };
-  if (METRO_SHORT_NAMES.has(province.short)) return { province, preferred: district || city || province.short, city, district };
-  if (province.short === "경기") return { province, preferred: city || district || province.short, city, district };
-  return { province, preferred: city || district || province.short, city, district };
+  if (province.short === "세종") return { province, preferred: "세종특별자치시", city, district, level: "city" };
+  if (METRO_SHORT_NAMES.has(province.short)) return { province, preferred: district || city || province.short, city, district, level: district ? "district" : "city" };
+  if (province.short === "경기") return { province, preferred: city || district || province.short, city, district, level: city ? "city" : "district" };
+  return { province, preferred: city || district || province.short, city, district, level: city ? "city" : "district" };
 }
 
-function getKnownYearbookPages(target) {
-  const preferred = normalizeName(target?.preferred);
-  return YEARBOOK_OFFICIAL_PAGES
-    .filter((source) => normalizeName(source.region) === preferred)
-    .flatMap((source) => source.pages.map((page) => ({ ...source, page })));
+function rowCode(row) {
+  return safe(row.ITM_ID || row.CD || row.CODE || row.OBJ_ID || row.id);
 }
 
-function buildReportYears(baseYear) {
-  const parsed = Number(baseYear);
-  if (!Number.isFinite(parsed)) return [safe(baseYear)].filter(Boolean);
-  return [String(parsed + 1), String(parsed)];
+function rowName(row) {
+  return safe(row.ITM_NM || row.CD_NM || row.C1_NM || row.C2_NM || row.C3_NM || row.name);
 }
 
-function buildYearbookSearchUrls(target, reportYear, baseYear) {
-  const region = safe(target?.preferred);
-  const queries = [
-    `${region} ${reportYear} 통계연보 PDF`,
-    `${region} 통계연보 ${reportYear}`,
-    `site:go.kr ${region} ${reportYear} 통계연보`,
-    `site:go.kr ${region} ${baseYear} 기준 통계연보 토지 용도지역`,
-  ];
-  return [
-    ...queries.map((query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`),
-    ...queries.map((query) => `https://www.bing.com/search?q=${encodeURIComponent(query)}`),
-    ...queries.map((query) => `https://search.daum.net/search?w=tot&q=${encodeURIComponent(query)}`),
-    ...queries.map((query) => `https://search.naver.com/search.naver?query=${encodeURIComponent(query)}`),
-  ];
+function objectRows(meta, objectId) {
+  return meta.filter((row) => safe(row.OBJ_ID) === objectId || safe(row.OBJ_ID_ENG) === objectId);
 }
 
-async function fetchTextDocument(url, timeoutMs = 4500) {
-  const response = await fetch(url, {
-    cache: "no-store",
-    signal: typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(timeoutMs) : undefined,
-    headers: {
-      Accept: "text/html,application/xhtml+xml,*/*",
-      "User-Agent": "Mozilla/5.0 tia-support/2.0",
-    },
-  });
-  if (!response.ok) throw new Error(`통계연보 페이지 조회 실패: ${response.status}`);
-  return response.text();
+function scoreNameMatch(row, names) {
+  const normalized = normalizeName(rowName(row));
+  const raw = safe(rowName(row));
+  const candidates = names.map(normalizeName).filter(Boolean);
+  if (!normalized || !candidates.length) return 0;
+  if (candidates.some((name) => normalized === name)) return 100;
+  if (candidates.some((name) => raw === name)) return 95;
+  if (candidates.some((name) => normalized.endsWith(name) || name.endsWith(normalized))) return 80;
+  if (candidates.some((name) => normalized.includes(name) || name.includes(normalized))) return 60;
+  return 0;
 }
 
-function makeYearbookCandidate(link, { reportYear, baseYear, sourcePage = "", officialDomain = "" }) {
-  const source = safe(`${link.context} ${link.text} ${link.url}`);
-  const years = [...source.matchAll(/(20\d{2}|19\d{2})/g)].map((match) => match[1]);
-  const fileYear = years.includes(safe(reportYear)) ? safe(reportYear) : (years.at(-1) || "");
-  const fileType = inferFileType(link);
-  const exactReportYear = fileYear === safe(reportYear) || link.context.includes(`${reportYear}년`) || link.text.includes(`${reportYear}년`);
-  const isPdf = fileType === "pdf" || /\.pdf(?:[?#]|$)/i.test(link.url);
-  return {
-    ...link,
-    fileYear,
-    reportYear: fileYear || reportYear,
-    baseYear,
-    fileType: fileType || (isPdf ? "pdf" : ""),
-    sourcePage,
-    officialDomain,
-    score: (exactReportYear ? 100 : 0) + (isPdf ? 30 : 0) + (/통계|연보/.test(source) ? 15 : 0) + (isOfficialDomain(link.url) ? 10 : 0),
-  };
+function findObjectCodes(meta, objectId, names, parentCode = "") {
+  return objectRows(meta, objectId)
+    .map((row) => ({
+      row,
+      code: rowCode(row),
+      score: scoreNameMatch(row, names) + (parentCode && safe(row.UP_ITM_ID) === parentCode ? 15 : 0),
+    }))
+    .filter((item) => item.code && item.score > 0)
+    .sort((left, right) => right.score - left.score);
 }
 
-function extractSearchResultUrls(html, searchUrl) {
-  const urls = new Set();
-  extractAnchors(html, searchUrl).forEach((anchor) => {
-    const unwrapped = unwrapSearchResultUrl(anchor.url);
-    if (!unwrapped || urls.has(unwrapped) || !isOfficialDomain(unwrapped)) return;
-    urls.add(unwrapped);
-  });
-  return [...urls];
+function categoryName(row) {
+  return safe(row.C3_NM || row.C2_NM || row.C1_NM || row.ITM_NM);
 }
 
-async function scanYearbookPage(page, reportYear, baseYear, found) {
-  if (YEARBOOK_DOC_PATTERN.test(page.url)) {
-    found.push(makeYearbookCandidate({ url: page.url, text: page.text || "", context: page.context || "" }, { reportYear, baseYear, sourcePage: page.sourcePage || page.url, officialDomain: page.officialDomain || "" }));
-    return;
-  }
-
-  const html = await fetchTextDocument(page.url);
-  extractYearbookLinks(html, page.url).forEach((link) => {
-    found.push(makeYearbookCandidate(link, { reportYear, baseYear, sourcePage: page.url, officialDomain: page.officialDomain || "" }));
-  });
+function categoryCode(row) {
+  return safe(row.C3 || row.C2 || row.C1 || row.ITM_ID);
 }
 
-async function findAnnualReport(target, baseYear) {
-  const reportYears = buildReportYears(baseYear);
-  const searchUrls = reportYears.flatMap((reportYear) => buildYearbookSearchUrls(target, reportYear, baseYear));
-  const knownPages = getKnownYearbookPages(target).map((item) => ({ url: item.page, sourcePage: item.page, officialDomain: item.domain }));
-  const pages = [...knownPages];
-  const seenPages = new Set(pages.map((page) => page.url));
-  const found = [];
+function areaFromRows(rows, expectedCode, expectedNames = []) {
+  const byCode = rows.find((row) => categoryCode(row) === expectedCode);
+  if (byCode) return toNumber(byCode.DT);
 
-  const searchResults = await Promise.allSettled(searchUrls.slice(0, 12).map(async (searchUrl) => {
-    const html = await fetchTextDocument(searchUrl, 3500);
-    return { searchUrl, urls: extractSearchResultUrls(html, searchUrl).slice(0, 8) };
-  }));
-
-  searchResults.forEach((result) => {
-    if (result.status !== "fulfilled") return;
-    result.value.urls.forEach((url) => {
-      if (seenPages.has(url)) return;
-      seenPages.add(url);
-      pages.push({ url, sourcePage: result.value.searchUrl, officialDomain: new URL(url).hostname });
-    });
-  });
-
-  await Promise.allSettled(reportYears.flatMap((reportYear) => (
-    pages.slice(0, 20).map((page) => scanYearbookPage(page, reportYear, baseYear, found))
-  )));
-
-  const selected = found
-    .filter((link) => link.score > 0)
-    .sort((left, right) => right.score - left.score)[0] || null;
-
-  if (!selected) {
-    return {
-      status: "REPORT_NOT_FOUND",
-      reportYears,
-      searchUrls,
-      yearbookUrl: "",
-      message: `${target.preferred} ${reportYears.join("/")} 통계연보 파일을 자동으로 찾지 못했습니다.`,
-    };
-  }
-
-  return {
-    status: "FOUND",
-    ...selected,
-    yearbookUrl: selected.url,
-    reportYears,
-    searchUrls,
-  };
+  const names = expectedNames.map(normalizeName);
+  const byName = rows.find((row) => names.includes(normalizeName(categoryName(row))));
+  return toNumber(byName?.DT);
 }
 
-async function downloadReport(report) {
-  if (!report?.yearbookUrl) return { status: "REPORT_NOT_FOUND" };
-  if (YEARBOOK_MANUAL_PATTERN.test(report.fileType || report.yearbookUrl)) {
-    return { status: "UNSUPPORTED_FILE_TYPE", message: "HWP/HWPX 통계연보는 자동 추출이 어려워 수동 입력 또는 PDF 업로드가 필요합니다." };
-  }
-
-  const response = await fetch(report.yearbookUrl, {
-    cache: "no-store",
-    headers: {
-      Accept: "application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,*/*",
-      "User-Agent": "Mozilla/5.0 tia-support/2.0",
-      Referer: report.sourcePage || "",
-    },
-  });
-  if (!response.ok) throw new Error(`통계연보 파일 다운로드 실패: ${response.status}`);
-  return { status: "DOWNLOADED", buffer: Buffer.from(await response.arrayBuffer()) };
+function sumKnown(values) {
+  return values.reduce((total, value) => total + (toNumber(value) ?? 0), 0);
 }
 
-async function analyzeDownloadedReport(buffer, report, baseYear) {
-  const fileType = safe(report.fileType).toLowerCase();
-  const fileName = `${report.preferred || "통계연보"}_${report.reportYear || report.fileYear || ""}.${fileType || "pdf"}`;
-  const source = `${report.reportYear || report.fileYear || ""} 통계연보`;
-
-  if (!fileType || fileType === "pdf") {
-    return analyzeYearbookPdfBuffer(buffer, { fileName, year: baseYear, source });
-  }
-
-  if (["xlsx", "xls", "csv"].includes(fileType)) {
-    const XLSX = await import("xlsx");
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-    const text = workbook.SheetNames.map((sheetName) => {
-      const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
-      return `\n[${sheetName}]\n${csv}`;
-    }).join("\n");
-    return analyzeYearbookText(text, { fileName, year: baseYear, source });
-  }
-
-  return { candidates: [], message: "지원하지 않는 통계연보 파일 형식입니다." };
-}
-
-function pickValue(source, labels) {
-  for (const label of labels) {
-    const value = source?.[label];
-    if (value !== undefined && value !== null && value !== "") return value;
-  }
-  return null;
-}
-
-function selectCandidate(candidates, kind, baseYear) {
-  const typed = candidates.filter((candidate) => candidate.kind === kind);
-  if (!typed.length) return { status: "TABLE_NOT_FOUND", candidate: null };
-  const sameYear = typed.find((candidate) => candidate.yearbookBaseYear === baseYear);
-  if (sameYear) {
-    if (!sameYear.sourceUnit) return { status: "UNKNOWN_UNIT", candidate: sameYear };
-    return { status: sameYear.yearbookValueExtracted ? "SUCCESS" : "VALUE_PARSE_FAILED", candidate: sameYear };
-  }
-  const unknown = typed.find((candidate) => !candidate.yearbookBaseYear);
-  if (unknown) return { status: "UNKNOWN_BASE_YEAR", candidate: unknown };
-  return { status: "BASE_YEAR_MISMATCH", candidate: typed[0] };
-}
-
-function buildLanduseAreas(candidate) {
-  if (!candidate) return null;
+function makeLanduseAreas(rows) {
   const areas = {};
   LANDUSE_REPORT_ITEMS.forEach((item) => {
-    areas[item.key] = toAreaString(pickValue(candidate.landuseAreas, item.labels));
+    areas[item] = toAreaString(areaFromRows(rows, LANDUSE_CATEGORY_CODES[item], item === "대지" ? ["대", "대지"] : [item]));
   });
-  const total = toNullableNumber(pickValue(candidate.landuseAreas, TOTAL_LABELS));
+
+  const total = areaFromRows(rows, LANDUSE_CATEGORY_CODES.계, ["계", "합계", "총계"]);
   const majorTotal = sumKnown(Object.values(areas));
   areas.기타 = total === null ? "" : toAreaString(Math.max(0, total - majorTotal));
-  return areas;
+  return { areas, total };
 }
 
-function buildZoningRows(candidate) {
-  if (!candidate) return null;
-  const sourceRows = candidate.zoningRows || [];
-  const findArea = (labels) => {
-    const row = sourceRows.find((item) => labels.some((label) => normalizeName(item.name) === normalizeName(label)));
-    return row?.area ?? null;
+function makeZoningRows(urbanRows, nonUrbanRows) {
+  const byCategory = {
+    주거지역: areaFromRows(urbanRows, ZONING_CATEGORY_CODES.주거지역, ["주거지역"]),
+    상업지역: areaFromRows(urbanRows, ZONING_CATEGORY_CODES.상업지역, ["상업지역"]),
+    공업지역: areaFromRows(urbanRows, ZONING_CATEGORY_CODES.공업지역, ["공업지역"]),
+    녹지지역: areaFromRows(urbanRows, ZONING_CATEGORY_CODES.녹지지역, ["녹지지역"]),
+    관리지역: areaFromRows(nonUrbanRows, ZONING_CATEGORY_CODES.관리지역, ["관리지역"]),
+    농림지역: areaFromRows(nonUrbanRows, ZONING_CATEGORY_CODES.농림지역, ["농림지역"]),
+    자연환경보전지역: areaFromRows(nonUrbanRows, ZONING_CATEGORY_CODES.자연환경보전지역, ["자연환경보전지역"]),
+    미지정지역: areaFromRows(urbanRows, ZONING_CATEGORY_CODES.미지정지역, ["미세분지역", "미지정", "미지정지역"]),
   };
-  const rows = ZONING_REPORT_ITEMS.map((item) => ({
-    name: item.key,
-    area: toAreaString(findArea(item.labels)),
-    rawItems: item.labels.join(", "),
+
+  const urbanTotal = areaFromRows(urbanRows, ZONING_CATEGORY_CODES.도시지역, ["도시지역"]);
+  const nonUrbanTotal = areaFromRows(nonUrbanRows, ZONING_CATEGORY_CODES.비도시지역, ["비도시지역"]);
+  const total = (urbanTotal ?? 0) + (nonUrbanTotal ?? 0);
+  const majorTotal = sumKnown(Object.values(byCategory));
+  const rows = ZONING_REPORT_ITEMS.map((name) => ({
+    name,
+    area: toAreaString(byCategory[name]),
+    rawItems: name === "미지정지역" ? "미세분지역" : name,
   }));
-  const totalRow = sourceRows.find((item) => TOTAL_LABELS.some((label) => normalizeName(item.name) === normalizeName(label)));
-  const total = toNullableNumber(totalRow?.area);
-  const majorTotal = sumKnown(rows.map((row) => row.area));
+
   rows.push({
     name: "기타",
-    area: total === null ? "" : toAreaString(Math.max(0, total - majorTotal)),
-    rawItems: "합계 - 주요 항목 합계",
+    area: total > 0 ? toAreaString(Math.max(0, total - majorTotal)) : "",
+    rawItems: "도시지역+비도시지역 합계 - 주요 항목 합계",
   });
-  return rows.filter((row) => row.name === "기타" || row.area !== "");
+
+  return { rows: rows.filter((row) => row.name === "기타" || row.area !== ""), total };
 }
 
-function makeExtractionSummary({ target, baseYear, report, analysis, landuseSelection, zoningSelection }) {
-  const statuses = [landuseSelection.status, zoningSelection.status];
-  const status = statuses.every((item) => item === "SUCCESS") ? "SUCCESS"
-    : statuses.includes("UNKNOWN_BASE_YEAR") ? "UNKNOWN_BASE_YEAR"
-      : statuses.includes("BASE_YEAR_MISMATCH") ? "BASE_YEAR_MISMATCH"
-        : statuses.includes("UNKNOWN_UNIT") ? "UNKNOWN_UNIT"
-          : statuses.includes("VALUE_PARSE_FAILED") ? "VALUE_PARSE_FAILED"
-            : "TABLE_NOT_FOUND";
-  const selectedCandidates = [landuseSelection.candidate, zoningSelection.candidate].filter(Boolean);
-  const baseYears = [...new Set(selectedCandidates.map((candidate) => candidate.yearbookBaseYear).filter(Boolean))];
+async function chooseDataRowsByCandidates(table, year, candidates, objectParamsFactory) {
+  const attempts = [];
+  for (const candidate of candidates) {
+    const objectParams = objectParamsFactory(candidate.code);
+    const rows = await fetchDataRows(table, year, objectParams);
+    attempts.push({
+      code: candidate.code,
+      name: rowName(candidate.row),
+      rowCount: rows.length,
+    });
+    if (rows.length) return { rows, selected: candidate, attempts };
+  }
+  return { rows: [], selected: null, attempts };
+}
+
+async function extractLanduse(target, year) {
+  const meta = await fetchMeta(LANDUSE_TABLE);
+  const provinceCodes = findObjectCodes(meta, LANDUSE_TABLE.provinceObjId, [
+    target.province.full,
+    target.province.short,
+    ...target.province.aliases,
+  ]);
+  const provinceCode = provinceCodes[0]?.code;
+  if (!provinceCode) throw new Error(`KOSIS 지목별 표에서 ${target.province.full} 코드를 찾지 못했습니다.`);
+
+  const regionCandidates = findObjectCodes(meta, LANDUSE_TABLE.regionObjId, [
+    target.preferred,
+    target.city,
+    target.district,
+  ]).slice(0, 12);
+  if (!regionCandidates.length) throw new Error(`KOSIS 지목별 표에서 ${target.preferred} 행정구역 코드를 찾지 못했습니다.`);
+
+  const data = await chooseDataRowsByCandidates(
+    LANDUSE_TABLE,
+    year,
+    regionCandidates,
+    (regionCode) => ({
+      [LANDUSE_TABLE.provinceObjKey]: provinceCode,
+      [LANDUSE_TABLE.regionObjKey]: regionCode,
+      [LANDUSE_TABLE.categoryObjKey]: "ALL",
+    }),
+  );
+
+  const { areas, total } = makeLanduseAreas(data.rows);
+  return {
+    status: data.rows.length ? "SUCCESS" : "DATA_NOT_FOUND",
+    table: LANDUSE_TABLE,
+    metaCount: meta.length,
+    regionName: data.selected ? rowName(data.selected.row) : target.preferred,
+    regionCode: data.selected?.code || "",
+    provinceCode,
+    rowCount: data.rows.length,
+    attempts: data.attempts,
+    areas,
+    total,
+    rows: data.rows,
+  };
+}
+
+async function extractZoning(target, year) {
+  const urbanMeta = await fetchMeta(ZONING_URBAN_TABLE);
+  const nonUrbanMeta = await fetchMeta(ZONING_NON_URBAN_TABLE);
+  const provinceCandidates = findObjectCodes(urbanMeta, ZONING_URBAN_TABLE.regionObjId, [
+    target.province.full,
+    target.province.short,
+    ...target.province.aliases,
+  ]);
+  const provinceCode = provinceCandidates[0]?.code || "";
+  const regionCandidates = findObjectCodes(urbanMeta, ZONING_URBAN_TABLE.regionObjId, [
+    target.preferred,
+    target.city,
+    target.district,
+  ], provinceCode).slice(0, 16);
+  if (!regionCandidates.length) throw new Error(`KOSIS 용도지역 표에서 ${target.preferred} 행정구역 코드를 찾지 못했습니다.`);
+
+  const urban = await chooseDataRowsByCandidates(
+    ZONING_URBAN_TABLE,
+    year,
+    regionCandidates,
+    (regionCode) => ({
+      [ZONING_URBAN_TABLE.regionObjKey]: regionCode,
+      [ZONING_URBAN_TABLE.categoryObjKey]: "ALL",
+    }),
+  );
+
+  const nonUrbanCandidates = urban.selected ? [urban.selected] : regionCandidates;
+  const nonUrban = await chooseDataRowsByCandidates(
+    ZONING_NON_URBAN_TABLE,
+    year,
+    nonUrbanCandidates,
+    (regionCode) => ({
+      [ZONING_NON_URBAN_TABLE.regionObjKey]: regionCode,
+      [ZONING_NON_URBAN_TABLE.categoryObjKey]: "ALL",
+    }),
+  );
+
+  const { rows, total } = makeZoningRows(urban.rows, nonUrban.rows);
+  return {
+    status: urban.rows.length || nonUrban.rows.length ? "SUCCESS" : "DATA_NOT_FOUND",
+    tables: [ZONING_URBAN_TABLE, ZONING_NON_URBAN_TABLE],
+    urbanMetaCount: urbanMeta.length,
+    nonUrbanMetaCount: nonUrbanMeta.length,
+    regionName: urban.selected ? rowName(urban.selected.row) : target.preferred,
+    regionCode: urban.selected?.code || nonUrban.selected?.code || "",
+    provinceCode,
+    urbanRowCount: urban.rows.length,
+    nonUrbanRowCount: nonUrban.rows.length,
+    urbanAttempts: urban.attempts,
+    nonUrbanAttempts: nonUrban.attempts,
+    rows,
+    total,
+    rawRows: { urban: urban.rows, nonUrban: nonUrban.rows },
+  };
+}
+
+function makeExtractionSummary({ target, year, landuse, zoning }) {
+  const successCount = [landuse.status, zoning.status].filter((status) => status === "SUCCESS").length;
+  const status = successCount === 2 ? "SUCCESS" : successCount === 1 ? "PARTIAL" : "DATA_NOT_FOUND";
+  const message = status === "SUCCESS"
+    ? `${target.preferred} ${year}년 수록기간 기준 KOSIS 지목별/용도지역 자료를 추출했습니다.`
+    : status === "PARTIAL"
+      ? `${target.preferred} ${year}년 KOSIS 자료 중 일부 표만 추출했습니다.`
+      : `${target.preferred} ${year}년 KOSIS 자료를 찾지 못했습니다.`;
 
   return {
     status,
-    message: status === "SUCCESS"
-      ? `${target.preferred} ${baseYear}년 기준 통계연보 표를 추출했습니다.`
-      : `통계연보 원자료 추출 상태: ${status}. 표 후보와 기준연도를 확인해 주세요.`,
-    source: analysis?.source || "",
-    sourceLink: report.yearbookUrl || "",
+    message,
+    source: "KOSIS OpenAPI",
+    sourceLink: "https://kosis.kr/",
     admin_area: target.preferred,
-    base_year: baseYear,
-    report_year: report.reportYear || report.fileYear || "",
-    table_base_year: baseYears.join(", "),
-    yearbook_url: report.yearbookUrl || "",
-    landuse_status: landuseSelection.status,
-    zoning_status: zoningSelection.status,
-    candidates: (analysis?.candidates || []).map((candidate) => ({
-      kind: candidate.kind,
-      title: candidate.sourceTableTitle || candidate.title,
-      foundCount: candidate.foundCount,
-      table_base_year: candidate.yearbookBaseYear || "",
-      unit: candidate.sourceUnit || "",
-      preview: candidate.preview || "",
-    })),
+    admin_level: target.level,
+    province: target.province.full,
+    base_year: year,
+    kosis_used_year: year,
+    period: year,
+    landuse_status: landuse.status,
+    zoning_status: zoning.status,
+    landuse_table: LANDUSE_TABLE.name,
+    zoning_tables: `${ZONING_URBAN_TABLE.name}, ${ZONING_NON_URBAN_TABLE.name}`,
   };
 }
 
@@ -457,7 +486,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const address = safe(body.address);
-    const baseYear = normalizeYear(body.year || body.base_year);
+    const year = normalizeYear(body.year || body.base_year);
     if (!address) return NextResponse.json({ error: "주소지가 비어 있습니다." }, { status: 400 });
 
     const target = resolveAdminArea(address);
@@ -465,99 +494,78 @@ export async function POST(request) {
       return NextResponse.json({ error: "주소에서 지자체 단위를 찾지 못했습니다." }, { status: 400 });
     }
 
-    const report = await findAnnualReport(target, baseYear);
-    if (report.status !== "FOUND") {
-      return NextResponse.json({
-        address,
-        target: target.preferred,
-        province: target.province.full,
-        base_year: baseYear,
-        extraction: {
-          status: report.status,
-          message: report.message,
-          admin_area: target.preferred,
-          base_year: baseYear,
-          report_year_candidates: report.reportYears || [],
-          yearbook_url: "",
-        },
-        landuse: null,
-        zoning: null,
-        warnings: [report.message],
-        debug: { address, admin_area: target.preferred, base_year: baseYear, report_year_candidates: report.reportYears || [], selected_url: "" },
-      });
-    }
-
-    const downloaded = await downloadReport(report);
-    if (downloaded.status !== "DOWNLOADED") {
-      return NextResponse.json({
-        address,
-        target: target.preferred,
-        province: target.province.full,
-        base_year: baseYear,
-        extraction: {
-          status: downloaded.status || "MANUAL_UPLOAD_REQUIRED",
-          message: downloaded.message || "통계연보 파일을 자동 처리하지 못했습니다.",
-          admin_area: target.preferred,
-          base_year: baseYear,
-          report_year: report.reportYear || report.fileYear || "",
-          yearbook_url: report.yearbookUrl || "",
-        },
-        landuse: null,
-        zoning: null,
-        warnings: [downloaded.message || "통계연보 직접 업로드 또는 수동 입력이 필요합니다."],
-      });
-    }
-
-    const analysis = await analyzeDownloadedReport(downloaded.buffer, report, baseYear);
-    const landuseSelection = selectCandidate(analysis.candidates || [], "landuse", baseYear);
-    const zoningSelection = selectCandidate(analysis.candidates || [], "zoning", baseYear);
-    const extraction = makeExtractionSummary({ target, baseYear, report, analysis, landuseSelection, zoningSelection });
-    const landuseAreas = landuseSelection.status === "SUCCESS" ? buildLanduseAreas(landuseSelection.candidate) : null;
-    const zoningRows = zoningSelection.status === "SUCCESS" ? buildZoningRows(zoningSelection.candidate) : null;
+    const [landuse, zoning] = await Promise.all([
+      extractLanduse(target, year),
+      extractZoning(target, year),
+    ]);
+    const extraction = makeExtractionSummary({ target, year, landuse, zoning });
 
     return NextResponse.json({
       address,
       target: target.preferred,
       province: target.province.full,
-      base_year: baseYear,
-      year: baseYear,
+      year,
+      base_year: year,
       extraction,
       verification: extraction,
-      landuse: landuseAreas ? {
-        areas: landuseAreas,
-        year: baseYear,
-        regionName: target.preferred,
-        source: `${target.preferred} ${report.reportYear || report.fileYear || ""} 통계연보`,
-        reportYear: report.reportYear || report.fileYear || "",
-        tableBaseYear: landuseSelection.candidate?.yearbookBaseYear || "",
-        tableTitle: landuseSelection.candidate?.sourceTableTitle || "",
-        page: landuseSelection.candidate?.pageNumber || "",
+      landuse: landuse.status === "SUCCESS" ? {
+        areas: landuse.areas,
+        year,
+        regionName: landuse.regionName,
+        source: LANDUSE_TABLE.source,
+        sourceLink: statHtmlUrl(LANDUSE_TABLE),
+        tableBaseYear: year,
+        tableTitle: LANDUSE_TABLE.name,
+        tableId: LANDUSE_TABLE.tblId,
       } : null,
-      zoning: zoningRows ? {
-        rows: zoningRows,
-        year: baseYear,
-        regionName: target.preferred,
-        source: `${target.preferred} ${report.reportYear || report.fileYear || ""} 통계연보`,
-        reportYear: report.reportYear || report.fileYear || "",
-        tableBaseYear: zoningSelection.candidate?.yearbookBaseYear || "",
-        tableTitle: zoningSelection.candidate?.sourceTableTitle || "",
-        page: zoningSelection.candidate?.pageNumber || "",
+      zoning: zoning.status === "SUCCESS" ? {
+        rows: zoning.rows,
+        year,
+        regionName: zoning.regionName,
+        source: "KOSIS 도시계획현황, 용도지역(시군구)-도시지역/비도시지역",
+        sourceLink: statHtmlUrl(ZONING_URBAN_TABLE),
+        tableBaseYear: year,
+        tableTitle: `${ZONING_URBAN_TABLE.name}, ${ZONING_NON_URBAN_TABLE.name}`,
+        tableId: `${ZONING_URBAN_TABLE.tblId}, ${ZONING_NON_URBAN_TABLE.tblId}`,
       } : null,
       warnings: extraction.status === "SUCCESS" ? [] : [extraction.message],
       debug: {
         address,
-        admin_area: target.preferred,
-        base_year: baseYear,
-        searched_report_years: report.reportYears || [],
-        selected_url: report.yearbookUrl || "",
-        candidates: extraction.candidates,
-        selected_landuse_table: landuseSelection.candidate?.sourceTableTitle || "",
-        selected_zoning_table: zoningSelection.candidate?.sourceTableTitle || "",
-        landuse_raw_values: landuseSelection.candidate?.landuseAreas || {},
-        zoning_raw_values: zoningSelection.candidate?.zoningRows || [],
+        resolved_admin_area: target,
+        requested_year: year,
+        kosis_tables: {
+          landuse: LANDUSE_TABLE,
+          zoningUrban: ZONING_URBAN_TABLE,
+          zoningNonUrban: ZONING_NON_URBAN_TABLE,
+        },
+        landuse: {
+          status: landuse.status,
+          meta_count: landuse.metaCount,
+          row_count: landuse.rowCount,
+          province_code: landuse.provinceCode,
+          region_code: landuse.regionCode,
+          region_name: landuse.regionName,
+          attempts: landuse.attempts,
+          mapped_areas: landuse.areas,
+          total_m2: landuse.total,
+        },
+        zoning: {
+          status: zoning.status,
+          urban_meta_count: zoning.urbanMetaCount,
+          non_urban_meta_count: zoning.nonUrbanMetaCount,
+          urban_row_count: zoning.urbanRowCount,
+          non_urban_row_count: zoning.nonUrbanRowCount,
+          province_code: zoning.provinceCode,
+          region_code: zoning.regionCode,
+          region_name: zoning.regionName,
+          urban_attempts: zoning.urbanAttempts,
+          non_urban_attempts: zoning.nonUrbanAttempts,
+          mapped_rows: zoning.rows,
+          total_m2: zoning.total,
+        },
       },
     });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "통계연보 추출 중 오류가 발생했습니다." }, { status: 500 });
+    return NextResponse.json({ error: error.message || "KOSIS 자료 추출 중 오류가 발생했습니다." }, { status: 500 });
   }
 }
