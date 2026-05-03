@@ -766,14 +766,14 @@ button.mini-button {
 
 .chart-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 18px;
+  grid-template-columns: minmax(280px, 320px) minmax(150px, 1fr);
+  gap: 24px;
   align-items: center;
 }
 
 .pie-chart {
-  width: 220px;
-  height: 220px;
+  width: min(320px, 100%);
+  aspect-ratio: 1;
   border-radius: 50%;
   background:
     radial-gradient(circle at center, rgba(255, 255, 255, 0.95) 0 34%, transparent 35%),
@@ -783,20 +783,21 @@ button.mini-button {
 
 .legend {
   display: grid;
-  gap: 10px;
+  align-content: center;
+  gap: 12px;
 }
 
 .legend-item {
   display: grid;
-  grid-template-columns: 14px 1fr auto;
+  grid-template-columns: 16px 1fr;
   gap: 10px;
   align-items: center;
   color: var(--muted);
 }
 
 .legend-swatch {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 4px;
 }
 
@@ -877,12 +878,7 @@ button.mini-button {
   }
 
   .chart-layout {
-    grid-template-columns: 200px minmax(0, 1fr);
-  }
-
-  .pie-chart {
-    width: 200px;
-    height: 200px;
+    grid-template-columns: minmax(260px, 300px) minmax(140px, 1fr);
   }
 }
 
@@ -895,8 +891,8 @@ button.mini-button {
   }
 
   .pie-chart {
-    width: min(220px, 100%);
-    height: min(220px, 100vw - 120px);
+    width: min(300px, 100%);
+    margin: 0 auto;
   }
 }
 
