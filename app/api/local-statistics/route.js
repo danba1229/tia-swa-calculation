@@ -148,16 +148,59 @@ function statHtmlUrl(table) {
   return url.toString();
 }
 
-async function fetchKosisJson(table, params) {
-  const response = await fetch(makeKosisUrl(table, params), {
-    cache: "no-store",
-    headers: {
-      Accept: "application/json,text/plain,*/*",
-      "User-Agent": "Mozilla/5.0 tia-support/3.0",
-    },
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
   });
-  const text = await response.text();
-  if (!response.ok) throw new Error(`KOSIS 조회 실패: ${response.status}`);
+}
+
+function redactApiKey(url) {
+  const nextUrl = new URL(url);
+  if (nextUrl.searchParams.has("apiKey")) nextUrl.searchParams.set("apiKey", "***");
+  return nextUrl.toString();
+}
+
+function withHttpFallback(url) {
+  const nextUrl = new URL(url);
+  nextUrl.protocol = nextUrl.protocol === "https:" ? "http:" : "https:";
+  return nextUrl;
+}
+
+async function fetchTextWithRetry(url, label) {
+  const urls = [url, withHttpFallback(url)];
+  let lastError = null;
+
+  for (const targetUrl of urls) {
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        const response = await fetch(targetUrl, {
+          cache: "no-store",
+          redirect: "follow",
+          headers: {
+            Accept: "application/json,text/plain,*/*",
+            "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+            Connection: "close",
+            "User-Agent": "Mozilla/5.0 tia-support/3.0",
+          },
+        });
+        const text = await response.text();
+        if (!response.ok) {
+          throw new Error(`${label} HTTP ${response.status}: ${text.slice(0, 160)}`);
+        }
+        return text;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 3) await wait(350 * attempt);
+      }
+    }
+  }
+
+  const cause = lastError?.cause?.code || lastError?.cause?.message || lastError?.message || "unknown";
+  throw new Error(`${label} 연결 실패: ${cause}. 요청 URL: ${redactApiKey(url)}`);
+}
+
+async function fetchKosisJson(table, params) {
+  const text = await fetchTextWithRetry(makeKosisUrl(table, params), `KOSIS ${table.name} 자료 조회`);
 
   let data;
   try {
@@ -186,15 +229,7 @@ async function fetchMeta(table) {
   url.searchParams.set("orgId", table.orgId);
   url.searchParams.set("tblId", table.tblId);
 
-  const response = await fetch(url, {
-    cache: "no-store",
-    headers: {
-      Accept: "application/json,text/plain,*/*",
-      "User-Agent": "Mozilla/5.0 tia-support/3.0",
-    },
-  });
-  const text = await response.text();
-  if (!response.ok) throw new Error(`KOSIS 메타데이터 조회 실패: ${response.status}`);
+  const text = await fetchTextWithRetry(url, `KOSIS ${table.name} 메타데이터 조회`);
 
   let data;
   try {
@@ -494,10 +529,9 @@ export async function POST(request) {
       return NextResponse.json({ error: "주소에서 지자체 단위를 찾지 못했습니다." }, { status: 400 });
     }
 
-    const [landuse, zoning] = await Promise.all([
-      extractLanduse(target, year),
-      extractZoning(target, year),
-    ]);
+    const landuse = await extractLanduse(target, year);
+    await wait(250);
+    const zoning = await extractZoning(target, year);
     const extraction = makeExtractionSummary({ target, year, landuse, zoning });
 
     return NextResponse.json({
