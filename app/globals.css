@@ -739,6 +739,24 @@ button.mini-button {
   margin-bottom: 14px;
 }
 
+.subpanel-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.subpanel-source {
+  max-width: 520px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .chart-grid {
   margin-top: 18px;
 }

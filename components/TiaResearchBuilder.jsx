@@ -1472,7 +1472,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
         <div className="subpanel-grid landuse-layout">
           <section className="subpanel">
-            <div className="subpanel-header"><h3>지목별 토지이용현황</h3></div>
+            <div className="subpanel-header">
+              <h3>지목별 토지이용현황</h3>
+              <p className="subpanel-source">출처: {landuseReportRows[0]?.source || "미입력"}</p>
+            </div>
             <div className="table-wrap">
               <table className="data-table report-table horizontal-report-table">
                 <thead>
@@ -1507,10 +1510,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     {landuseReportRows.map((row) => <td key={`landuse-raw-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.rawItem}</td>)}
                   </tr>
                   <tr>
-                    <th>자료출처</th>
-                    {landuseReportRows.map((row) => <td key={`landuse-source-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.source}</td>)}
-                  </tr>
-                  <tr>
                     <th>조사년도</th>
                     {landuseReportRows.map((row) => <td key={`landuse-year-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.year}</td>)}
                   </tr>
@@ -1522,7 +1521,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <section className="subpanel">
             <div className="subpanel-header">
               <h3>용도지역 현황</h3>
-              <button type="button" className="secondary" onClick={() => addRow("zoningRows", createZoningRow)}>용도지역 추가</button>
+              <div className="subpanel-header-actions">
+                <p className="subpanel-source">출처: {zoningReportRows[0]?.source || "미입력"}</p>
+                <button type="button" className="secondary" onClick={() => addRow("zoningRows", createZoningRow)}>용도지역 추가</button>
+              </div>
             </div>
             <div className="table-wrap">
               <table className="data-table report-table horizontal-report-table">
@@ -1558,10 +1560,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   <tr>
                     <th>원자료항목</th>
                     {zoningReportRows.map((row) => <td key={`zoning-raw-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.rawItem}</td>)}
-                  </tr>
-                  <tr>
-                    <th>자료출처</th>
-                    {zoningReportRows.map((row) => <td key={`zoning-source-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.source}</td>)}
                   </tr>
                   <tr>
                     <th>조사년도</th>
