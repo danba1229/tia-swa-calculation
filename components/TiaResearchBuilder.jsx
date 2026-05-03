@@ -38,7 +38,7 @@ const SURVEY_TYPES = [
   { value: "average", label: "요일별 평균 교통량" },
   { value: "none", label: "자료 없음" },
 ];
-const CHART_COLORS = ["#0b4f8a", "#2f6fa5", "#5e90bb", "#8fb4d0", "#b7cbdd", "#d5dfeb", "#7f9c7a", "#c68f58", "#8a6b5c", "#b9a79d"];
+const CHART_COLORS = ["#2563eb", "#dc2626", "#16a34a", "#f59e0b", "#7c3aed", "#0891b2", "#db2777", "#65a30d", "#ea580c", "#475569", "#0f766e", "#9333ea"];
 const MANUAL_RESEARCH_PLACEHOLDER = "수동 조사필요";
 const DEFAULT_SCOPE_WIDTH = "2300";
 const DEFAULT_SCOPE_HEIGHT = "3200";
@@ -1588,7 +1588,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   <div key={slice.label} className="legend-item">
                     <span className="legend-swatch" style={{ background: slice.color }} />
                     <span>{slice.label}</span>
-                    <strong>{formatPercent(slice.percent)} / {formatNumber(slice.value)}㎡</strong>
                   </div>
                 )) : <p className="chart-caption">입력된 지목별 면적이 없습니다.</p>}
               </div>
@@ -1607,7 +1606,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   <div key={`${slice.label}-${slice.key}`} className="legend-item">
                     <span className="legend-swatch" style={{ background: slice.color }} />
                     <span>{slice.label}</span>
-                    <strong>{formatPercent(slice.percent)} / {formatNumber(slice.value)}㎡</strong>
                   </div>
                 )) : <p className="chart-caption">입력된 용도지역 면적이 없습니다.</p>}
               </div>
