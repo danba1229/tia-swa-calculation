@@ -1474,34 +1474,46 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <section className="subpanel">
             <div className="subpanel-header"><h3>지목별 토지이용현황</h3></div>
             <div className="table-wrap">
-              <table className="data-table report-table">
+              <table className="data-table report-table horizontal-report-table">
                 <thead>
                   <tr>
-                    <th>구분</th>
-                    <th>면적_m2</th>
-                    <th>면적_km2</th>
-                    <th>구성비_%</th>
-                    <th>원자료항목</th>
-                    <th>자료출처</th>
-                    <th>조사년도</th>
+                    <th>항목</th>
+                    {landuseReportRows.map((row) => (
+                      <th key={`landuse-head-${row.key}`} className={row.isTotal ? "total-row" : rankClass(landuseStats.rankMap.get(row.key))}>{row.label}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {landuseReportRows.map((row) => (
-                    <tr key={`landuse-report-${row.key}`} className={row.isTotal ? "total-row" : rankClass(landuseStats.rankMap.get(row.key))}>
-                      <td>{row.label}</td>
-                      <td>
+                  <tr>
+                    <th>면적_m2</th>
+                    {landuseReportRows.map((row) => (
+                      <td key={`landuse-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(landuseStats.rankMap.get(row.key))}>
                         {row.isTotal ? formatNumber(row.area) : (
                           <input className="table-input" type="number" value={form.landuseAreas[row.key] || ""} onChange={(event) => updateLanduseArea(row.key, event.target.value)} placeholder="면적 입력" />
                         )}
                       </td>
-                      <td>{formatSquareKilometers(row.area)}</td>
-                      <td>{formatPercent(row.ratio)}</td>
-                      <td>{row.rawItem}</td>
-                      <td>{row.source}</td>
-                      <td>{row.year}</td>
-                    </tr>
-                  ))}
+                    ))}
+                  </tr>
+                  <tr>
+                    <th>면적_km2</th>
+                    {landuseReportRows.map((row) => <td key={`landuse-km2-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatSquareKilometers(row.area)}</td>)}
+                  </tr>
+                  <tr>
+                    <th>구성비_%</th>
+                    {landuseReportRows.map((row) => <td key={`landuse-ratio-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatPercent(row.ratio)}</td>)}
+                  </tr>
+                  <tr>
+                    <th>원자료항목</th>
+                    {landuseReportRows.map((row) => <td key={`landuse-raw-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.rawItem}</td>)}
+                  </tr>
+                  <tr>
+                    <th>자료출처</th>
+                    {landuseReportRows.map((row) => <td key={`landuse-source-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.source}</td>)}
+                  </tr>
+                  <tr>
+                    <th>조사년도</th>
+                    {landuseReportRows.map((row) => <td key={`landuse-year-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.year}</td>)}
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -1513,32 +1525,52 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               <button type="button" className="secondary" onClick={() => addRow("zoningRows", createZoningRow)}>용도지역 추가</button>
             </div>
             <div className="table-wrap">
-              <table className="data-table report-table">
+              <table className="data-table report-table horizontal-report-table">
                 <thead>
                   <tr>
-                    <th>구분</th>
-                    <th>면적_m2</th>
-                    <th>면적_km2</th>
-                    <th>구성비_%</th>
-                    <th>원자료항목</th>
-                    <th>자료출처</th>
-                    <th>조사년도</th>
-                    <th>관리</th>
+                    <th>항목</th>
+                    {zoningReportRows.map((row, index) => (
+                      <th key={`zoning-head-${row.key}`} className={row.isTotal ? "total-row" : rankClass(zoningStats.rankMap.get(index))}>
+                        {row.isTotal ? row.label : (
+                          <input className="table-input" value={form.zoningRows[index]?.name || ""} onChange={(event) => updateListItem("zoningRows", index, { name: event.target.value })} placeholder="예: 주거지역" />
+                        )}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {zoningReportRows.map((row, index) => (
-                    <tr key={`zoning-report-${row.key}`} className={row.isTotal ? "total-row" : rankClass(zoningStats.rankMap.get(index))}>
-                      <td>{row.isTotal ? row.label : <input className="table-input" value={form.zoningRows[index]?.name || ""} onChange={(event) => updateListItem("zoningRows", index, { name: event.target.value })} placeholder="예: 주거지역" />}</td>
-                      <td>{row.isTotal ? formatNumber(row.area) : <input className="table-input" type="number" value={form.zoningRows[index]?.area || ""} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />}</td>
-                      <td>{formatSquareKilometers(row.area)}</td>
-                      <td>{formatPercent(row.ratio)}</td>
-                      <td>{row.rawItem}</td>
-                      <td>{row.source}</td>
-                      <td>{row.year}</td>
-                      <td className="actions">{row.isTotal ? "" : <button type="button" className="mini-button" onClick={() => removeRow("zoningRows", index, createZoningRow)}>삭제</button>}</td>
-                    </tr>
-                  ))}
+                  <tr>
+                    <th>면적_m2</th>
+                    {zoningReportRows.map((row, index) => (
+                      <td key={`zoning-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(zoningStats.rankMap.get(index))}>
+                        {row.isTotal ? formatNumber(row.area) : <input className="table-input" type="number" value={form.zoningRows[index]?.area || ""} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <th>면적_km2</th>
+                    {zoningReportRows.map((row) => <td key={`zoning-km2-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatSquareKilometers(row.area)}</td>)}
+                  </tr>
+                  <tr>
+                    <th>구성비_%</th>
+                    {zoningReportRows.map((row) => <td key={`zoning-ratio-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatPercent(row.ratio)}</td>)}
+                  </tr>
+                  <tr>
+                    <th>원자료항목</th>
+                    {zoningReportRows.map((row) => <td key={`zoning-raw-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.rawItem}</td>)}
+                  </tr>
+                  <tr>
+                    <th>자료출처</th>
+                    {zoningReportRows.map((row) => <td key={`zoning-source-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.source}</td>)}
+                  </tr>
+                  <tr>
+                    <th>조사년도</th>
+                    {zoningReportRows.map((row) => <td key={`zoning-year-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.year}</td>)}
+                  </tr>
+                  <tr>
+                    <th>관리</th>
+                    {zoningReportRows.map((row, index) => <td key={`zoning-actions-${row.key}`} className="actions">{row.isTotal ? "" : <button type="button" className="mini-button" onClick={() => removeRow("zoningRows", index, createZoningRow)}>삭제</button>}</td>)}
+                  </tr>
                 </tbody>
               </table>
             </div>

@@ -523,6 +523,46 @@ button.mini-button {
   color: var(--muted);
 }
 
+.horizontal-report-table {
+  min-width: 1320px;
+  table-layout: fixed;
+}
+
+.horizontal-report-table th,
+.horizontal-report-table td {
+  min-width: 112px;
+  text-align: center;
+  vertical-align: middle;
+  word-break: keep-all;
+}
+
+.horizontal-report-table tbody th {
+  width: 128px;
+  text-align: left;
+  font-weight: 800;
+  background: rgba(160, 79, 47, 0.08);
+}
+
+.horizontal-report-table .table-input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.horizontal-report-table td:nth-child(5),
+.horizontal-report-table td:nth-child(6) {
+  min-width: 112px;
+  color: inherit;
+}
+
+.horizontal-report-table td.total-row,
+.horizontal-report-table th.total-row {
+  font-weight: 800;
+  background: rgba(64, 49, 34, 0.08);
+}
+
 .data-table th.rank-1,
 .data-table td.rank-1 {
   background: rgba(11, 79, 138, 0.22);
