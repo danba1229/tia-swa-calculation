@@ -1018,6 +1018,71 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     setStatusText(result.message);
   }
 
+  function buildExcelReportSheet(title, source, rows) {
+    return [
+      [title],
+      ["자료출처", source || "미입력"],
+      ["조사년도", rows[0]?.year || form.statisticsYear || DEFAULT_STATISTICS_YEAR],
+      [],
+      ["항목", ...rows.map((row) => row.label)],
+      ["면적_m2", ...rows.map((row) => row.area || 0)],
+      ["면적_km2", ...rows.map((row) => Number(((row.area || 0) / 1000000).toFixed(2)))],
+      ["구성비_%", ...rows.map((row) => Number((row.ratio || 0).toFixed(2)))],
+      ["원자료항목", ...rows.map((row) => row.rawItem)],
+    ];
+  }
+
+  function buildExcelChartSheet(rows) {
+    return [
+      ["구분", "면적_m2", "구성비_%"],
+      ...rows
+        .filter((row) => !row.isTotal && row.area > 0)
+        .map((row) => [row.label, row.area, Number((row.ratio || 0).toFixed(2))]),
+    ];
+  }
+
+  function fitSheetColumns(sheet, columnCount) {
+    sheet["!cols"] = Array.from({ length: columnCount }, (_, index) => ({
+      wch: index === 0 ? 16 : 14,
+    }));
+  }
+
+  async function exportStep3Excel() {
+    try {
+      const XLSX = await import("xlsx");
+      const workbook = XLSX.utils.book_new();
+      const landuseSource = landuseReportRows[0]?.source || form.landuseSource || "";
+      const zoningSource = zoningReportRows[0]?.source || form.zoningSource || "";
+      const landuseSheetRows = buildExcelReportSheet("지목별 토지이용현황", landuseSource, landuseReportRows);
+      const zoningSheetRows = buildExcelReportSheet("용도지역 현황", zoningSource, zoningReportRows);
+      const landuseChartRows = buildExcelChartSheet(landuseReportRows);
+      const zoningChartRows = buildExcelChartSheet(zoningReportRows);
+      const landuseSheet = XLSX.utils.aoa_to_sheet(landuseSheetRows);
+      const zoningSheet = XLSX.utils.aoa_to_sheet(zoningSheetRows);
+      const landuseChartSheet = XLSX.utils.aoa_to_sheet(landuseChartRows);
+      const zoningChartSheet = XLSX.utils.aoa_to_sheet(zoningChartRows);
+      const maxColumnCount = Math.max(landuseReportRows.length, zoningReportRows.length) + 1;
+
+      fitSheetColumns(landuseSheet, maxColumnCount);
+      fitSheetColumns(zoningSheet, maxColumnCount);
+      fitSheetColumns(landuseChartSheet, 3);
+      fitSheetColumns(zoningChartSheet, 3);
+
+      XLSX.utils.book_append_sheet(workbook, landuseSheet, "지목별 토지이용현황");
+      XLSX.utils.book_append_sheet(workbook, zoningSheet, "용도지역 현황");
+      XLSX.utils.book_append_sheet(workbook, landuseChartSheet, "그래프용_지목");
+      XLSX.utils.book_append_sheet(workbook, zoningChartSheet, "그래프용_용도지역");
+
+      const unitName = deriveLocalStatisticsUnit(form.basics.siteAddress, "대상지").replace(/[\\/:*?"<>|]/g, "");
+      const year = form.statisticsYear || DEFAULT_STATISTICS_YEAR;
+      XLSX.writeFile(workbook, `TIA_STEP3_${unitName}_${year}.xlsx`);
+      setStatusText("지목별 토지이용현황과 용도지역 현황을 엑셀 파일로 출력했습니다. 원형그래프용 데이터 시트도 함께 포함했습니다.");
+    } catch (error) {
+      console.error(error);
+      setStatusText("엑셀 파일을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    }
+  }
+
   async function renderScopeMap() {
     const address = safe(form.basics.siteAddress);
     const { width, height } = getScopeDimensions(form.basics);
@@ -1437,9 +1502,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="eyebrow">Step 3</p>
             <h2>토지이용 현황 및 계획</h2>
           </div>
-          <button type="button" className="secondary" onClick={refreshLocalStatisticsOnly}>
-            KOSIS 자료 추출
-          </button>
+          <div className="panel-header-actions">
+            <button type="button" className="secondary" onClick={refreshLocalStatisticsOnly}>
+              KOSIS 자료 추출
+            </button>
+            <button type="button" className="secondary" onClick={exportStep3Excel}>
+              엑셀 출력
+            </button>
+          </div>
         </div>
 
         <div className="form-grid compact-grid">

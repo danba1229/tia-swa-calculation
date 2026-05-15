@@ -172,6 +172,14 @@ h3 {
   margin-bottom: 12px;
 }
 
+.panel-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .panel-header,
 .subpanel-header,
 .output-header,
