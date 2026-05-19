@@ -836,6 +836,23 @@ button.mini-button {
   grid-column: span 2;
 }
 
+.scope-linked-note {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+}
+
+.scope-linked-note strong {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
 .checkbox-label {
   display: flex;
   min-height: 48px;

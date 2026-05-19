@@ -95,9 +95,6 @@ function createConstructionPlanRow(overrides = {}) {
 
 function createBlankDevelopmentSearch(overrides = {}) {
   return {
-    siteName: "",
-    siteAddress: "",
-    radiusMeters: "2000",
     startYear: "2021",
     endYear: "2026",
     sido: "",
@@ -166,6 +163,11 @@ function getScopeDimensions(basics) {
   const width = toNumber(basics?.rectWidth) || Number(DEFAULT_SCOPE_WIDTH);
   const height = toNumber(basics?.rectHeight) || Number(DEFAULT_SCOPE_HEIGHT);
   return { width, height };
+}
+
+function getDevelopmentRadiusMeters(basics) {
+  const { width, height } = getScopeDimensions(basics);
+  return Math.ceil(Math.sqrt((width / 2) ** 2 + (height / 2) ** 2));
 }
 
 function toSortableNumber(value) {
@@ -546,7 +548,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const verification = form.statisticsVerification;
   const developmentSearch = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
   const developmentResult = { ...createBlankDevelopmentResult(), ...(form.developmentResult || {}) };
-  const developmentRadius = toNumber(developmentSearch.radiusMeters) || 2000;
+  const developmentRadius = getDevelopmentRadiusMeters(form.basics);
   const developmentResults = Array.isArray(developmentResult.results) ? developmentResult.results : [];
   const displayedDevelopmentResults = developmentResults.filter((result) => {
     const statusMatches = developmentSearch.statusFilter === "전체" || result.reflectionStatus === developmentSearch.statusFilter;
@@ -848,6 +850,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         }
       }
 
+      if (field === "siteAddress" || field === "rectWidth" || field === "rectHeight") {
+        next.developmentResult = createBlankDevelopmentResult();
+      }
+
       return next;
     });
 
@@ -927,9 +933,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function getDevelopmentPayload() {
     const search = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
     return {
-      siteName: search.siteName,
-      siteAddress: safe(search.siteAddress) || safe(form.basics.siteAddress),
-      radiusMeters: toNumber(search.radiusMeters) || 2000,
+      siteAddress: safe(form.basics.siteAddress),
+      radiusMeters: getDevelopmentRadiusMeters(form.basics),
       startYear: toNumber(search.startYear) || "",
       endYear: toNumber(search.endYear) || "",
       sido: search.sido,
@@ -959,8 +964,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       developmentSearch: {
         ...createBlankDevelopmentSearch(),
         ...(current.developmentSearch || {}),
-        siteAddress: payload.siteAddress,
-        radiusMeters: String(payload.radiusMeters),
       },
       developmentResult: createBlankDevelopmentResult({ loading: true, searched: true }),
     }));
@@ -1069,7 +1072,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   async function copyDevelopmentDraft() {
     const summary = developmentResult.summary || {};
-    const radius = toNumber(developmentSearch.radiusMeters) || 2000;
+    const radius = getDevelopmentRadiusMeters(form.basics);
     const reflect = toNumber(summary.reflectCount);
     const review = toNumber(summary.reviewCount);
     const reference = toNumber(summary.referenceCount);
@@ -1910,19 +1913,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </div>
         </div>
 
+        <div className="scope-linked-note">
+          <strong>검색 기준</strong>
+          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사범위를 사용합니다. 주변사업 검색 반경은 중심점 기준 약 {formatNumber(developmentRadius)}m입니다.</span>
+        </div>
+
         <div className="form-grid compact-grid development-form">
-          <label>
-            <span>사업지명</span>
-            <input value={developmentSearch.siteName} onChange={(event) => updateDevelopmentSearch({ siteName: event.target.value })} placeholder="예: ○○복합개발사업" />
-          </label>
-          <label className="wide">
-            <span>사업지 주소</span>
-            <input value={developmentSearch.siteAddress || form.basics.siteAddress} onChange={(event) => updateDevelopmentSearch({ siteAddress: event.target.value })} placeholder="예: 서울특별시 송파구 양재대로 1239" />
-          </label>
-          <label>
-            <span>검색반경(m)</span>
-            <input type="number" value={developmentSearch.radiusMeters} onChange={(event) => updateDevelopmentSearch({ radiusMeters: event.target.value })} placeholder="2000" />
-          </label>
           <label>
             <span>검색시작연도</span>
             <input type="number" value={developmentSearch.startYear} onChange={(event) => updateDevelopmentSearch({ startYear: event.target.value })} placeholder="2021" />
