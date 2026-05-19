@@ -97,8 +97,6 @@ function createBlankDevelopmentSearch(overrides = {}) {
   return {
     startYear: "2021",
     endYear: "2026",
-    sido: "",
-    sigungu: "",
     projectType: "전체",
     includeFailed: false,
     statusFilter: "전체",
@@ -168,6 +166,36 @@ function getScopeDimensions(basics) {
 function getDevelopmentRadiusMeters(basics) {
   const { width, height } = getScopeDimensions(basics);
   return Math.ceil(Math.sqrt((width / 2) ** 2 + (height / 2) ** 2));
+}
+
+function deriveDevelopmentAdmin(address) {
+  const parts = normalizeAddress(address).split(" ").filter(Boolean);
+  if (!parts.length) return { sido: "", sigungu: "" };
+
+  const first = parts[0];
+  const sido = first.startsWith("서울") ? "서울특별시"
+    : first.startsWith("경기") ? "경기도"
+      : first;
+  const rest = parts.slice(1);
+
+  if (sido === "서울특별시") {
+    return {
+      sido,
+      sigungu: rest.find((part) => /구$/.test(part)) || "",
+    };
+  }
+
+  if (sido === "경기도") {
+    return {
+      sido,
+      sigungu: rest.find((part) => /[시군]$/.test(part)) || "",
+    };
+  }
+
+  return {
+    sido,
+    sigungu: rest.find((part) => /[시군구]$/.test(part)) || "",
+  };
 }
 
 function toSortableNumber(value) {
@@ -549,6 +577,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const developmentSearch = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
   const developmentResult = { ...createBlankDevelopmentResult(), ...(form.developmentResult || {}) };
   const developmentRadius = getDevelopmentRadiusMeters(form.basics);
+  const developmentAdmin = deriveDevelopmentAdmin(form.basics.siteAddress);
   const developmentResults = Array.isArray(developmentResult.results) ? developmentResult.results : [];
   const displayedDevelopmentResults = developmentResults.filter((result) => {
     const statusMatches = developmentSearch.statusFilter === "전체" || result.reflectionStatus === developmentSearch.statusFilter;
@@ -932,13 +961,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function getDevelopmentPayload() {
     const search = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
+    const admin = deriveDevelopmentAdmin(form.basics.siteAddress);
     return {
       siteAddress: safe(form.basics.siteAddress),
       radiusMeters: getDevelopmentRadiusMeters(form.basics),
       startYear: toNumber(search.startYear) || "",
       endYear: toNumber(search.endYear) || "",
-      sido: search.sido,
-      sigungu: search.sigungu,
+      sido: admin.sido,
+      sigungu: admin.sigungu,
       projectType: search.projectType || "전체",
     };
   }
@@ -1915,7 +1945,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
         <div className="scope-linked-note">
           <strong>검색 기준</strong>
-          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사범위를 사용합니다. 주변사업 검색 반경은 중심점 기준 약 {formatNumber(developmentRadius)}m입니다.</span>
+          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사범위를 사용합니다. 행정구역은 {developmentAdmin.sido || "-"} / {developmentAdmin.sigungu || "-"}로 자동 적용하고, 주변사업 검색 반경은 중심점 기준 약 {formatNumber(developmentRadius)}m입니다.</span>
         </div>
 
         <div className="form-grid compact-grid development-form">
@@ -1926,14 +1956,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <label>
             <span>검색종료연도</span>
             <input type="number" value={developmentSearch.endYear} onChange={(event) => updateDevelopmentSearch({ endYear: event.target.value })} placeholder="2026" />
-          </label>
-          <label>
-            <span>시도</span>
-            <input value={developmentSearch.sido} onChange={(event) => updateDevelopmentSearch({ sido: event.target.value })} placeholder="예: 서울특별시" />
-          </label>
-          <label>
-            <span>시군구</span>
-            <input value={developmentSearch.sigungu} onChange={(event) => updateDevelopmentSearch({ sigungu: event.target.value })} placeholder="예: 송파구" />
           </label>
           <label>
             <span>사업유형</span>
