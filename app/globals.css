@@ -832,6 +832,97 @@ button.mini-button {
   align-items: center;
 }
 
+.development-form .wide {
+  grid-column: span 2;
+}
+
+.checkbox-label {
+  display: flex;
+  min-height: 48px;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.checkbox-label input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+}
+
+.development-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.development-summary-grid > div {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.development-summary-grid strong {
+  font-size: 24px;
+  color: var(--ink);
+}
+
+.development-summary-grid span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.development-table {
+  min-width: 1280px;
+}
+
+.status-pill {
+  display: inline-flex;
+  min-width: 70px;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(64, 49, 34, 0.08);
+  color: var(--ink);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-pill.반영 {
+  background: rgba(22, 163, 74, 0.16);
+  color: #166534;
+}
+
+.status-pill.반영검토 {
+  background: rgba(37, 99, 235, 0.14);
+  color: #1d4ed8;
+}
+
+.status-pill.참고 {
+  background: rgba(245, 158, 11, 0.18);
+  color: #92400e;
+}
+
+.status-pill.제외후보 {
+  background: rgba(100, 116, 139, 0.16);
+  color: #475569;
+}
+
+.empty-cell {
+  padding: 28px 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
 @media (min-width: 992px) {
   .app-shell {
     max-width: 1360px;

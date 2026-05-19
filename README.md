@@ -1,49 +1,77 @@
 # TIA Research Builder
 
-Next.js App Router 기반의 배포형 TIA 조사 작성 도구입니다.
+Next.js App Router 기반 교통영향평가 조사 초안 작성 보조 웹앱입니다. 주소지를 입력하면 조사 범위, 가로망, 사전조사지점, 토지이용 및 용도지역, 주변지역 개발계획, 교통관련 계획을 한 화면에서 정리할 수 있습니다.
 
-## 현재 구조
+## 1차 버전 범위
 
-- `app/`
-  - Next.js 라우트와 전역 스타일
-- `components/TiaResearchBuilder.jsx`
-  - 화면 UI, 로컬 저장, 카카오 지도, 계산 로직
-- `.env.example`
-  - 배포 환경변수 예시
+- 카카오 지도 JavaScript SDK로 사업지와 조사 범위를 표시합니다.
+- KOSIS 수록기간 자료로 지목별 토지이용현황과 용도지역 현황을 표/그래프/엑셀로 정리합니다.
+- 주변지역 개발계획은 카카오 Local API와 국토교통부 교통영향평가정보지원시스템 API만 사용합니다.
+- `/embed` 경로는 티스토리 iframe 삽입용 간소화 화면입니다.
 
-기존 정적 파일인 `index.html`, `app.js`, `style.css`, `serve_local.ps1` 는 참고용으로 남아 있으며, 새 실행 구조에서는 사용하지 않습니다.
+## 제외 기능
 
-## 실행 방법
+- 지자체 고시공고 자동검색은 1차 버전에 포함하지 않습니다.
+- 토지이음, 건축인허가, 정비사업 데이터 연계는 TODO로 남겨둡니다.
+- 교통영향평가 API의 정확한 endpoint, 요청변수명, 응답 필드명은 활용신청 후 제공되는 Swagger/활용가이드를 기준으로 `lib/tiaApi.js`에서 조정해야 합니다.
 
-1. 의존성 설치
-   - `npm install`
-2. 환경변수 파일 생성
-   - `.env.local`
-3. 아래 값 설정
-   - `KAKAO_JS_KEY=...`
-4. 개발 서버 실행
-   - `npm run dev`
-5. 브라우저에서 열기
-   - `http://localhost:3000`
+## 환경변수
 
-## 배포 메모
-
-- 카카오 Developers Web 플랫폼에 아래 주소를 등록해야 합니다.
-  - 개발용 예시: `http://localhost:3000`
-  - 배포용 예시: `https://your-domain.com`
-- 사용자는 지도 키를 입력하지 않습니다.
-- 다만 카카오 지도 JavaScript SDK 특성상 지도 렌더링 시 키가 브라우저 요청에 사용되므로, 완전한 비공개 키처럼 취급할 수는 없습니다.
-- 따라서 `도메인 제한`을 반드시 함께 설정해야 합니다.
-
-## 티스토리 임베드
-
-- 임베드 전용 주소는 `/embed` 입니다.
-  - 예: `https://your-domain.com/embed`
-- 티스토리 HTML 모드에 넣을 예시는 [tistory-iframe-snippet.html](C:/Users/kimys543512/Desktop/tia%20codex/01.%20tia(swa)%20calculation/tistory-iframe-snippet.html) 파일에 넣어두었습니다.
-- 티스토리에서 바로 보이게 하려면 블로그 글 본문이나 스킨 HTML 편집 영역에 `iframe` 코드를 넣으면 됩니다.
-
-## 권장 환경변수
+`.env.local` 또는 Vercel Environment Variables에 아래 값을 설정합니다.
 
 ```env
-KAKAO_JS_KEY=your_kakao_javascript_key
+KAKAO_JS_KEY=
+KAKAO_REST_API_KEY=
+DATA_GO_KR_SERVICE_KEY=
+TIA_API_BASE_URL=
+TIA_API_OPERATION_PATH=
+KOSIS_API_KEY=
 ```
+
+- `KAKAO_JS_KEY`: 화면 지도 표시용 JavaScript 키입니다.
+- `KAKAO_REST_API_KEY`: 서버 API Route에서 주소 좌표변환에 사용하는 REST API 키입니다.
+- `DATA_GO_KR_SERVICE_KEY`: 공공데이터포털 인증키입니다.
+- `TIA_API_BASE_URL`, `TIA_API_OPERATION_PATH`: 교통영향평가정보지원시스템 API 활용가이드 확인 후 입력합니다.
+- `KOSIS_API_KEY`: STEP3 KOSIS 자료 추출에 사용합니다.
+
+API 키는 클라이언트 번들에 넣지 않습니다. 카카오 REST API와 공공데이터 API 호출은 모두 Next.js 서버 API Route에서 처리합니다.
+
+## 로컬 실행
+
+```bash
+npm install
+npm run dev
+```
+
+브라우저에서 `http://localhost:3000`을 엽니다.
+
+## Vercel 배포
+
+1. GitHub 저장소를 Vercel 프로젝트로 연결합니다.
+2. Vercel Project Settings에서 위 환경변수를 Production에 추가합니다.
+3. `main` 브랜치에 push하면 자동 배포됩니다.
+4. 카카오 Developers의 플랫폼 Web 도메인에 Vercel 도메인을 등록합니다.
+
+## 티스토리 iframe 예시
+
+```html
+<div class="tia-embed-wrap">
+  <iframe
+    src="https://tia-support.vercel.app/embed"
+    title="교통영향평가 조사 초안 작성 도구"
+    data-tia-embed
+    loading="lazy"
+  ></iframe>
+</div>
+```
+
+기존 예시는 `tistory-iframe-snippet.html`에도 들어 있습니다.
+
+## 주변지역 개발계획 API
+
+- `POST /api/geocode`: 주소를 카카오 Local API로 좌표 변환합니다.
+- `POST /api/tia/search`: 사업지 주소 좌표변환, 교통영향평가 후보사업 조회, 후보사업 좌표변환, 거리계산, 반영여부 자동판정을 수행합니다.
+
+공공데이터포털 API 신청 URL:
+
+https://www.data.go.kr/iim/api/selectDevAcountRequestForm.do?publicDataDetailPk=uddi:fe3f4ccd-57ea-4b79-b77a-cdbed1484bf4_202308241603

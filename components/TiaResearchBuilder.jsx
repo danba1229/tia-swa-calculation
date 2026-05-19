@@ -45,6 +45,8 @@ const DEFAULT_SCOPE_HEIGHT = "3200";
 const ROAD_SAMPLE_INTERVAL_METERS = 180;
 const DEFAULT_STATISTICS_YEAR = "2024";
 const STATISTICS_YEAR_OPTIONS = ["2025", "2024", "2023", "2022", "2021"];
+const DEVELOPMENT_PROJECT_TYPES = ["전체", "건축물", "개발사업"];
+const DEVELOPMENT_STATUS_FILTERS = ["전체", "반영", "반영검토", "참고", "제외후보"];
 
 function createBlankBasics() {
   return {
@@ -91,6 +93,34 @@ function createConstructionPlanRow(overrides = {}) {
   return { title: "", location: "", status: "", source: "", ...overrides };
 }
 
+function createBlankDevelopmentSearch(overrides = {}) {
+  return {
+    siteName: "",
+    siteAddress: "",
+    radiusMeters: "2000",
+    startYear: "2021",
+    endYear: "2026",
+    sido: "",
+    sigungu: "",
+    projectType: "전체",
+    includeFailed: false,
+    statusFilter: "전체",
+    ...overrides,
+  };
+}
+
+function createBlankDevelopmentResult(overrides = {}) {
+  return {
+    site: null,
+    summary: null,
+    results: [],
+    searched: false,
+    loading: false,
+    error: "",
+    ...overrides,
+  };
+}
+
 function createBlankState() {
   return {
     basics: createBlankBasics(),
@@ -106,6 +136,8 @@ function createBlankState() {
     statisticsDataKey: "",
     landuseAreas: createBlankLanduseAreas(),
     zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
+    developmentSearch: createBlankDevelopmentSearch(),
+    developmentResult: createBlankDevelopmentResult(),
     trafficPlans: [createTrafficPlanRow()],
     constructionPlans: [createConstructionPlanRow()],
   };
@@ -425,6 +457,8 @@ function mergeLoadedState(parsed) {
     roads: Array.isArray(parsed.roads) && parsed.roads.length ? parsed.roads : base.roads,
     surveyPoints: Array.isArray(parsed.surveyPoints) && parsed.surveyPoints.length ? parsed.surveyPoints : base.surveyPoints,
     zoningRows: Array.isArray(parsed.zoningRows) && parsed.zoningRows.length ? parsed.zoningRows : base.zoningRows,
+    developmentSearch: { ...base.developmentSearch, ...(parsed.developmentSearch || {}) },
+    developmentResult: { ...base.developmentResult, ...(parsed.developmentResult || {}), loading: false },
     trafficPlans: Array.isArray(parsed.trafficPlans) && parsed.trafficPlans.length ? parsed.trafficPlans : base.trafficPlans,
     constructionPlans: Array.isArray(parsed.constructionPlans) && parsed.constructionPlans.length ? parsed.constructionPlans : base.constructionPlans,
   };
@@ -510,6 +544,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const landuseReportRows = buildLanduseReportRows(form, landuseStats);
   const zoningReportRows = buildZoningReportRows(form, zoningStats);
   const verification = form.statisticsVerification;
+  const developmentSearch = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
+  const developmentResult = { ...createBlankDevelopmentResult(), ...(form.developmentResult || {}) };
+  const developmentRadius = toNumber(developmentSearch.radiusMeters) || 2000;
+  const developmentResults = Array.isArray(developmentResult.results) ? developmentResult.results : [];
+  const displayedDevelopmentResults = developmentResults.filter((result) => {
+    const statusMatches = developmentSearch.statusFilter === "전체" || result.reflectionStatus === developmentSearch.statusFilter;
+    const hasUsableDistance = Number.isFinite(Number(result.distanceMeters)) && Number(result.distanceMeters) <= developmentRadius;
+    const canShow = developmentSearch.includeFailed ? true : result.geocodeStatus === "success" && hasUsableDistance;
+    return statusMatches && canShow;
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -867,6 +911,171 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
     }));
     setStatusText("기준연도가 바뀌었습니다. 조사 시작 버튼을 눌러 해당 연도 자료로 다시 조회해 주세요.");
+  }
+
+  function updateDevelopmentSearch(patch) {
+    setForm((current) => ({
+      ...current,
+      developmentSearch: {
+        ...createBlankDevelopmentSearch(),
+        ...(current.developmentSearch || {}),
+        ...patch,
+      },
+    }));
+  }
+
+  function getDevelopmentPayload() {
+    const search = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
+    return {
+      siteName: search.siteName,
+      siteAddress: safe(search.siteAddress) || safe(form.basics.siteAddress),
+      radiusMeters: toNumber(search.radiusMeters) || 2000,
+      startYear: toNumber(search.startYear) || "",
+      endYear: toNumber(search.endYear) || "",
+      sido: search.sido,
+      sigungu: search.sigungu,
+      projectType: search.projectType || "전체",
+    };
+  }
+
+  async function searchDevelopmentPlans() {
+    const payload = getDevelopmentPayload();
+
+    if (!payload.siteAddress) {
+      setStatusText("주변지역 개발계획을 검색하려면 사업지 주소를 먼저 입력해 주세요.");
+      setForm((current) => ({
+        ...current,
+        developmentResult: createBlankDevelopmentResult({
+          searched: true,
+          error: "사업지 주소를 입력해 주세요.",
+        }),
+      }));
+      return;
+    }
+
+    setStatusText("주변 교통영향평가 후보사업을 조회하고 좌표를 계산하는 중입니다.");
+    setForm((current) => ({
+      ...current,
+      developmentSearch: {
+        ...createBlankDevelopmentSearch(),
+        ...(current.developmentSearch || {}),
+        siteAddress: payload.siteAddress,
+        radiusMeters: String(payload.radiusMeters),
+      },
+      developmentResult: createBlankDevelopmentResult({ loading: true, searched: true }),
+    }));
+
+    try {
+      const response = await fetch("/api/tia/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "교통영향평가 API 호출 실패");
+      }
+
+      setForm((current) => ({
+        ...current,
+        developmentResult: {
+          site: result.site,
+          summary: result.summary,
+          results: result.results || [],
+          searched: true,
+          loading: false,
+          error: "",
+        },
+      }));
+      setStatusText(`주변지역 개발계획 후보 ${formatNumber(result.summary?.withinRadiusCount || 0)}건을 반경 안에서 확인했습니다.`);
+    } catch (error) {
+      console.error(error);
+      setForm((current) => ({
+        ...current,
+        developmentResult: createBlankDevelopmentResult({
+          searched: true,
+          error: error.message || "교통영향평가 API 호출 실패",
+        }),
+      }));
+      setStatusText(error.message || "주변지역 개발계획 조회에 실패했습니다.");
+    }
+  }
+
+  function formatDevelopmentDistance(result) {
+    const km = Number(result.distanceKm);
+    if (!Number.isFinite(km)) return "거리계산 불가";
+    return `${km.toFixed(2)}km`;
+  }
+
+  function developmentScaleText(result) {
+    return [
+      result.siteArea ? `대지 ${result.siteArea}` : "",
+      result.grossFloorArea ? `연면적 ${result.grossFloorArea}` : "",
+      result.householdCount ? `${result.householdCount}세대` : "",
+    ].filter(Boolean).join(" / ") || "-";
+  }
+
+  function developmentTableRows(results) {
+    return [
+      ["번호", "사업명", "위치", "사업구분", "용도/시설", "규모", "사업기간", "심의결과", "사업지와 거리", "반영여부", "반영사유", "출처"],
+      ...results.map((result, index) => [
+        index + 1,
+        result.projectName || "-",
+        result.location || "-",
+        result.projectType || "-",
+        result.facilityType || "-",
+        developmentScaleText(result),
+        result.projectPeriod || "-",
+        result.reviewResult || "-",
+        formatDevelopmentDistance(result),
+        result.reflectionStatus || "-",
+        result.reflectionReason || "-",
+        result.source || "TIA_API",
+      ]),
+    ];
+  }
+
+  function toClipboardText(rows) {
+    return rows.map((row) => row.map((cell) => String(cell ?? "").replace(/\s+/g, " ").trim()).join("\t")).join("\n");
+  }
+
+  function toCsvText(rows) {
+    return rows.map((row) => row.map((cell) => {
+      const text = String(cell ?? "");
+      return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    }).join(",")).join("\r\n");
+  }
+
+  async function copyDevelopmentTable() {
+    const rows = developmentTableRows(displayedDevelopmentResults);
+    await window.navigator.clipboard.writeText(toClipboardText(rows));
+    setStatusText("주변지역 개발계획 결과표를 클립보드에 복사했습니다.");
+  }
+
+  function downloadDevelopmentCsv() {
+    const rows = developmentTableRows(displayedDevelopmentResults);
+    const blob = new Blob([`\uFEFF${toCsvText(rows)}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `TIA_STEP4_주변지역개발_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setStatusText("주변지역 개발계획 CSV 파일을 내려받았습니다.");
+  }
+
+  async function copyDevelopmentDraft() {
+    const summary = developmentResult.summary || {};
+    const radius = toNumber(developmentSearch.radiusMeters) || 2000;
+    const reflect = toNumber(summary.reflectCount);
+    const review = toNumber(summary.reviewCount);
+    const reference = toNumber(summary.referenceCount);
+    const text = `사업지 주변 장래 개발계획을 검토한 결과, 검색반경 ${formatNumber(radius)}m 이내에서 교통영향평가 관련 사업 ${formatNumber(summary.withinRadiusCount || 0)}건이 확인되었다. 이 중 사업기간, 심의결과 및 위치정보 등을 고려하여 ${formatNumber(reflect)}건은 장래 교통수요 반영 여부를 검토하고, ${formatNumber(review + reference)}건은 참고자료로 검토하였다.`;
+    await window.navigator.clipboard.writeText(text);
+    setStatusText("주변지역 개발계획 문장 초안을 클립보드에 복사했습니다.");
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -1689,6 +1898,148 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 4</p>
+            <h2>주변지역 개발계획</h2>
+          </div>
+          <div className="panel-header-actions">
+            <button type="button" className="secondary" onClick={searchDevelopmentPlans} disabled={developmentResult.loading}>
+              {developmentResult.loading ? "검색 중" : "주변사업 검색"}
+            </button>
+            <button type="button" className="secondary" onClick={copyDevelopmentTable} disabled={!displayedDevelopmentResults.length}>표 복사</button>
+            <button type="button" className="secondary" onClick={downloadDevelopmentCsv} disabled={!displayedDevelopmentResults.length}>CSV 다운로드</button>
+            <button type="button" className="secondary" onClick={copyDevelopmentDraft} disabled={!developmentResult.summary}>2장 문장 복사</button>
+          </div>
+        </div>
+
+        <div className="form-grid compact-grid development-form">
+          <label>
+            <span>사업지명</span>
+            <input value={developmentSearch.siteName} onChange={(event) => updateDevelopmentSearch({ siteName: event.target.value })} placeholder="예: ○○복합개발사업" />
+          </label>
+          <label className="wide">
+            <span>사업지 주소</span>
+            <input value={developmentSearch.siteAddress || form.basics.siteAddress} onChange={(event) => updateDevelopmentSearch({ siteAddress: event.target.value })} placeholder="예: 서울특별시 송파구 양재대로 1239" />
+          </label>
+          <label>
+            <span>검색반경(m)</span>
+            <input type="number" value={developmentSearch.radiusMeters} onChange={(event) => updateDevelopmentSearch({ radiusMeters: event.target.value })} placeholder="2000" />
+          </label>
+          <label>
+            <span>검색시작연도</span>
+            <input type="number" value={developmentSearch.startYear} onChange={(event) => updateDevelopmentSearch({ startYear: event.target.value })} placeholder="2021" />
+          </label>
+          <label>
+            <span>검색종료연도</span>
+            <input type="number" value={developmentSearch.endYear} onChange={(event) => updateDevelopmentSearch({ endYear: event.target.value })} placeholder="2026" />
+          </label>
+          <label>
+            <span>시도</span>
+            <input value={developmentSearch.sido} onChange={(event) => updateDevelopmentSearch({ sido: event.target.value })} placeholder="예: 서울특별시" />
+          </label>
+          <label>
+            <span>시군구</span>
+            <input value={developmentSearch.sigungu} onChange={(event) => updateDevelopmentSearch({ sigungu: event.target.value })} placeholder="예: 송파구" />
+          </label>
+          <label>
+            <span>사업유형</span>
+            <select value={developmentSearch.projectType} onChange={(event) => updateDevelopmentSearch({ projectType: event.target.value })}>
+              {DEVELOPMENT_PROJECT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>반영여부 필터</span>
+            <select value={developmentSearch.statusFilter} onChange={(event) => updateDevelopmentSearch({ statusFilter: event.target.value })}>
+              {DEVELOPMENT_STATUS_FILTERS.map((status) => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </label>
+          <label className="checkbox-label">
+            <input type="checkbox" checked={Boolean(developmentSearch.includeFailed)} onChange={(event) => updateDevelopmentSearch({ includeFailed: event.target.checked })} />
+            <span>좌표변환 실패 포함 보기</span>
+          </label>
+        </div>
+
+        <div className="verification-card">
+          <div>
+            <p className="eyebrow">TIA API Search</p>
+            <h3>교통영향평가 후보사업 자동 검색</h3>
+          </div>
+          <p>
+            {developmentResult.error
+              ? developmentResult.error
+              : developmentResult.searched
+                ? "사업지 좌표와 후보사업 좌표를 계산해 거리순으로 정리했습니다. 반영여부는 자동판정이므로 보고서 작성 전 원자료 확인이 필요합니다."
+                : "사업지 주소 입력 후 주변사업 검색을 누르면 교통영향평가정보지원시스템 API 후보사업을 조회합니다."}
+          </p>
+          <p className="verification-source">원자료: 국토교통부 교통영향평가정보지원시스템 API / 좌표변환: 카카오 Local API</p>
+        </div>
+
+        {developmentResult.summary ? (
+          <div className="development-summary-grid">
+            <div><strong>{formatNumber(developmentResult.summary.totalRawCount)}</strong><span>원자료</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.geocodedCount)}</strong><span>좌표변환</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.withinRadiusCount)}</strong><span>반경 내</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.reflectCount)}</strong><span>반영</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.reviewCount)}</strong><span>반영검토</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.referenceCount)}</strong><span>참고</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.excludedCount)}</strong><span>제외후보</span></div>
+          </div>
+        ) : null}
+
+        <section className="subpanel">
+          <div className="subpanel-header">
+            <h3>주변 교통영향평가 사업 후보</h3>
+            <p className="subpanel-source">기본 정렬: 거리순 / 좌표변환 실패 사업은 하단 표시</p>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table development-table">
+              <thead>
+                <tr>
+                  <th>번호</th>
+                  <th>사업명</th>
+                  <th>위치</th>
+                  <th>사업구분</th>
+                  <th>용도/시설</th>
+                  <th>규모</th>
+                  <th>사업기간</th>
+                  <th>심의결과</th>
+                  <th>사업지와 거리</th>
+                  <th>반영여부</th>
+                  <th>반영사유</th>
+                  <th>출처</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedDevelopmentResults.length ? displayedDevelopmentResults.map((result, index) => (
+                  <tr key={`${result.id}-${index}`}>
+                    <td>{index + 1}</td>
+                    <td>{result.projectName || "-"}</td>
+                    <td>{result.location || "-"}</td>
+                    <td>{result.projectType || "-"}</td>
+                    <td>{result.facilityType || "-"}</td>
+                    <td>{developmentScaleText(result)}</td>
+                    <td>{result.projectPeriod || "-"}</td>
+                    <td>{result.reviewResult || "-"}</td>
+                    <td>{formatDevelopmentDistance(result)}</td>
+                    <td><span className={`status-pill ${result.reflectionStatus || ""}`}>{result.reflectionStatus || "-"}</span></td>
+                    <td>{result.reflectionReason || "-"}</td>
+                    <td>{result.source || "TIA_API"}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={12} className="empty-cell">
+                      {developmentResult.searched ? "표시할 주변지역 개발계획 후보가 없습니다." : "검색 전입니다. 입력값을 확인한 뒤 주변사업 검색을 눌러 주세요."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Step 5</p>
             <h2>교통관련 계획</h2>
           </div>
         </div>
