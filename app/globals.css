@@ -903,6 +903,37 @@ button.mini-button {
   min-width: 1280px;
 }
 
+.public-transport-table {
+  min-width: 860px;
+}
+
+.future-transport-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.future-transport-grid > div {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.future-transport-grid strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.future-transport-grid span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
 .status-pill {
   display: inline-flex;
   min-width: 70px;

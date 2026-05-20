@@ -116,6 +116,19 @@ function createBlankDevelopmentResult(overrides = {}) {
   };
 }
 
+function createBlankPublicTransportResult(overrides = {}) {
+  return {
+    bikeStations: [],
+    summary: null,
+    searched: false,
+    loading: false,
+    error: "",
+    source: "",
+    sourceUrl: "",
+    ...overrides,
+  };
+}
+
 function createBlankState() {
   return {
     basics: createBlankBasics(),
@@ -133,6 +146,7 @@ function createBlankState() {
     zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
     developmentSearch: createBlankDevelopmentSearch(),
     developmentResult: createBlankDevelopmentResult(),
+    publicTransportResult: createBlankPublicTransportResult(),
     trafficPlans: [createTrafficPlanRow()],
     constructionPlans: [createConstructionPlanRow()],
   };
@@ -489,6 +503,7 @@ function mergeLoadedState(parsed) {
     zoningRows: Array.isArray(parsed.zoningRows) && parsed.zoningRows.length ? parsed.zoningRows : base.zoningRows,
     developmentSearch: { ...base.developmentSearch, ...(parsed.developmentSearch || {}) },
     developmentResult: { ...base.developmentResult, ...(parsed.developmentResult || {}), loading: false },
+    publicTransportResult: { ...base.publicTransportResult, ...(parsed.publicTransportResult || {}), loading: false },
     trafficPlans: Array.isArray(parsed.trafficPlans) && parsed.trafficPlans.length ? parsed.trafficPlans : base.trafficPlans,
     constructionPlans: Array.isArray(parsed.constructionPlans) && parsed.constructionPlans.length ? parsed.constructionPlans : base.constructionPlans,
   };
@@ -585,6 +600,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     const canShow = developmentSearch.includeFailed ? true : result.geocodeStatus === "success" && hasUsableDistance;
     return statusMatches && canShow;
   });
+  const publicTransportResult = { ...createBlankPublicTransportResult(), ...(form.publicTransportResult || {}) };
+  const bikeStations = Array.isArray(publicTransportResult.bikeStations) ? publicTransportResult.bikeStations : [];
 
   useEffect(() => {
     let cancelled = false;
@@ -881,6 +898,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       if (field === "siteAddress" || field === "rectWidth" || field === "rectHeight") {
         next.developmentResult = createBlankDevelopmentResult();
+        next.publicTransportResult = createBlankPublicTransportResult();
       }
 
       return next;
@@ -1109,6 +1127,169 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     const text = `사업지 주변 장래 개발계획을 검토한 결과, 검색반경 ${formatNumber(radius)}m 이내에서 교통영향평가 관련 사업 ${formatNumber(summary.withinRadiusCount || 0)}건이 확인되었다. 이 중 사업기간, 심의결과 및 위치정보 등을 고려하여 ${formatNumber(reflect)}건은 장래 교통수요 반영 여부를 검토하고, ${formatNumber(review + reference)}건은 참고자료로 검토하였다.`;
     await window.navigator.clipboard.writeText(text);
     setStatusText("주변지역 개발계획 문장 초안을 클립보드에 복사했습니다.");
+  }
+
+  async function resolveScopeCenter() {
+    const storedLat = Number(form.basics.centerLat);
+    const storedLng = Number(form.basics.centerLng);
+
+    if (Number.isFinite(storedLat) && Number.isFinite(storedLng)) {
+      return { lat: storedLat, lng: storedLng };
+    }
+
+    const address = safe(form.basics.siteAddress);
+    const response = await fetch("/api/geocode", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || "주소 좌표 변환에 실패했습니다.");
+    }
+
+    const lat = Number(result.y);
+    const lng = Number(result.x);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      throw new Error("주소 좌표 변환 결과가 올바르지 않습니다.");
+    }
+
+    setForm((current) => ({
+      ...current,
+      basics: {
+        ...current.basics,
+        centerLat: lat.toFixed(6),
+        centerLng: lng.toFixed(6),
+      },
+    }));
+
+    return { lat, lng };
+  }
+
+  async function searchPublicTransportFacilities() {
+    const address = safe(form.basics.siteAddress);
+    const { width, height } = getScopeDimensions(form.basics);
+
+    if (!address) {
+      setStatusText("대중교통/교통시설 현황을 조회하려면 주소지를 먼저 입력해 주세요.");
+      setForm((current) => ({
+        ...current,
+        publicTransportResult: createBlankPublicTransportResult({
+          searched: true,
+          error: "주소지를 입력해 주세요.",
+        }),
+      }));
+      return;
+    }
+
+    if (detectSurveyRegion(address) !== "seoul") {
+      setStatusText("따릉이 대여소 자동 조회는 현재 서울 주소지에 한해 지원합니다.");
+      setForm((current) => ({
+        ...current,
+        publicTransportResult: createBlankPublicTransportResult({
+          searched: true,
+          error: "현재 1차 버전은 서울 따릉이 대여소만 자동 조회합니다.",
+        }),
+      }));
+      return;
+    }
+
+    if (width <= 0 || height <= 0) {
+      setStatusText("가로와 세로 범위를 모두 1m 이상으로 입력해 주세요.");
+      return;
+    }
+
+    setStatusText("조사 범위 안의 서울 따릉이 대여소를 조회하는 중입니다.");
+    setForm((current) => ({
+      ...current,
+      publicTransportResult: createBlankPublicTransportResult({ loading: true, searched: true }),
+    }));
+
+    try {
+      const center = await resolveScopeCenter();
+      const bounds = computeRectangleBounds(center.lat, center.lng, width, height);
+      const response = await fetch("/api/seoul-bike", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          center,
+          bounds,
+          width,
+          height,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "따릉이 대여소 조회에 실패했습니다.");
+      }
+
+      setForm((current) => ({
+        ...current,
+        publicTransportResult: {
+          bikeStations: result.stations || [],
+          summary: result.summary || null,
+          searched: true,
+          loading: false,
+          error: "",
+          source: result.source || "",
+          sourceUrl: result.sourceUrl || "",
+        },
+      }));
+      setStatusText(`조사 범위 안의 따릉이 대여소 ${formatNumber(result.summary?.withinScopeCount || 0)}개를 확인했습니다.`);
+    } catch (error) {
+      console.error(error);
+      setForm((current) => ({
+        ...current,
+        publicTransportResult: createBlankPublicTransportResult({
+          searched: true,
+          error: error.message || "따릉이 대여소 조회에 실패했습니다.",
+        }),
+      }));
+      setStatusText(error.message || "따릉이 대여소 조회에 실패했습니다.");
+    }
+  }
+
+  function formatFacilityDistance(station) {
+    const meters = Number(station.distanceMeters);
+    if (!Number.isFinite(meters)) return "-";
+    if (meters < 1000) return `${formatNumber(Math.round(meters))}m`;
+    return `${(meters / 1000).toFixed(2)}km`;
+  }
+
+  function publicBikeTableRows(stations) {
+    return [
+      ["대여소번호", "대여소명", "주소 또는 위치", "거치대수", "거리"],
+      ...stations.map((station) => [
+        station.stationNumber || station.id || "-",
+        station.stationName || "-",
+        station.location || "-",
+        formatOptionalNumber(station.rackCount),
+        formatFacilityDistance(station),
+      ]),
+    ];
+  }
+
+  async function copyBikeTable() {
+    const rows = publicBikeTableRows(bikeStations);
+    await window.navigator.clipboard.writeText(toClipboardText(rows));
+    setStatusText("따릉이 대여소 표를 클립보드에 복사했습니다.");
+  }
+
+  function downloadBikeCsv() {
+    const rows = publicBikeTableRows(bikeStations);
+    const blob = new Blob([`\uFEFF${toCsvText(rows)}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `TIA_STEP5_대중교통시설_따릉이_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setStatusText("따릉이 대여소 CSV 파일을 내려받았습니다.");
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -2059,6 +2240,93 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 5</p>
+            <h2>대중교통/교통시설 현황</h2>
+          </div>
+          <div className="panel-header-actions">
+            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading}>
+              {publicTransportResult.loading ? "조회 중" : "따릉이 조회"}
+            </button>
+            <button type="button" className="secondary" onClick={copyBikeTable} disabled={!bikeStations.length}>표 복사</button>
+            <button type="button" className="secondary" onClick={downloadBikeCsv} disabled={!bikeStations.length}>CSV 다운로드</button>
+          </div>
+        </div>
+
+        <div className="scope-linked-note">
+          <strong>조사 기준</strong>
+          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사 범위를 사용합니다. 1차 버전은 서울 주소지의 따릉이 대여소를 우선 자동 조회합니다.</span>
+        </div>
+
+        <div className="verification-card">
+          <div>
+            <p className="eyebrow">Public Transport Facilities</p>
+            <h3>범위 내 교통시설 자동 정리</h3>
+          </div>
+          <p>
+            {publicTransportResult.error
+              ? publicTransportResult.error
+              : publicTransportResult.searched
+                ? `서울 열린데이터광장 자료 기준으로 조사 범위 안의 따릉이 대여소 ${formatNumber(publicTransportResult.summary?.withinScopeCount || 0)}개를 정리했습니다.`
+                : "따릉이 조회를 누르면 조사 범위 안의 대여소번호, 대여소명, 위치, 거치대수, 거리를 표로 정리합니다."}
+          </p>
+          <p className="verification-source">
+            원자료: {publicTransportResult.source || "서울 열린데이터광장 공공자전거 실시간 대여정보"}
+            {publicTransportResult.sourceUrl ? ` / ${publicTransportResult.sourceUrl}` : ""}
+          </p>
+        </div>
+
+        <section className="subpanel">
+          <div className="subpanel-header">
+            <h3>따릉이 대여소</h3>
+            <p className="subpanel-source">향후 같은 STEP 안에 버스 정류장, 버스노선, 지하철역 조사표를 추가할 예정입니다.</p>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table public-transport-table">
+              <thead>
+                <tr>
+                  <th>대여소번호</th>
+                  <th>대여소명</th>
+                  <th>주소 또는 위치</th>
+                  <th>거치대수</th>
+                  <th>거리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bikeStations.length ? bikeStations.map((station) => (
+                  <tr key={station.id || `${station.stationNumber}-${station.stationName}`}>
+                    <td>{station.stationNumber || station.id || "-"}</td>
+                    <td>{station.stationName || "-"}</td>
+                    <td>{station.location || "-"}</td>
+                    <td>{formatOptionalNumber(station.rackCount)}</td>
+                    <td>{formatFacilityDistance(station)}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={5} className="empty-cell">
+                      {publicTransportResult.searched ? "조사 범위 안에서 표시할 따릉이 대여소가 없습니다." : "조회 전입니다. 서울 주소지를 입력한 뒤 따릉이 조회를 눌러 주세요."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div className="future-transport-grid">
+          <div>
+            <strong>버스 정류장 조사 예정</strong>
+            <span>정류장에 정차하는 버스 종류, 번호, 첫차/막차, 기종점, 평일/주말/공휴일 배차시간을 연결할 수 있도록 구조만 열어두었습니다.</span>
+          </div>
+          <div>
+            <strong>지하철역 조사 예정</strong>
+            <span>역 종류, 첫차/막차, 출발 방향, 노선 정보를 같은 STEP 안에 추가할 수 있도록 다음 확장 위치를 확보했습니다.</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Step 6</p>
             <h2>교통관련 계획</h2>
           </div>
         </div>
