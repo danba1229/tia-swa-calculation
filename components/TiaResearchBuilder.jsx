@@ -2265,11 +2265,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             {publicTransportResult.error
               ? publicTransportResult.error
               : publicTransportResult.searched
-                ? `서울 열린데이터광장 자료 기준으로 조사 범위 안의 따릉이 대여소 ${formatNumber(publicTransportResult.summary?.withinScopeCount || 0)}개를 정리했습니다.`
-                : "따릉이 조회를 누르면 조사 범위 안의 대여소번호, 대여소명, 위치, 거치대수, 거리를 표로 정리합니다."}
+                ? `서울특별시 공공자전거 대여소 마스터 기준으로 조사 범위 안의 따릉이 대여소 ${formatNumber(publicTransportResult.summary?.withinScopeCount || 0)}개를 정리했습니다.`
+                : "따릉이 조회를 누르면 조사 범위 안의 대여소번호, 대여소명, 주소, 거치대수, 거리를 표로 정리합니다."}
           </p>
           <p className="verification-source">
-            원자료: {publicTransportResult.source || "서울 열린데이터광장 공공자전거 실시간 대여정보"}
+            원자료: {publicTransportResult.source || "서울특별시_공공자전거 대여소 정보(25.12월 기준)"}
             {publicTransportResult.sourceUrl ? ` / ${publicTransportResult.sourceUrl}` : ""}
           </p>
         </div>
