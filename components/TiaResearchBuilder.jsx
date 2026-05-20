@@ -1985,9 +1985,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               ? developmentResult.error
               : developmentResult.searched
                 ? "사업지 좌표와 후보사업 좌표를 계산해 거리순으로 정리했습니다. 반영여부는 자동판정이므로 보고서 작성 전 원자료 확인이 필요합니다."
-                : "사업지 주소 입력 후 주변사업 검색을 누르면 교통영향평가정보지원시스템 API 후보사업을 조회합니다."}
+                : "사업지 주소 입력 후 주변사업 검색을 누르면 교통영향평가 사업정보 API와 정보지원시스템 API 후보사업을 함께 조회합니다."}
           </p>
-          <p className="verification-source">원자료: 국토교통부 교통영향평가정보지원시스템 API / 좌표변환: 카카오 Local API</p>
+          <p className="verification-source">원자료: 국토교통부 교통영향평가_사업정보 API + 교통영향평가정보지원시스템 API / 좌표변환: 카카오 Local API</p>
         </div>
 
         {developmentResult.summary ? (

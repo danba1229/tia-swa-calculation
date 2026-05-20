@@ -87,7 +87,9 @@ export async function POST(request) {
       summary: summarize(tiaResponse.rawCount, sortedResults, radiusMeters),
       results: sortedResults,
       debug: {
-        requestUrl: tiaResponse.requestUrl,
+        requestUrls: tiaResponse.requestUrls,
+        apiSources: tiaResponse.sources,
+        apiErrors: tiaResponse.errors,
         normalizedCount: tiaResponse.projects.length,
         geocodeLimit,
       },
