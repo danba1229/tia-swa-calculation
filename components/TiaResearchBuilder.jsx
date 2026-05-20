@@ -2502,16 +2502,18 @@ function buildScopeSamplePoints(lat, lng, widthMeters, heightMeters) {
   const points = [];
   const seen = new Set();
 
-  for (const yRatio of yRatios) {
+  for (let yIndex = 0; yIndex < yRatios.length; yIndex += 1) {
+    const yRatio = yRatios[yIndex];
     const sampleLat = bounds.south + ((bounds.north - bounds.south) * yRatio);
 
-    for (const xRatio of xRatios) {
+    for (let xIndex = 0; xIndex < xRatios.length; xIndex += 1) {
+      const xRatio = xRatios[xIndex];
       const sampleLng = bounds.west + ((bounds.east - bounds.west) * xRatio);
       const key = `${sampleLat.toFixed(6)}:${sampleLng.toFixed(6)}`;
 
       if (!seen.has(key)) {
         seen.add(key);
-        points.push({ lat: sampleLat, lng: sampleLng });
+        points.push({ lat: sampleLat, lng: sampleLng, xIndex, yIndex });
       }
     }
   }
@@ -2553,44 +2555,29 @@ function buildRoadRowsFromBuckets(roadBuckets) {
     });
 }
 
-function sortRoadSamples(samples) {
-  if (samples.length <= 1) return samples.slice();
-
-  const latValues = samples.map((sample) => sample.lat);
-  const lngValues = samples.map((sample) => sample.lng);
-  const midLat = latValues.reduce((sum, value) => sum + value, 0) / latValues.length;
-  const latSpreadMeters = (Math.max(...latValues) - Math.min(...latValues)) * 111320;
-  const lngSpreadMeters = (Math.max(...lngValues) - Math.min(...lngValues)) * 111320 * Math.cos((midLat * Math.PI) / 180);
-  const primary = lngSpreadMeters >= latSpreadMeters ? "lng" : "lat";
-  const secondary = primary === "lng" ? "lat" : "lng";
-
-  return samples
-    .slice()
-    .sort((a, b) => (a[primary] - b[primary]) || (a[secondary] - b[secondary]));
-}
-
-function splitRoadSamples(samples) {
-  const sorted = sortRoadSamples(samples);
+function buildAdjacentRoadSegments(samples) {
+  const sampleMap = new Map(samples.map((sample) => [`${sample.xIndex}:${sample.yIndex}`, sample]));
+  const maxGapKm = (ROAD_SAMPLE_INTERVAL_METERS * 1.8) / 1000;
   const segments = [];
-  let current = [];
-  const maxGapKm = (ROAD_SAMPLE_INTERVAL_METERS * 2.8) / 1000;
 
-  sorted.forEach((sample) => {
-    const previous = current[current.length - 1];
-    if (previous && distanceBetweenKm(previous.lat, previous.lng, sample.lat, sample.lng) > maxGapKm) {
-      if (current.length >= 2) segments.push(current);
-      current = [];
-    }
-    current.push(sample);
+  samples.forEach((sample) => {
+    [
+      sampleMap.get(`${sample.xIndex + 1}:${sample.yIndex}`),
+      sampleMap.get(`${sample.xIndex}:${sample.yIndex + 1}`),
+    ].filter(Boolean).forEach((neighbor) => {
+      const gapKm = distanceBetweenKm(sample.lat, sample.lng, neighbor.lat, neighbor.lng);
+      if (gapKm <= maxGapKm) {
+        segments.push([sample, neighbor]);
+      }
+    });
   });
 
-  if (current.length >= 2) segments.push(current);
   return segments;
 }
 
 function buildRoadLinesFromBuckets(roadBuckets) {
   return Array.from(roadBuckets.values()).flatMap((bucket) => (
-    splitRoadSamples(bucket.samples).map((segment, index) => ({
+    buildAdjacentRoadSegments(bucket.samples).map((segment, index) => ({
       key: `${bucket.roadClass}:${bucket.name}:${index}`,
       roadClass: bucket.roadClass,
       name: bucket.name,
@@ -2637,6 +2624,8 @@ async function collectRoadRowsInScope({ lat, lng, width, height }) {
           address: sampleAddress,
           lat: point.lat,
           lng: point.lng,
+          xIndex: point.xIndex,
+          yIndex: point.yIndex,
         });
       }
     });
