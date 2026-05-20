@@ -511,7 +511,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     marker: null,
     rectangle: null,
     infoWindow: null,
-    roadPolylines: [],
     surveyMarkers: [],
     surveyOverlays: [],
   });
@@ -1407,7 +1406,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         width,
         height,
       });
-      drawRoadScopePolylines(mapRuntimeRef, roadScopeResult.roadLines);
       const autoRoadRows = roadScopeResult.rows;
       const statisticsResult = await fetchLocalStatistics(address);
 
@@ -2555,37 +2553,6 @@ function buildRoadRowsFromBuckets(roadBuckets) {
     });
 }
 
-function buildAdjacentRoadSegments(samples) {
-  const sampleMap = new Map(samples.map((sample) => [`${sample.xIndex}:${sample.yIndex}`, sample]));
-  const maxGapKm = (ROAD_SAMPLE_INTERVAL_METERS * 1.8) / 1000;
-  const segments = [];
-
-  samples.forEach((sample) => {
-    [
-      sampleMap.get(`${sample.xIndex + 1}:${sample.yIndex}`),
-      sampleMap.get(`${sample.xIndex}:${sample.yIndex + 1}`),
-    ].filter(Boolean).forEach((neighbor) => {
-      const gapKm = distanceBetweenKm(sample.lat, sample.lng, neighbor.lat, neighbor.lng);
-      if (gapKm <= maxGapKm) {
-        segments.push([sample, neighbor]);
-      }
-    });
-  });
-
-  return segments;
-}
-
-function buildRoadLinesFromBuckets(roadBuckets) {
-  return Array.from(roadBuckets.values()).flatMap((bucket) => (
-    buildAdjacentRoadSegments(bucket.samples).map((segment, index) => ({
-      key: `${bucket.roadClass}:${bucket.name}:${index}`,
-      roadClass: bucket.roadClass,
-      name: bucket.name,
-      samples: segment,
-    }))
-  ));
-}
-
 async function collectRoadRowsInScope({ lat, lng, width, height }) {
   const geocoder = new window.kakao.maps.services.Geocoder();
   const points = buildScopeSamplePoints(lat, lng, width, height);
@@ -2633,7 +2600,6 @@ async function collectRoadRowsInScope({ lat, lng, width, height }) {
 
   return {
     rows: buildRoadRowsFromBuckets(roadBuckets),
-    roadLines: buildRoadLinesFromBuckets(roadBuckets),
   };
 }
 
@@ -2701,39 +2667,6 @@ function clearSurveyCandidateOverlays(mapRuntimeRef) {
   }
   mapRuntimeRef.current.surveyMarkers = [];
   mapRuntimeRef.current.surveyOverlays = [];
-}
-
-function clearRoadScopePolylines(mapRuntimeRef) {
-  for (const polyline of mapRuntimeRef.current.roadPolylines || []) {
-    polyline.setMap(null);
-  }
-  mapRuntimeRef.current.roadPolylines = [];
-}
-
-function drawRoadScopePolylines(mapRuntimeRef, roadLines = []) {
-  if (!mapRuntimeRef.current.map || !window.kakao?.maps) return;
-
-  clearRoadScopePolylines(mapRuntimeRef);
-
-  roadLines.forEach((line) => {
-    const path = line.samples
-      .filter((sample) => Number.isFinite(sample.lat) && Number.isFinite(sample.lng))
-      .map((sample) => new window.kakao.maps.LatLng(sample.lat, sample.lng));
-
-    if (path.length < 2) return;
-
-    const polyline = new window.kakao.maps.Polyline({
-      map: mapRuntimeRef.current.map,
-      path,
-      strokeWeight: 5,
-      strokeColor: "#111111",
-      strokeOpacity: 0.88,
-      strokeStyle: "solid",
-      zIndex: 6,
-    });
-
-    mapRuntimeRef.current.roadPolylines.push(polyline);
-  });
 }
 
 function syncSurveyCandidateOverlays({
@@ -2807,7 +2740,6 @@ function clearMapOverlays(mapRuntimeRef) {
     mapRuntimeRef.current.infoWindow.close();
     mapRuntimeRef.current.infoWindow = null;
   }
-  clearRoadScopePolylines(mapRuntimeRef);
   clearSurveyCandidateOverlays(mapRuntimeRef);
 }
 
