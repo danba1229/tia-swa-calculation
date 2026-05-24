@@ -1129,7 +1129,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     setStatusText("주변지역 개발계획 문장 초안을 클립보드에 복사했습니다.");
   }
 
-  async function resolveScopeCenter() {
+  async function resolveScopeCenter(centerOverride = null) {
+    const overrideLat = Number(centerOverride?.lat);
+    const overrideLng = Number(centerOverride?.lng);
+
+    if (Number.isFinite(overrideLat) && Number.isFinite(overrideLng)) {
+      return { lat: overrideLat, lng: overrideLng };
+    }
+
     const storedLat = Number(form.basics.centerLat);
     const storedLng = Number(form.basics.centerLng);
 
@@ -1168,9 +1175,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     return { lat, lng };
   }
 
-  async function searchPublicTransportFacilities() {
-    const address = safe(form.basics.siteAddress);
-    const { width, height } = getScopeDimensions(form.basics);
+  async function searchPublicTransportFacilities(options = {}) {
+    const address = safe(options.address ?? form.basics.siteAddress);
+    const { width, height } = options.width && options.height
+      ? { width: toNumber(options.width), height: toNumber(options.height) }
+      : getScopeDimensions(form.basics);
 
     if (!address) {
       setStatusText("대중교통/교통시설 현황을 조회하려면 주소지를 먼저 입력해 주세요.");
@@ -1185,6 +1194,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }
 
     if (detectSurveyRegion(address) !== "seoul") {
+      if (options.auto) {
+        setForm((current) => ({
+          ...current,
+          publicTransportResult: createBlankPublicTransportResult(),
+        }));
+        return;
+      }
+
       setStatusText("따릉이 대여소 자동 조회는 현재 서울 주소지에 한해 지원합니다.");
       setForm((current) => ({
         ...current,
@@ -1208,7 +1225,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }));
 
     try {
-      const center = await resolveScopeCenter();
+      const center = await resolveScopeCenter(options.center);
       const bounds = computeRectangleBounds(center.lat, center.lng, width, height);
       const response = await fetch("/api/seoul-bike", {
         method: "POST",
@@ -1604,6 +1621,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       }));
       setMapStatus(`"${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위를 지도에 표시했고, 범위에 걸친 도로 ${autoRoadRows.length}건을 자동 조사했습니다.`);
       setStatusText(`${autoRoadRows.length ? "지도 범위와 가로망 자동조사를 갱신했습니다." : "지도 범위는 표시했지만 범위에 걸친 도로를 찾지 못했습니다."} ${statisticsResult.message}`);
+      void searchDevelopmentPlans();
+      void searchPublicTransportFacilities({
+        auto: true,
+        address,
+        width,
+        height,
+        center: { lat, lng },
+      });
     } catch (error) {
       console.error(error);
       setMapStatus(error.message || "지도 표시 중 오류가 발생했습니다.");
