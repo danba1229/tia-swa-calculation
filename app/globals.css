@@ -399,6 +399,10 @@ button.mini-button {
   margin-top: 0;
 }
 
+.public-transport-map-card {
+  margin: 18px 0;
+}
+
 .map-view {
   margin-top: 14px;
   min-height: 510px;
@@ -409,6 +413,10 @@ button.mini-button {
     repeating-linear-gradient(0deg, rgba(11, 79, 138, 0.05) 0 1px, transparent 1px 28px),
     repeating-linear-gradient(90deg, rgba(11, 79, 138, 0.05) 0 1px, transparent 1px 28px);
   overflow: hidden;
+}
+
+.public-transport-map-view {
+  min-height: 430px;
 }
 
 .survey-point-overlay {
@@ -431,6 +439,48 @@ button.mini-button {
   line-height: 1;
   letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.bike-station-dot {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #1d6fe8;
+  box-shadow: 0 5px 14px rgba(29, 111, 232, 0.36);
+  transform: translate(-50%, -50%);
+}
+
+.bike-station-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  z-index: 2;
+  display: none;
+  min-width: max-content;
+  max-width: 220px;
+  padding: 7px 10px;
+  border: 1px solid rgba(11, 79, 138, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 10px 22px rgba(21, 47, 75, 0.18);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.bike-station-dot:hover {
+  background: #0b4f8a;
+  z-index: 3;
+}
+
+.bike-station-dot:hover .bike-station-tooltip {
+  display: block;
 }
 
 .tag-strip {

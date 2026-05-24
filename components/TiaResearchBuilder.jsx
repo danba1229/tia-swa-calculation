@@ -519,6 +519,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [gyeonggiStatus, setGyeonggiStatus] = useState("");
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
+  const publicTransportMapContainerRef = useRef(null);
   const mapRuntimeRef = useRef({
     sdkPromise: null,
     loadedKey: "",
@@ -528,6 +529,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     infoWindow: null,
     surveyMarkers: [],
     surveyOverlays: [],
+  });
+  const publicTransportMapRuntimeRef = useRef({
+    sdkPromise: null,
+    loadedKey: "",
+    map: null,
+    rectangle: null,
+    overlays: [],
   });
 
   useEffect(() => {
@@ -602,6 +610,57 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   });
   const publicTransportResult = { ...createBlankPublicTransportResult(), ...(form.publicTransportResult || {}) };
   const bikeStations = Array.isArray(publicTransportResult.bikeStations) ? publicTransportResult.bikeStations : [];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function renderPublicTransportMap() {
+      if (!publicTransportMapContainerRef.current) return;
+      if (!kakaoJsKey) {
+        clearPublicTransportMap(publicTransportMapRuntimeRef);
+        return;
+      }
+
+      const lat = Number(form.basics.centerLat);
+      const lng = Number(form.basics.centerLng);
+      const { width, height } = getScopeDimensions(form.basics);
+
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || width <= 0 || height <= 0) {
+        clearPublicTransportMap(publicTransportMapRuntimeRef);
+        return;
+      }
+
+      try {
+        await loadKakaoSdk(kakaoJsKey, publicTransportMapRuntimeRef);
+        if (cancelled) return;
+
+        syncPublicTransportMap({
+          mapRuntimeRef: publicTransportMapRuntimeRef,
+          container: publicTransportMapContainerRef.current,
+          centerLat: lat,
+          centerLng: lng,
+          rectWidth: width,
+          rectHeight: height,
+          stations: bikeStations,
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    renderPublicTransportMap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    bikeStations,
+    form.basics.centerLat,
+    form.basics.centerLng,
+    form.basics.rectWidth,
+    form.basics.rectHeight,
+    kakaoJsKey,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1639,6 +1698,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function applySampleState(nextForm, label) {
     setForm(nextForm);
     clearMapOverlays(mapRuntimeRef);
+    clearPublicTransportMap(publicTransportMapRuntimeRef);
     setMapStatus(`${label} 샘플 데이터를 채웠습니다. 필요하면 바로 조사 범위를 표시할 수 있습니다.`);
     setStatusText(`${label} 샘플 데이터를 반영했습니다.`);
   }
@@ -1745,9 +1805,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
     setForm(createBlankState());
     clearMapOverlays(mapRuntimeRef);
+    clearPublicTransportMap(publicTransportMapRuntimeRef);
     if (mapRuntimeRef.current.map && mapContainerRef.current) {
       mapContainerRef.current.innerHTML = "";
       mapRuntimeRef.current.map = null;
+    }
+    if (publicTransportMapRuntimeRef.current.map && publicTransportMapContainerRef.current) {
+      publicTransportMapContainerRef.current.innerHTML = "";
+      publicTransportMapRuntimeRef.current.map = null;
     }
     setMapStatus('배포 환경에 카카오 지도 키를 설정한 뒤 "조사 시작" 버튼을 눌러 주세요.');
     setStatusText("모든 입력값을 초기화했습니다.");
@@ -2297,6 +2362,18 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             원자료: {publicTransportResult.source || "서울특별시_공공자전거 대여소 정보(25.12월 기준)"}
             {publicTransportResult.sourceUrl ? ` / ${publicTransportResult.sourceUrl}` : ""}
           </p>
+        </div>
+
+        <div className="map-card public-transport-map-card">
+          <div className="map-header">
+            <strong>따릉이 위치 지도</strong>
+            <p className="chart-caption">
+              {bikeStations.length
+                ? `상단 주소와 조사 범위 기준으로 따릉이 대여소 ${formatNumber(bikeStations.length)}개를 파란색 점으로 표시합니다.`
+                : "조사 시작 또는 따릉이 조회 후 범위 내 대여소를 지도에 표시합니다."}
+            </p>
+          </div>
+          <div ref={publicTransportMapContainerRef} className="map-view public-transport-map-view" aria-label="따릉이 대여소 위치 지도" />
         </div>
 
         <section className="subpanel">
@@ -3034,6 +3111,81 @@ function clearMapOverlays(mapRuntimeRef) {
     mapRuntimeRef.current.infoWindow = null;
   }
   clearSurveyCandidateOverlays(mapRuntimeRef);
+}
+
+function clearPublicTransportMap(mapRuntimeRef) {
+  for (const overlay of mapRuntimeRef.current.overlays || []) {
+    overlay.setMap(null);
+  }
+  mapRuntimeRef.current.overlays = [];
+
+  if (mapRuntimeRef.current.rectangle) {
+    mapRuntimeRef.current.rectangle.setMap(null);
+    mapRuntimeRef.current.rectangle = null;
+  }
+}
+
+function syncPublicTransportMap({
+  mapRuntimeRef,
+  container,
+  centerLat,
+  centerLng,
+  rectWidth,
+  rectHeight,
+  stations,
+}) {
+  if (!container || !window.kakao?.maps) return;
+
+  const kakao = window.kakao;
+  const center = new kakao.maps.LatLng(centerLat, centerLng);
+  const boundsData = computeRectangleBounds(centerLat, centerLng, rectWidth, rectHeight);
+  const sw = new kakao.maps.LatLng(boundsData.south, boundsData.west);
+  const ne = new kakao.maps.LatLng(boundsData.north, boundsData.east);
+  const rectangleBounds = new kakao.maps.LatLngBounds(sw, ne);
+  const displayBounds = new kakao.maps.LatLngBounds(sw, ne);
+
+  if (!mapRuntimeRef.current.map) {
+    mapRuntimeRef.current.map = new kakao.maps.Map(container, {
+      center,
+      level: 5,
+    });
+  }
+
+  clearPublicTransportMap(mapRuntimeRef);
+
+  mapRuntimeRef.current.rectangle = new kakao.maps.Rectangle({
+    bounds: rectangleBounds,
+    strokeWeight: 2,
+    strokeColor: "#0b4f8a",
+    strokeOpacity: 0.9,
+    strokeStyle: "solid",
+    fillColor: "#0b4f8a",
+    fillOpacity: 0.08,
+  });
+  mapRuntimeRef.current.rectangle.setMap(mapRuntimeRef.current.map);
+
+  stations
+    .filter((station) => Number.isFinite(Number(station.latitude)) && Number.isFinite(Number(station.longitude)))
+    .forEach((station) => {
+      const position = new kakao.maps.LatLng(Number(station.latitude), Number(station.longitude));
+      displayBounds.extend(position);
+
+      const overlay = new kakao.maps.CustomOverlay({
+        position,
+        yAnchor: 0.5,
+        xAnchor: 0.5,
+        content: `
+          <div class="bike-station-dot" title="${escapeHtml(station.stationName || "따릉이 대여소")}">
+            <span class="bike-station-tooltip">${escapeHtml(station.stationName || "따릉이 대여소")}</span>
+          </div>
+        `,
+      });
+
+      overlay.setMap(mapRuntimeRef.current.map);
+      mapRuntimeRef.current.overlays.push(overlay);
+    });
+
+  mapRuntimeRef.current.map.setBounds(displayBounds, 42, 42, 42, 42);
 }
 
 function loadKakaoSdk(key, mapRuntimeRef) {
