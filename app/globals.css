@@ -456,7 +456,7 @@ button.mini-button {
 }
 
 .public-transport-map-card {
-  margin: 18px 0;
+  display: none;
 }
 
 .map-view {
@@ -473,6 +473,16 @@ button.mini-button {
 
 .public-transport-map-view {
   min-height: 390px;
+}
+
+.map-toggle-control {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(11, 79, 138, 0.16);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--ink);
+  font-weight: 800;
 }
 
 .survey-point-overlay {
