@@ -47,6 +47,15 @@ const DEFAULT_STATISTICS_YEAR = "2024";
 const STATISTICS_YEAR_OPTIONS = ["2025", "2024", "2023", "2022", "2021"];
 const DEVELOPMENT_PROJECT_TYPES = ["전체", "건축물", "개발사업"];
 const DEVELOPMENT_STATUS_FILTERS = ["전체", "반영", "반영검토", "참고", "제외후보"];
+const STEP_NAV_ITEMS = [
+  { step: 0, label: "전체 보기" },
+  { step: 1, label: "가로망 조사" },
+  { step: 2, label: "사전조사지점" },
+  { step: 3, label: "토지이용/용도지역" },
+  { step: 4, label: "주변지역 개발계획" },
+  { step: 5, label: "대중교통/교통시설" },
+  { step: 6, label: "교통관련 계획" },
+];
 
 function createBlankBasics() {
   return {
@@ -511,6 +520,7 @@ function mergeLoadedState(parsed) {
 
 export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [form, setForm] = useState(createBlankState);
+  const [activeStep, setActiveStep] = useState(0);
   const [statusText, setStatusText] = useState("초기 화면을 준비하는 중입니다.");
   const [mapStatus, setMapStatus] = useState('배포 환경에 카카오 지도 키를 설정한 뒤 "조사 시작" 버튼을 눌러 주세요.');
   const [topisCandidates, setTopisCandidates] = useState([]);
@@ -610,6 +620,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   });
   const publicTransportResult = { ...createBlankPublicTransportResult(), ...(form.publicTransportResult || {}) };
   const bikeStations = Array.isArray(publicTransportResult.bikeStations) ? publicTransportResult.bikeStations : [];
+  const shouldShowStep = (step) => activeStep === 0 || activeStep === step;
 
   useEffect(() => {
     let cancelled = false;
@@ -1868,7 +1879,27 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
       </section>
 
-      <section className="panel">
+      <section className="step-nav-panel" aria-label="조사 단계 목차">
+        <div className="step-nav-header">
+          <p className="eyebrow">Step Index</p>
+          <h2>목차</h2>
+        </div>
+        <div className="step-nav">
+          {STEP_NAV_ITEMS.map((item) => (
+            <button
+              key={item.step}
+              type="button"
+              className={activeStep === item.step ? "active" : ""}
+              onClick={() => setActiveStep(item.step)}
+            >
+              <span>{`Step.${item.step}`}</span>
+              <strong>{item.label}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className={`panel step-section ${shouldShowStep(1) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 1</p>
@@ -1914,7 +1945,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       </section>
 
-      <section className="panel">
+      <section className={`panel step-section ${shouldShowStep(2) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 2</p>
@@ -2010,7 +2041,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       </section>
 
-      <section className="panel">
+      <section className={`panel step-section ${shouldShowStep(3) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 3</p>
@@ -2199,7 +2230,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       </section>
 
-      <section className="panel">
+      <section className={`panel step-section ${shouldShowStep(4) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 4</p>
@@ -2326,7 +2357,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </section>
       </section>
 
-      <section className="panel">
+      <section className={`panel step-section ${shouldShowStep(5) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 5</p>
@@ -2425,7 +2456,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
       </section>
 
-      <section className="panel">
+      <section className={`panel step-section ${shouldShowStep(6) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 6</p>

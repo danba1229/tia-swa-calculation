@@ -51,7 +51,7 @@ a {
   width: 100%;
   max-width: 1360px;
   margin: 0 auto;
-  padding: 26px 14px 60px;
+  padding: 20px 14px 52px;
 }
 
 .embedded-shell {
@@ -60,6 +60,7 @@ a {
 }
 
 .hero-card,
+.step-nav-panel,
 .panel,
 .subpanel,
 .chart-card,
@@ -75,7 +76,7 @@ a {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
-  padding: 22px 24px;
+  padding: 18px 22px;
 }
 
 .hero-main {
@@ -106,7 +107,7 @@ p {
 }
 
 h1 {
-  font-size: clamp(34px, 5vw, 54px);
+  font-size: clamp(28px, 4vw, 44px);
   line-height: 1.08;
   letter-spacing: -0.03em;
 }
@@ -158,8 +159,63 @@ h3 {
 }
 
 .panel {
-  margin-top: 18px;
+  margin-top: 16px;
   padding: 24px;
+}
+
+.step-section.is-hidden {
+  display: none;
+}
+
+.step-nav-panel {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  margin-top: 18px;
+  padding: 18px 20px;
+}
+
+.step-nav-header h2 {
+  font-size: 20px;
+}
+
+.step-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+}
+
+.step-nav button {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  min-height: 54px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  text-align: left;
+}
+
+.step-nav button span {
+  color: var(--accent-strong);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.step-nav button strong {
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.step-nav button.active {
+  border-color: rgba(11, 79, 138, 0.42);
+  background: linear-gradient(135deg, rgba(11, 79, 138, 0.14), rgba(255, 255, 255, 0.78));
+  box-shadow: 0 10px 26px rgba(11, 79, 138, 0.12);
 }
 
 .project-panel {
@@ -386,7 +442,7 @@ button.mini-button {
   border: 1px solid var(--line);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.58);
-  padding: 20px;
+  padding: 16px;
 }
 
 .map-card {
@@ -404,8 +460,8 @@ button.mini-button {
 }
 
 .map-view {
-  margin-top: 14px;
-  min-height: 510px;
+  margin-top: 10px;
+  min-height: 390px;
   border-radius: 18px;
   border: 1px solid rgba(11, 79, 138, 0.14);
   background:
@@ -416,7 +472,7 @@ button.mini-button {
 }
 
 .public-transport-map-view {
-  min-height: 430px;
+  min-height: 390px;
 }
 
 .survey-point-overlay {
@@ -1027,24 +1083,26 @@ button.mini-button {
     max-width: 1360px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
+    gap: 16px;
     align-items: start;
-    padding: 28px 22px 72px;
+    padding: 22px 22px 64px;
   }
 
   .app-shell > .hero-card,
+  .app-shell > .step-nav-panel,
   .app-shell > .project-panel,
   .app-shell > .status-panel {
     grid-column: 1 / -1;
   }
 
   .app-shell > .hero-card,
+  .app-shell > .step-nav-panel,
   .app-shell > .panel {
     margin-top: 0;
   }
 
   .hero-card {
-    padding: 34px;
+    padding: 24px;
   }
 
   .hero-form {
@@ -1068,7 +1126,7 @@ button.mini-button {
   }
 
   .map-view {
-    min-height: 620px;
+    min-height: 440px;
   }
 
   .survey-recommendations {
@@ -1127,6 +1185,14 @@ button.mini-button {
 }
 
 @media (max-width: 700px) {
+  .step-nav-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .step-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .hero-actions,
   .panel-header,
   .subpanel-header,
@@ -1181,7 +1247,7 @@ button.mini-button {
   }
 
   .map-view {
-    min-height: 420px;
+    min-height: 360px;
   }
 }
 
@@ -1202,5 +1268,9 @@ button.mini-button {
   .map-header button,
   .priority-card button {
     width: 100%;
+  }
+
+  .step-nav {
+    grid-template-columns: 1fr;
   }
 }
