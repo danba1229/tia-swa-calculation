@@ -1116,13 +1116,19 @@ button.mini-button {
     margin-top: 0;
   }
 
+  .app-shell > .hero-card,
+  .app-shell > .step-nav-panel {
+    height: 100%;
+  }
+
   .hero-card {
     grid-template-columns: 1fr;
-    padding: 20px;
+    align-content: center;
+    padding: 18px 20px;
   }
 
   .hero-card h1 {
-    font-size: clamp(24px, 2.7vw, 36px);
+    font-size: clamp(23px, 2.5vw, 34px);
   }
 
   .hero-card .eyebrow {
@@ -1146,8 +1152,8 @@ button.mini-button {
   .hero-form {
     grid-template-columns: 1fr;
     align-items: end;
-    gap: 10px;
-    margin-top: 14px;
+    gap: 8px;
+    margin-top: 12px;
   }
 
   .hero-form > .full:first-child {
@@ -1161,6 +1167,10 @@ button.mini-button {
   .hero-card input {
     padding: 10px 12px;
     border-radius: 14px;
+  }
+
+  .step-nav-panel {
+    align-content: center;
   }
 
   .panel,

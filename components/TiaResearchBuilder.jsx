@@ -1834,7 +1834,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       <section className="hero-card">
         <div className="hero-main">
           <p className="eyebrow">TIA Research Builder</p>
-          <h1>교통영향평가 조사 초안 작성 도구</h1>
+          <h1>교통영향평가 초안 작성 도구</h1>
           <div className="hero-form">
             <label className="full">
               <span>주소지</span>
@@ -1863,17 +1863,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       </section>
 
       <section className="panel project-panel">
-        <div className="panel-header compact-panel-header">
-          <div>
-            <p className="eyebrow">지도 범위</p>
-            <h2>카카오 지도</h2>
-          </div>
-        </div>
-
         <div className="map-card project-map-card">
           <div className="map-header">
             <h3>카카오 지도</h3>
-            <p className="chart-caption">{mapStatus}</p>
           </div>
           <div ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
         </div>
