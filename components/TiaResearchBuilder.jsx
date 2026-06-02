@@ -1828,6 +1828,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       <section className="panel project-panel">
         <div className="map-card project-map-card">
           <div className="map-header">
+            <label className="checkbox-label map-toggle-control">
+              <input
+                type="checkbox"
+                checked={showBikeStationsOnMap}
+                onChange={(event) => setShowBikeStationsOnMap(event.target.checked)}
+              />
+              <span>따릉이 위치 표시</span>
+            </label>
             <h3>카카오 지도</h3>
           </div>
           <div ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />

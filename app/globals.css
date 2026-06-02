@@ -485,6 +485,21 @@ button.mini-button {
   font-weight: 800;
 }
 
+.project-map-card .map-header h3 {
+  order: 1;
+}
+
+.project-map-card .map-toggle-control {
+  order: 2;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.step-section > .map-toggle-control {
+  display: none;
+}
+
 .survey-point-overlay {
   display: inline-flex;
   align-items: center;
