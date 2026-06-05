@@ -91,6 +91,7 @@ export async function POST(request) {
         apiSources: tiaResponse.sources,
         apiErrors: tiaResponse.errors,
         sourceCounts: tiaResponse.sourceCounts,
+        sourceDiagnostics: body?.debug ? tiaResponse.sourceDiagnostics : undefined,
         normalizedCount: tiaResponse.projects.length,
         geocodeLimit,
       },
