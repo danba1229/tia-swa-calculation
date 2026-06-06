@@ -1034,6 +1034,48 @@ button.mini-button {
   min-width: 1280px;
 }
 
+.notice-link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.notice-link-card {
+  display: grid;
+  gap: 6px;
+  min-height: 112px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.notice-link-card:hover {
+  border-color: rgba(36, 102, 160, 0.4);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.notice-link-card strong {
+  font-size: 15px;
+}
+
+.notice-link-card span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.notice-link-card em {
+  color: var(--blue);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
 .public-transport-table {
   min-width: 860px;
 }

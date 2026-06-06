@@ -41,6 +41,8 @@ KOSIS_API_KEY=
 - `TIA_PROJECT_API_BASE_URL`, `TIA_PROJECT_API_OPERATION_PATH`: 국토교통부_교통영향평가_사업정보 API 활용가이드 확인 후 입력합니다.
 - `TIA_SYSTEM_API_BASE_URL`, `TIA_SYSTEM_API_OPERATION_PATH`: 국토교통부_교통영향평가정보지원시스템 API 활용가이드 확인 후 입력합니다.
 - `TIA_API_BASE_URL`, `TIA_API_OPERATION_PATH`: 기존 단일 API 설정과 호환하기 위한 값입니다. 새 환경변수가 있으면 없어도 됩니다.
+- `DATABASE_URL`: Neon PostgreSQL 연결 문자열입니다. 있으면 주변지역 개발계획 누적 DB를 우선 조회합니다.
+- `CRON_SECRET`: Vercel Cron 호출 보호용 비밀값입니다. 설정하면 `Authorization: Bearer {CRON_SECRET}` 요청만 동기화를 허용합니다.
 - `KOSIS_API_KEY`: STEP3 KOSIS 자료 추출에 사용합니다.
 
 API 키는 클라이언트 번들에 넣지 않습니다. 카카오 REST API와 공공데이터 API 호출은 모두 Next.js 서버 API Route에서 처리합니다.
@@ -79,7 +81,27 @@ npm run dev
 ## 주변지역 개발계획 API
 
 - `POST /api/geocode`: 주소를 카카오 Local API로 좌표 변환합니다.
-- `POST /api/tia/search`: 사업지 주소 좌표변환, 2개 교통영향평가 API 후보사업 조회, 중복 병합, 후보사업 좌표변환, 거리계산, 반영여부 자동판정을 수행합니다.
+- `POST /api/tia/search`: 사업지 주소 좌표변환, 누적 DB 우선 조회, DB 미연결/미수집 시 2개 교통영향평가 API 실시간 조회, 후보사업 좌표변환, 거리계산, 반영여부 자동판정을 수행합니다.
+- `GET /api/cron/tia-sync`: Vercel Cron 또는 수동 호출로 교통영향평가정보지원시스템 `businessSearch` 자료를 `numOfRows=1` 방식으로 수집해 Neon DB에 누적 저장합니다.
+
+## 주변지역 개발계획 자동조사 1차 구조
+
+1차 버전은 완전 자동에 가까운 구조를 목표로 하되, 공공 API와 지자체 고시공고의 한계를 UI에서 명확히 표시합니다.
+
+- `businessSearch`는 `numOfRows=1`로 기간별 누적 수집합니다. 공개 API가 `numOfRows=100`에서 같은 사업을 반복 반환하는 현상을 우회하기 위한 방식입니다.
+- 수집자료는 `tia_projects` 테이블에 사업번호/사업명/위치 기준으로 중복 제거하여 저장합니다.
+- 사용자가 주변사업 검색을 누르면 DB 자료를 먼저 조회하고, DB가 없거나 해당 조건 자료가 없으면 기존 실시간 API 조회로 fallback합니다.
+- 지자체 고시공고는 1차에서 공식 사이트를 직접 크롤링하지 않고, 행정구역과 핵심 키워드 기반 검색 링크를 생성하여 수동확인 후보로 표시합니다.
+
+### Neon 연결 후 초기 동기화
+
+Vercel Marketplace에서 Neon을 연결하면 `DATABASE_URL`이 자동으로 생성됩니다. 이후 다음 주소를 호출하면 해당 기간 자료를 수집합니다.
+
+```text
+https://tia-support.vercel.app/api/cron/tia-sync?startDate=2026-01-01&endDate=2026-01-31&maxPages=250
+```
+
+`CRON_SECRET`을 설정한 경우에는 `Authorization: Bearer {CRON_SECRET}` 헤더가 필요합니다. `vercel.json`에는 매일 03:00(KST)에 현재 월 자료를 동기화하도록 설정되어 있습니다.
 
 공공데이터포털 API 신청 URL:
 

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { geocodeAddress } from "../../../../lib/kakao";
 import { fetchTiaProjects } from "../../../../lib/tiaApi";
+import { isTiaDatabaseConfigured, searchStoredTiaProjects } from "../../../../lib/tiaDatabase";
+import { buildLocalNoticeSearches } from "../../../../lib/localNoticeSearch";
 import { haversineDistanceMeters } from "../../../../lib/distance";
 import { judgeReflection } from "../../../../lib/judgeReflection";
 
@@ -37,13 +39,38 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: siteGeocode.message || "사업지 주소 좌표 변환 실패" }, { status: 400 });
     }
 
-    const tiaResponse = await fetchTiaProjects({
+    const searchCriteria = {
       sido: body?.sido,
       sigungu: body?.sigungu,
       startYear: body?.startYear,
       endYear: body?.endYear,
       projectType: body?.projectType,
-    });
+    };
+    const dbConfigured = isTiaDatabaseConfigured();
+    let storedProjects = [];
+    let dbWarning = "";
+    if (dbConfigured) {
+      try {
+        storedProjects = await searchStoredTiaProjects(searchCriteria);
+      } catch (error) {
+        dbWarning = error.message || "DB 조회 실패";
+        console.warn("[tia/search] DB fallback:", error);
+      }
+    }
+    const fallbackResponse = storedProjects.length ? null : await fetchTiaProjects(searchCriteria);
+    const tiaResponse = storedProjects.length
+      ? {
+        rawCount: storedProjects.length,
+        projects: storedProjects,
+        requestUrls: [],
+        errors: dbWarning ? [dbWarning] : [],
+        sources: ["TIA_DB"],
+        sourceCounts: { TIA_DB: storedProjects.length },
+        sourceDiagnostics: [],
+      }
+      : fallbackResponse;
+    const dataMode = storedProjects.length ? "DB_CACHE" : "LIVE_API";
+    const noticeSearches = buildLocalNoticeSearches(searchCriteria);
 
     const geocodeLimit = 80;
     const geocodedProjects = [];
@@ -86,10 +113,14 @@ export async function POST(request) {
       },
       summary: summarize(tiaResponse.rawCount, sortedResults, radiusMeters),
       results: sortedResults,
+      dataMode,
+      dbConfigured,
+      noticeSearches,
       debug: {
         requestUrls: tiaResponse.requestUrls,
         apiSources: tiaResponse.sources,
         apiErrors: tiaResponse.errors,
+        dbWarning,
         sourceCounts: tiaResponse.sourceCounts,
         sourceDiagnostics: body?.debug ? tiaResponse.sourceDiagnostics : undefined,
         normalizedCount: tiaResponse.projects.length,

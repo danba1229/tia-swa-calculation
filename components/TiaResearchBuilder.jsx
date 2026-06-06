@@ -118,6 +118,9 @@ function createBlankDevelopmentResult(overrides = {}) {
     site: null,
     summary: null,
     results: [],
+    noticeSearches: [],
+    dataMode: "",
+    dbConfigured: false,
     searched: false,
     loading: false,
     error: "",
@@ -1067,6 +1070,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           site: result.site,
           summary: result.summary,
           results: result.results || [],
+          noticeSearches: result.noticeSearches || [],
+          dataMode: result.dataMode || "",
+          dbConfigured: Boolean(result.dbConfigured),
           searched: true,
           loading: false,
           error: "",
@@ -2248,12 +2254,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </div>
           <p>
             {developmentResult.error
-              ? developmentResult.error
-              : developmentResult.searched
-                ? "사업지 좌표와 후보사업 좌표를 계산해 거리순으로 정리했습니다. 반영여부는 자동판정이므로 보고서 작성 전 원자료 확인이 필요합니다."
-                : "사업지 주소 입력 후 주변사업 검색을 누르면 교통영향평가 사업정보 API와 정보지원시스템 API 후보사업을 함께 조회합니다."}
+        ? developmentResult.error
+        : developmentResult.searched
+                ? `${developmentResult.dataMode === "DB_CACHE" ? "누적 DB 자료" : "실시간 공공 API"}를 기준으로 사업지 좌표와 후보사업 좌표를 계산했습니다. 반영여부는 자동판정이므로 보고서 작성 전 원자료 확인이 필요합니다.`
+                : "사업지 주소 입력 후 주변사업 검색을 누르면 누적 DB 자료를 우선 조회하고, DB 자료가 없으면 교통영향평가 공공 API를 실시간 조회합니다."}
           </p>
-          <p className="verification-source">원자료: 국토교통부 교통영향평가_사업정보 API + 교통영향평가정보지원시스템 API / 좌표변환: 카카오 Local API</p>
+          <p className="verification-source">
+            원자료: {developmentResult.dataMode === "DB_CACHE" ? "누적 DB(TIA businessSearch 수집자료)" : "국토교통부 교통영향평가_사업정보 API + 교통영향평가정보지원시스템 API"}
+            {" / "}DB 연결: {developmentResult.dbConfigured ? "연결됨" : "미연결"}
+            {" / "}좌표변환: 카카오 Local API
+          </p>
         </div>
 
         {developmentResult.summary ? (
@@ -2316,6 +2326,24 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 )}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <section className="subpanel notice-search-panel">
+          <div className="subpanel-header">
+            <h3>지자체 고시공고 보조 확인</h3>
+            <p className="subpanel-source">자동 키워드 검색 링크 / 공식 고시공고 및 첨부파일은 수동확인 필요</p>
+          </div>
+          <div className="notice-link-grid">
+            {(developmentResult.noticeSearches || []).length ? developmentResult.noticeSearches.map((item) => (
+              <a key={item.keyword} className="notice-link-card" href={item.url} target="_blank" rel="noreferrer">
+                <strong>{item.keyword}</strong>
+                <span>{item.title}</span>
+                <em>{item.confidence}</em>
+              </a>
+            )) : (
+              <p className="empty-cell">주변사업 검색 후 행정구역 기반 고시공고 검색 링크가 표시됩니다.</p>
+            )}
           </div>
         </section>
       </section>
