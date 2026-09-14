@@ -320,7 +320,14 @@ class handler(BaseHTTPRequestHandler):
             self._json(401, {"status": "ERROR", "error_code": "AUTH_REQUIRED", "error": str(exc)})
         except KakaoGeocoderError as exc:
             self._json(400, {"status": "ERROR", "error_code": exc.code, "error": str(exc), "http_status": exc.http_status})
-        except CloudDataError:
+        except CloudDataError as exc:
+            sys.stderr.write(json.dumps({
+                "event": "indicator_cloud_data_failure",
+                "at": datetime.now(timezone.utc).isoformat(),
+                "stage": exc.stage,
+                "cause_class": exc.cause_class,
+                "instance_id": INSTANCE_ID,
+            }, separators=(",", ":")) + "\n")
             self._json(503, {"status": "ERROR", "error_code": "CALCULATION_DATA_UNAVAILABLE", "error": "검증된 계산자료를 준비하지 못했습니다. 잠시 후 다시 시도하십시오"})
         except (CalculationRequestError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             self._json(400, {"status": "ERROR", "error_code": "VALIDATION_ERROR", "error": str(exc)})

@@ -20,7 +20,10 @@ _STATUS: dict[str, Any] | None = None
 
 
 class CloudDataError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, stage: str = "unknown", cause_class: str | None = None) -> None:
+        super().__init__(message)
+        self.stage = stage
+        self.cause_class = cause_class
 
 
 def _sha256(path: Path) -> str:
@@ -97,7 +100,11 @@ def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> di
             from vercel.blob import BlobClient
             from vercel.headers import set_headers
         except ImportError as exc:
-            raise CloudDataError("Vercel private Blob SDK를 불러올 수 없습니다") from exc
+            raise CloudDataError(
+                "Vercel private Blob SDK를 불러올 수 없습니다",
+                stage="sdk_import",
+                cause_class=exc.__class__.__name__,
+            ) from exc
         if request_headers is not None:
             set_headers(dict(request_headers))
         staging_parent = root.parent
@@ -142,7 +149,11 @@ def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> di
         except CloudDataError:
             raise
         except Exception as exc:
-            raise CloudDataError("private Blob 계산자료를 준비하지 못했습니다") from exc
+            raise CloudDataError(
+                "private Blob 계산자료를 준비하지 못했습니다",
+                stage="blob_download_or_extract",
+                cause_class=exc.__class__.__name__,
+            ) from exc
         finally:
             archive_path.unlink(missing_ok=True)
             if staging.exists():
