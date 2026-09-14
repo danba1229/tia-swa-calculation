@@ -23,10 +23,18 @@ _STATUS: dict[str, Any] | None = None
 
 
 class CloudDataError(RuntimeError):
-    def __init__(self, message: str, *, stage: str = "unknown", cause_class: str | None = None) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        stage: str = "unknown",
+        cause_class: str | None = None,
+        http_status: int | None = None,
+    ) -> None:
         super().__init__(message)
         self.stage = stage
         self.cause_class = cause_class
+        self.http_status = http_status
 
 
 def _sha256(path: Path) -> str:
@@ -99,6 +107,7 @@ def _presigned_bundle_url(version: str) -> str:
             "계산자료 읽기 URL을 준비하지 못했습니다",
             stage="presign_request",
             cause_class=exc.__class__.__name__,
+            http_status=getattr(exc, "code", None) if isinstance(exc, HTTPError) else None,
         ) from exc
     url = str(payload.get("presignedUrl") or "")
     if not payload.get("success") or not url.startswith("https://"):

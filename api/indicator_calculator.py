@@ -319,6 +319,7 @@ class handler(BaseHTTPRequestHandler):
                 "at": datetime.now(timezone.utc).isoformat(),
                 "stage": exc.stage,
                 "cause_class": exc.cause_class,
+                "http_status": exc.http_status,
                 "instance_id": INSTANCE_ID,
             }, separators=(",", ":")) + "\n")
             self._json(503, {"status": "ERROR", "error_code": "CALCULATION_DATA_UNAVAILABLE", "error": "검증된 계산자료를 준비하지 못했습니다. 잠시 후 다시 시도하십시오"})
