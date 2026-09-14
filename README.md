@@ -106,3 +106,11 @@ https://tia-support.vercel.app/api/cron/tia-sync?startDate=2026-01-01&endDate=20
 공공데이터포털 API 신청 URL:
 
 https://www.data.go.kr/iim/api/selectDevAcountRequestForm.do?publicDataDetailPk=uddi:fe3f4ccd-57ea-4b79-b77a-cdbed1484bf4_202308241603
+
+## 지표·O/D 접근강도 계산기 Preview
+
+`/indicator`는 기존 조사 도구와 분리된 사용자 로그인 화면이다. 상세 주소를 서버의 카카오 REST API로 확인한 뒤, 수도권 1,310존 또는 전국 250존의 검증된 파생 자료를 Python 함수에서 계산한다. 지리적 동서남북 방향은 개별·선택·행정지역 묶음으로 바꿀 수 있으며 결과는 사용자별 private Vercel Blob에 저장된다.
+
+필수 서버 환경변수는 `KAKAO_REST_API_KEY`, `TIA_CALCULATOR_SESSION_SECRET`, `TIA_CALCULATOR_INVITE_CODE`다. 민감값을 클라이언트에 노출하지 않는다. Blob은 OIDC 연결을 사용하며 정적 read-write 토큰을 두지 않는다. 현재 연결은 Preview 환경 전용이다.
+
+계산 함수에 포함된 자료는 파생 JSON/f64와 검증용 경계뿐이며 원 Excel·ZIP·TXT는 배포하지 않는다. 지표 목표연도와 O/D 시나리오 연도는 독립적이다. 수도권 O/D는 2023년만, 전국 O/D는 등록된 시나리오 연도만 선택한다.

@@ -10,4 +10,22 @@ yarn-error.log*
 pnpm-debug.log*
 backup_before_reset_*/
 
+# Cloud calculator data is uploaded to a private, environment-specific Blob
+# store.  Only the small integrity manifest is committed.
+calculator_core/common_data/
+cloud_artifacts/
+.production-secrets.json
+.production-test-context.dpapi
+.vercel-py-inspect/
+vercel_py_inspect/
+sdk_source/
+sdk_source_headers/
+sdk_wheels/
+
 .vercel
+.env*
+!.env.example
+.preview-secrets.json
+.preview-test-results/
+__pycache__/
+*.pyc

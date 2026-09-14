@@ -1,4 +1,12 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/indicator_calculator.py": {
+      "maxDuration": 60,
+      "regions": ["icn1"],
+      "excludeFiles": "{tests/**,.preview-test-results/**,calculator_core/src/__pycache__/**}"
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/tia-sync",

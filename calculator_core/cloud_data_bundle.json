@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "version": "2024-od-v1-89a27c12cde68e37",
+  "built_at_utc": "2026-09-14T10:15:04.224679+00:00",
+  "blob_path": "tia-indicator-data/2024-od-v1-89a27c12cde68e37/common_data_bundle-MGALHR2PFqzz9ioVFh5mcdcdJAhcHA.zip",
+  "bundle": {
+    "size_bytes": 30370431,
+    "sha256": "89A27C12CDE68E37B4CF01FEAB5A1136FE3A5D3033F3E0F49EEA14FEE8C846A2"
+  },
+  "members": {
+    "common_data/raw/HangJeongDong_ver20230101.geojson": {
+      "size_bytes": 34880763,
+      "sha256": "A48B10D5FAB1BBBEC98C981E1BDEB7281217143C30D5BBAE754ED804143F7AB8"
+    },
+    "common_data/raw/HangJeongDong_ver20220101.geojson": {
+      "size_bytes": 34859049,
+      "sha256": "62AFD9041CC13B7ECABD444B2109152A68F0174C1EF1B5DFD5DF0E0D33BB3200"
+    },
+    "common_data/derived/metro_2024_1310_zones.json": {
+      "size_bytes": 573348,
+      "sha256": "9C16E952C52A2EB82A271232954D36639FD687711ECF50DEEC47C938AED1AD21"
+    },
+    "common_data/derived/metro_2024_1310_purpose_total_2023.f64": {
+      "size_bytes": 13728800,
+      "sha256": "AD6D071EAA08CBD5ABC1E7A087DD5EAC48C9A167792471AE6EC1D0E4E863A689"
+    },
+    "common_data/derived/metro_2024_1310_purpose_outbound_2023.json": {
+      "size_bytes": 324105,
+      "sha256": "525F55C092215837258E2C7104E8A2C17F71DE79D9B7574FFC7A69852B4E7FD9"
+    },
+    "common_data/derived/national_2024_250_indicators.json": {
+      "size_bytes": 982993,
+      "sha256": "19D87A6E4D52B5EB756F00D63204CA5EC2B53A756197E30D393648A6108D8E65"
+    },
+    "common_data/derived/national_2024_250_zones.json": {
+      "size_bytes": 127449,
+      "sha256": "F24428562CF3F53450B1BF731FA9760095EAA12558651E0099236501EB2C9181"
+    },
+    "common_data/derived/metro_2024_to_national_2024_region_crosswalk.json": {
+      "size_bytes": 175371,
+      "sha256": "F80B1F25D364892D1508B732BC4F8138A229E14A67DF86627A86BE00585C49DB"
+    },
+    "common_data/derived/national_2024_250_purpose_total_2023.f64": {
+      "size_bytes": 500000,
+      "sha256": "397BD9F3984771995AA8F7A3059BA2035B7EBC86089A50C36A4D726F8571C98D"
+    },
+    "common_data/derived/national_2024_250_purpose_total_2025.f64": {
+      "size_bytes": 500000,
+      "sha256": "0EC8E4424393E4B65EB78749E46312B03EFC419B9E9A2FAFBF4C385F89B36BCE"
+    },
+    "common_data/derived/national_2024_250_purpose_total_2030.f64": {
+      "size_bytes": 500000,
+      "sha256": "81B42BBD0FB78649ADF4CC4C3B6703853E4D2EC10C3213C3C169882C4BCA70D7"
+    },
+    "common_data/derived/national_2024_250_purpose_total_2035.f64": {
+      "size_bytes": 500000,
+      "sha256": "D8D0A1C4ED0E684ABBE100320DD6000B7BB320E7BBBBC948164428E87EDB04DE"
+    },
+    "common_data/derived/national_2024_250_purpose_total_2040.f64": {
+      "size_bytes": 500000,
+      "sha256": "AF5ED4E22167424B543A5F33CEF64D19C083332106F080CDDD117FF89FE6B73E"
+    },
+    "common_data/derived/national_2024_250_purpose_total_2045.f64": {
+      "size_bytes": 500000,
+      "sha256": "DC1615609649A43C2CBEF0676E447BF78A69E670B52B17C5465D3BDDF8302D2C"
+    },
+    "common_data/derived/national_2024_250_purpose_total_2050.f64": {
+      "size_bytes": 500000,
+      "sha256": "1A2349B0A0E123210A2F1A27E417E1267054DA1A8ECAAC0C83032E879EEE1DE2"
+    },
+    "common_data/derived/manifest.json": {
+      "size_bytes": 9838,
+      "sha256": "E9D3D3104D30115002C44474B1D5D65BB1C24F555038DC6F6EC9CB55B8DE6175"
+    }
+  },
+  "inner_manifest_sha256": "E9D3D3104D30115002C44474B1D5D65BB1C24F555038DC6F6EC9CB55B8DE6175",
+  "source_scope": "verified derived traffic indicators, O/D matrices, zone crosswalk and representative boundaries"
+}

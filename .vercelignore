@@ -1,0 +1,11 @@
+.git/
+.next/
+node_modules/
+.env*
+.preview-secrets.json
+.preview-test-results/
+**/__pycache__/
+**/*.pyc
+calculator_core/common_data/raw/HangJeongDong_ver20210101.geojson
+calculator_core/common_data/
+cloud_artifacts/
