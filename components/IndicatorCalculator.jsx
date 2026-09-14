@@ -99,7 +99,7 @@ function AuthPanel({ onAuthenticated }) {
   }
   return <main className={styles.center}>
     <section className={styles.authCard}>
-      <p className={styles.eyebrow}>TIA SUPPORT · PRIVATE PREVIEW</p>
+      <p className={styles.eyebrow}>TIA SUPPORT · PRIVATE CALCULATOR</p>
       <h1>지표·O/D 접근강도 계산기</h1>
       <p>저장된 주소·방향 배정·결과는 사용자별 비공개 영역에 보관됩니다.</p>
       <div className={styles.tabs}>
