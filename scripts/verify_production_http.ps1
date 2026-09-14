@@ -6,6 +6,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Security
+$script:TransportRetries = 0
 
 function Invoke-JsonRequest {
   param(
@@ -25,7 +26,17 @@ function Invoke-JsonRequest {
     $parameters.ContentType = 'application/json; charset=utf-8'
     $parameters.Body = $Body | ConvertTo-Json -Depth 100 -Compress
   }
-  $response = Invoke-WebRequest @parameters
+  $response = $null
+  for ($attempt = 1; $attempt -le 3; $attempt++) {
+    try {
+      $response = Invoke-WebRequest @parameters
+      break
+    } catch {
+      if ($attempt -eq 3) { throw }
+      $script:TransportRetries += 1
+      Start-Sleep -Milliseconds 400
+    }
+  }
   $parsed = $null
   if ($response.Content) {
     try { $parsed = $response.Content | ConvertFrom-Json } catch { $parsed = $null }
@@ -204,6 +215,7 @@ try {
     cases = @($suwon, $busan)
     fresh_login_restore = $freshRestore
     cross_user_project_read_status = $crossUserRead.Status
+    transport_retries = $script:TransportRetries
     secrets_in_report = $false
   }
   $summary | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'production-http-results.json') -Encoding utf8
