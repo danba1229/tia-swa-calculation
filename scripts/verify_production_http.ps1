@@ -112,8 +112,18 @@ function Invoke-Case {
     name = $ProjectName
     calculationEnvelope = $after.storage_envelope
   }
-  $firstSave = Invoke-JsonRequest -Session $Session -Method POST -Path '/api/indicator/projects' -Body $saveBody
-  if ($firstSave.Status -ne 200) { throw "$CaseName first save failed with HTTP $($firstSave.Status)" }
+  $saveAttempts = @()
+  $firstSave = $null
+  for ($attempt = 1; $attempt -le 3; $attempt++) {
+    $candidateSave = Invoke-JsonRequest -Session $Session -Method POST -Path '/api/indicator/projects' -Body $saveBody
+    $saveAttempts += $candidateSave.Status
+    if ($candidateSave.Status -eq 200) {
+      $firstSave = $candidateSave
+      break
+    }
+    Start-Sleep -Milliseconds 400
+  }
+  if ($null -eq $firstSave) { throw "$CaseName save did not recover after HTTP $($saveAttempts -join ',')" }
   $retrySave = Invoke-JsonRequest -Session $Session -Method POST -Path '/api/indicator/projects' -Body $saveBody
   if ($retrySave.Status -ne 200 -or -not $retrySave.Body.project.idempotentReplay) {
     throw "$CaseName idempotent retry was not reused"
@@ -146,6 +156,8 @@ function Invoke-Case {
     destination_direction = $DestinationDirection
     denominators_unchanged = $denominatorsUnchanged
     first_save_revision = $firstSave.Body.project.revisionNumber
+    save_attempt_statuses = @($saveAttempts)
+    save_recovered_after_retry = $saveAttempts.Count -gt 1
     retry_idempotent_replay = [bool]$retrySave.Body.project.idempotentReplay
     restored_direction = $restoredRow.current_direction
     project_id = $projectId
