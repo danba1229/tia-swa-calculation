@@ -78,7 +78,10 @@ def _safe_extract(archive_path: Path, destination: Path, manifest: dict[str, Any
 
 
 def _presigned_bundle_url(version: str) -> str:
-    host = os.getenv("VERCEL_URL", "").strip()
+    host = (
+        os.getenv("VERCEL_PROJECT_PRODUCTION_URL", "").strip()
+        or os.getenv("VERCEL_URL", "").strip()
+    )
     secret = os.getenv("TIA_CALCULATOR_SESSION_SECRET", "").strip()
     if not host or len(secret) < 32:
         raise CloudDataError("계산자료 서버 연결 설정이 없습니다", stage="presign_configuration")
