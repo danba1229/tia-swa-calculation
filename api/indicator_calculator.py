@@ -297,6 +297,7 @@ class handler(BaseHTTPRequestHandler):
             self._json(404, {"status": "ERROR", "error": "not found"})
 
     def do_POST(self) -> None:
+        stage = "request_headers"
         try:
             from vercel.headers import set_headers
 
@@ -305,12 +306,15 @@ class handler(BaseHTTPRequestHandler):
             # The private Blob SDK resolves its short-lived OIDC credential from
             # the current Vercel request headers. No long-lived Blob token is
             # stored in code or returned to the browser.
+            stage = "authenticate"
             _read_user(self.headers.get("Cookie"))
+            stage = "read_request"
             length = int(self.headers.get("Content-Length", "0"))
             if length <= 0 or length > MAX_BODY_BYTES:
                 self._json(413, {"status": "ERROR", "error_code": "PAYLOAD_SIZE", "error": "요청 크기가 허용 범위를 벗어났습니다"})
                 return
             body = json.loads(self.rfile.read(length).decode("utf-8"))
+            stage = f"dispatch_{str(body.get('action') or 'unknown')[:32]}"
             self._json(200, dispatch(body))
         except AuthenticationError as exc:
             self._json(401, {"status": "ERROR", "error_code": "AUTH_REQUIRED", "error": str(exc)})
@@ -324,4 +328,13 @@ class handler(BaseHTTPRequestHandler):
             if GENERIC_ERROR_CLASS is not None and isinstance(exc, GENERIC_ERROR_CLASS):
                 self._json(400, {"status": "ERROR", "error_code": "VALIDATION_ERROR", "error": str(exc)})
             else:
+                # Do not log request bodies, addresses, cookies, provider
+                # responses, environment values or exception messages.
+                sys.stderr.write(json.dumps({
+                    "event": "indicator_calculator_failure",
+                    "at": datetime.now(timezone.utc).isoformat(),
+                    "stage": stage,
+                    "error_class": exc.__class__.__name__,
+                    "instance_id": INSTANCE_ID,
+                }, separators=(",", ":")) + "\n")
                 self._json(500, {"status": "ERROR", "error_code": "INTERNAL_ERROR", "error": "계산 처리 중 오류가 발생했습니다"})
