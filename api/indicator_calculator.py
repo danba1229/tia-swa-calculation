@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from cloud_data import CloudDataError, prepare_runtime_data, runtime_data_status
+from api.cloud_data import CloudDataError, prepare_runtime_data, runtime_data_status
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CORE_ROOT = PROJECT_ROOT / "calculator_core"
