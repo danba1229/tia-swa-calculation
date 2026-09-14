@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import os
 import shutil
@@ -11,6 +12,8 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +69,55 @@ def _safe_extract(archive_path: Path, destination: Path, manifest: dict[str, Any
                 shutil.copyfileobj(source, output, length=1024 * 1024)
 
 
+def _presigned_bundle_url(version: str) -> str:
+    host = os.getenv("VERCEL_URL", "").strip()
+    secret = os.getenv("TIA_CALCULATOR_SESSION_SECRET", "").strip()
+    if not host or len(secret) < 32:
+        raise CloudDataError("계산자료 서버 연결 설정이 없습니다", stage="presign_configuration")
+    timestamp = int(datetime.now(timezone.utc).timestamp())
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        f"data-bundle:{version}:{timestamp}".encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    body = json.dumps({
+        "timestamp": timestamp,
+        "version": version,
+        "signature": signature,
+    }, separators=(",", ":")).encode("utf-8")
+    request = Request(
+        f"https://{host}/api/indicator/data-url",
+        data=body,
+        method="POST",
+        headers={"Content-Type": "application/json", "Cache-Control": "no-store"},
+    )
+    try:
+        with urlopen(request, timeout=15) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (HTTPError, URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
+        raise CloudDataError(
+            "계산자료 읽기 URL을 준비하지 못했습니다",
+            stage="presign_request",
+            cause_class=exc.__class__.__name__,
+        ) from exc
+    url = str(payload.get("presignedUrl") or "")
+    if not payload.get("success") or not url.startswith("https://"):
+        raise CloudDataError("계산자료 읽기 URL이 유효하지 않습니다", stage="presign_response")
+    return url
+
+
+def _download_presigned(url: str, destination: Path) -> None:
+    try:
+        with urlopen(Request(url, method="GET"), timeout=45) as response, destination.open("wb") as output:
+            shutil.copyfileobj(response, output, length=1024 * 1024)
+    except (HTTPError, URLError, TimeoutError, OSError) as exc:
+        raise CloudDataError(
+            "private Blob 계산자료를 내려받지 못했습니다",
+            stage="presigned_download",
+            cause_class=exc.__class__.__name__,
+        ) from exc
+
+
 def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> dict[str, Any]:
     global _STATUS
     with _LOCK:
@@ -96,30 +148,12 @@ def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> di
             except (OSError, ValueError, KeyError, json.JSONDecodeError, CloudDataError):
                 pass
 
-        try:
-            from vercel.blob import BlobClient
-            from vercel.headers import set_headers
-        except ImportError as exc:
-            raise CloudDataError(
-                "Vercel private Blob SDK를 불러올 수 없습니다",
-                stage="sdk_import",
-                cause_class=exc.__class__.__name__,
-            ) from exc
-        if request_headers is not None:
-            set_headers(dict(request_headers))
         staging_parent = root.parent
         staging_parent.mkdir(parents=True, exist_ok=True)
         staging = staging_parent / f".{version}-{uuid.uuid4().hex}"
         archive_path = staging_parent / f".{version}-{uuid.uuid4().hex}.zip"
         try:
-            with BlobClient() as client:
-                client.download_file(
-                    str(manifest["blob_path"]),
-                    archive_path,
-                    access="private",
-                    timeout=45,
-                    overwrite=False,
-                )
+            _download_presigned(_presigned_bundle_url(version), archive_path)
             if archive_path.stat().st_size != int(manifest["bundle"]["size_bytes"]):
                 raise CloudDataError("private Blob 계산자료 크기가 매니페스트와 다릅니다")
             if _sha256(archive_path) != str(manifest["bundle"]["sha256"]).upper():
@@ -151,7 +185,7 @@ def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> di
         except Exception as exc:
             raise CloudDataError(
                 "private Blob 계산자료를 준비하지 못했습니다",
-                stage="blob_download_or_extract",
+                stage="bundle_verify_or_extract",
                 cause_class=exc.__class__.__name__,
             ) from exc
         finally:

@@ -299,13 +299,6 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         stage = "request_headers"
         try:
-            from vercel.headers import set_headers
-
-            request_headers = dict(self.headers.items())
-            set_headers(request_headers)
-            # The private Blob SDK resolves its short-lived OIDC credential from
-            # the current Vercel request headers. No long-lived Blob token is
-            # stored in code or returned to the browser.
             stage = "authenticate"
             _read_user(self.headers.get("Cookie"))
             stage = "read_request"

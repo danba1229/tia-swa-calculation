@@ -5,6 +5,10 @@
       "maxDuration": 60,
       "regions": ["icn1"],
       "excludeFiles": "{tests/**,.preview-test-results/**,calculator_core/src/__pycache__/**}"
+    },
+    "app/api/indicator/data-url/route.js": {
+      "maxDuration": 15,
+      "regions": ["icn1"]
     }
   },
   "crons": [
