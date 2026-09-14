@@ -149,6 +149,8 @@ def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> di
                     _verify_files(root, manifest)
                     _STATUS = {
                         "status": "VERIFIED_PRIVATE_BLOB_CACHE",
+                        "verified": True,
+                        "access": "PRIVATE_BLOB_OIDC_PRESIGNED",
                         "version": version,
                         "bundle_sha256": manifest["bundle"]["sha256"],
                         "bundle_size_bytes": int(manifest["bundle"]["size_bytes"]),
@@ -184,6 +186,8 @@ def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> di
             staging.replace(root)
             _STATUS = {
                 "status": "VERIFIED_PRIVATE_BLOB_DOWNLOAD",
+                "verified": True,
+                "access": "PRIVATE_BLOB_OIDC_PRESIGNED",
                 "version": version,
                 "bundle_sha256": manifest["bundle"]["sha256"],
                 "bundle_size_bytes": int(manifest["bundle"]["size_bytes"]),
@@ -207,4 +211,8 @@ def prepare_runtime_data(request_headers: Mapping[str, str] | None = None) -> di
 
 
 def runtime_data_status() -> dict[str, Any] | None:
-    return dict(_STATUS) if _STATUS else None
+    if not _STATUS:
+        return None
+    public = dict(_STATUS)
+    public.pop("root", None)
+    return public
