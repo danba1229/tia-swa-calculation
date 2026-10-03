@@ -51,14 +51,14 @@ test("rectangle search returns every stop without the former 35-stop cap, sorted
 test("missing operations data stays manual, never inferred from route number or zero", () => {
   const result = searchSeoulBusSnapshot(scope());
   const rows = createBusRouteTableRows(result.busStops);
-  assert.equal(rows[0].length, 14);
+  assert.equal(rows[0].length, 11);
   for (const row of rows.slice(1)) {
-    assert.equal(row.length, 14);
+    assert.equal(row.length, 11);
     if (row[2] === "-") continue;
     assert.match(row[1], /수동 확인/);
-    row.slice(3, 13).forEach(cell => assert.match(cell, /수동 확인/));
-    assert.match(row[13], /2026-09-02/);
+    row.slice(3).forEach(cell => assert.match(cell, /수동 확인/));
   }
+  assert.equal(result.sourceDate, "2026-09-02");
 });
 
 test("empty area succeeds with an empty result; no outside stops are substituted", () => {
@@ -78,6 +78,7 @@ async function loadRoute() {
   let source = readFileSync(new URL("../app/api/seoul-bus/route.js", import.meta.url), "utf8");
   source = source.replace('"next/server"', JSON.stringify(pathToFileURL(require.resolve("next/server.js")).href));
   source = source.replace('"../../../lib/seoulBusSnapshot"', JSON.stringify(new URL("../lib/seoulBusSnapshot.js", import.meta.url).href));
+  source = source.replace('"../../../lib/seoulBusStore.js"', JSON.stringify(new URL("../lib/seoulBusStore.js", import.meta.url).href));
   return import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 }
 

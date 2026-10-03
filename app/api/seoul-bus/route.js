@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchSeoulBusSnapshot, validateSnapshotScope } from "../../../lib/seoulBusSnapshot";
+import { getBusSnapshot } from "../../../lib/seoulBusStore.js";
 
 function toNumber(value) {
   if (value === null || value === undefined || String(value).trim() === "") return null;
@@ -35,14 +36,15 @@ export async function POST(request) {
       );
     }
 
+    const current = await getBusSnapshot();
     const result = searchSeoulBusSnapshot({
       center,
       bounds,
       width,
       height,
-    });
+    }, current.snapshot);
 
-    return NextResponse.json(result);
+    return NextResponse.json({ ...result, refresh: current.refresh }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     // Never log provider URLs/error bodies because they may contain credentials.
     return NextResponse.json(

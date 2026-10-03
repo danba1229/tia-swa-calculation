@@ -40,9 +40,9 @@ test("detail merge preserves all stops/routes, matches NODE_ID and leaves day-sp
   assert.match(result[1].routes[0].stationFirstBusTime, /미제공/);
   assert.match(result[1].routes[0].stationTimeError, /해당 정류장/);
   const rows = createBusRouteTableRows(result);
-  assert.equal(rows[1][9], "12분");
-  rows[1].slice(10,13).forEach(value=>assert.match(value, /수동 확인/));
-  assert.match(rows[1][13], /상세 API 조회/);
+  assert.equal(rows[1][7], "12분");
+  rows[1].slice(8,11).forEach(value=>assert.match(value, /수동 확인/));
+  assert.equal(rows[1].length, 11);
 });
 
 test("ambiguous repeat visits and conflicting station IDs never pick an arbitrary time", () => {
@@ -83,7 +83,8 @@ test("systemic failure halts requests and marks pending rows without deleting da
   assert.equal(last.completed, 1);
   assert.equal(last.stations.length, 2);
   assert.equal(last.stations[0].routes[1].detailStatus, "NOT_QUERIED");
-  assert.match(createBusRouteTableRows(last.stations)[1][13], /HTTPS 시간 초과/);
+  assert.match(last.stations[0].routes[0].detailError, /HTTPS 시간 초과/);
+  assert.equal(createBusRouteTableRows(last.stations)[1].length, 11);
   assert.equal(last.stations[0].routes[0].routeName, "400");
 });
 
@@ -157,7 +158,7 @@ test("actual details endpoint validates scope/IDs before any upstream call", asy
   const require = createRequire(import.meta.url);
   let source = readFileSync(new URL("../app/api/seoul-bus/details/route.js", import.meta.url), "utf8");
   source = source.replace('"next/server"', JSON.stringify(pathToFileURL(require.resolve("next/server.js")).href));
-  for (const name of ["seoulBusSnapshot", "seoulBusDetails"]) source = source.replace(`"../../../../lib/${name}.js"`, JSON.stringify(new URL(`../lib/${name}.js`, import.meta.url).href));
+  for (const name of ["seoulBusSnapshot", "seoulBusDetails", "seoulBusStore"]) source = source.replace(`"../../../../lib/${name}.js"`, JSON.stringify(new URL(`../lib/${name}.js`, import.meta.url).href));
   const { POST } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
   await withApiMock(async (calls)=>{
     const bad = await POST(new Request("http://localhost/api/seoul-bus/details", { method: "POST", body: JSON.stringify({ scope, routeIds: ["999999999"] }) }));

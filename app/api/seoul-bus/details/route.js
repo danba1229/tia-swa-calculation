@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { searchSeoulBusSnapshot } from "../../../../lib/seoulBusSnapshot.js";
 import { fetchBusDetailBatch, validateDetailRouteIds } from "../../../../lib/seoulBusDetails.js";
+import { getBusSnapshot } from "../../../../lib/seoulBusStore.js";
 
 export const maxDuration = 30;
 
@@ -8,7 +9,8 @@ export async function POST(request) {
   let routeIds;
   try {
     const body = await request.json();
-    const snapshot = searchSeoulBusSnapshot(body.scope);
+    const current = await getBusSnapshot();
+    const snapshot = searchSeoulBusSnapshot(body.scope, current.snapshot);
     routeIds = body.routeIds;
     validateDetailRouteIds(snapshot.busStops, routeIds);
   } catch {

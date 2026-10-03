@@ -7,6 +7,7 @@ import { nullableArea, areaStats, createRequestGate } from "../lib/researchInteg
 import { summarizeProjects } from "../lib/tiaScope";
 import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../lib/busMapOverlays";
 import { loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader";
+import { busRefreshStatusText } from "../lib/seoulBusRefreshStatus";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
@@ -150,6 +151,7 @@ function createBlankPublicTransportResult(overrides = {}) {
     busSourceUrl: "",
     busFetchedAt: "",
     busSourceDate: "",
+    busRefresh: null,
     busDetailLoading: false,
     busDetailCompleted: 0,
     busDetailTotal: 0,
@@ -1489,6 +1491,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           busSourceUrl: busResult?.sourceUrl || "",
           busFetchedAt: busResult?.fetchedAt || "",
           busSourceDate: busResult?.sourceDate || "",
+          busRefresh: busResult?.refresh || null,
         },
       }) : current);
 
@@ -2735,8 +2738,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             {publicTransportResult.busSourceDate ? ` / 버스 자료 기준일: ${publicTransportResult.busSourceDate} (실시간 자료 아님)` : ""}
             {publicTransportResult.busFetchedAt ? ` / 버스 조회 시각: ${publicTransportResult.busFetchedAt} (UTC)` : ""}
           </p>
+          {publicTransportResult.busSourceDate ? <p className="verification-source">{busRefreshStatusText(publicTransportResult.busRefresh)}</p> : null}
           {publicTransportResult.busDetailTotal > 0 ? (
-            <p className="verification-source" role="status">노선 상세 API: {publicTransportResult.busDetailLoading ? "조회 중" : publicTransportResult.busDetailError ? "조회 중단" : "조회 시도 완료"} ({publicTransportResult.busDetailCompleted}/{publicTransportResult.busDetailTotal}개 노선). 항목별 제공 여부는 표의 조회 상태를 확인해 주세요.</p>
+            <p className="verification-source" role="status">노선 상세 API: {publicTransportResult.busDetailLoading ? "조회 중" : publicTransportResult.busDetailError ? "조회 중단" : "조회 시도 완료"} ({publicTransportResult.busDetailCompleted}/{publicTransportResult.busDetailTotal}개 노선). 미제공 항목은 수동 확인이 필요합니다.</p>
           ) : null}
           {publicTransportResult.busDetailError ? <p className="verification-source" role="alert">{publicTransportResult.busDetailError} 기본 정류장·경유노선 목록은 유지합니다.</p> : null}
           {publicTransportResult.busSummary?.partial ? (
@@ -2787,7 +2791,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <section className="subpanel">
           <div className="subpanel-header">
             <h3>정류장별 경유 버스노선</h3>
-            <p className="subpanel-source">정차 노선은 공식 파일 기준이며 종류·기종점·첫차·막차·일반 배차간격은 서울시 API로 추가 조회합니다. 평일·토요일·공휴일별 간격은 별도 제공이 확인되지 않아 수동 확인으로 남깁니다. 조회 시각은 자료 기준일과 다릅니다.</p>
+            <p className="subpanel-source">정차 노선은 공식 파일 기준이며 종류·기종점·일반 배차간격은 서울시 API로 추가 조회합니다. 첫차·막차는 해당 정류장 기준이며, 미제공 시 기점 시간으로 대체하지 않습니다. 평일·토요일·공휴일별 간격은 수동 확인이 필요합니다. 조회 시각은 자료 기준일과 다릅니다.</p>
           </div>
           <div className="table-wrap">
             <table className="data-table bus-route-table">
