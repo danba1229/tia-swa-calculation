@@ -5,6 +5,7 @@ import seoulTopisPoints from "../app/seoul-topis-points.json";
 import { BUS_ROUTE_COLUMNS, createBusRouteTableRows } from "../lib/seoulBusTable";
 import { nullableArea, areaStats, createRequestGate } from "../lib/researchIntegrity";
 import { summarizeProjects } from "../lib/tiaScope";
+import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../lib/busMapOverlays";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
@@ -557,6 +558,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [gyeonggiCandidates, setGyeonggiCandidates] = useState([]);
   const [gyeonggiStatus, setGyeonggiStatus] = useState("");
   const [showBikeStationsOnMap, setShowBikeStationsOnMap] = useState(true);
+  const [showBusStopsOnMap, setShowBusStopsOnMap] = useState(true);
+  const [selectedBusStop, setSelectedBusStop] = useState(null);
+  const [mapRevision, setMapRevision] = useState(0);
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
   const publicTransportMapContainerRef = useRef(null);
@@ -570,7 +574,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     surveyMarkers: [],
     surveyOverlays: [],
     bikeStationOverlays: [],
+    busStopLayer: null,
+    busScope: null,
   });
+  useEffect(() => () => clearBusStopOverlays(mapRuntimeRef), []);
 
   useEffect(() => {
     try {
@@ -643,6 +650,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const publicTransportResult = { ...createBlankPublicTransportResult(), ...(form.publicTransportResult || {}) };
   const bikeStations = Array.isArray(publicTransportResult.bikeStations) ? publicTransportResult.bikeStations : [];
   const busStops = Array.isArray(publicTransportResult.busStops) ? publicTransportResult.busStops : [];
+  const selectedBusDetails = selectedBusStop && showBusStopsOnMap ? busStopMapDetails(selectedBusStop) : null;
   const shouldShowStep = (step) => activeStep === 0 || activeStep === step;
 
   useEffect(() => {
@@ -655,6 +663,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       mapRuntimeRef,
       stations: bikeStations,
     });
+    return () => clearBikeStationOverlays(mapRuntimeRef);
   }, [
     bikeStations,
     form.basics.centerLat,
@@ -662,7 +671,20 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     form.basics.rectWidth,
     form.basics.rectHeight,
     showBikeStationsOnMap,
+    mapRevision,
   ]);
+
+  useEffect(() => {
+    clearBusStopOverlays(mapRuntimeRef);
+    setSelectedBusStop(null);
+    const runtime = mapRuntimeRef.current;
+    if (!showBusStopsOnMap || !busStops.length || !runtime.map || !runtime.busScope || !window.kakao?.maps) return;
+    runtime.busStopLayer = createBusStopLayer({
+      map: runtime.map, maps: window.kakao.maps, stops: busStops, bounds: runtime.busScope,
+      onSelect: setSelectedBusStop,
+    });
+    return () => clearBusStopOverlays(mapRuntimeRef);
+  }, [busStops, showBusStopsOnMap, mapRevision]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1801,7 +1823,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       const sw = new kakao.maps.LatLng(boundsData.south, boundsData.west);
       const ne = new kakao.maps.LatLng(boundsData.north, boundsData.east);
       const bounds = new kakao.maps.LatLngBounds(sw, ne);
-      mapRuntimeRef.current.scopeBounds = bounds;
 
       if (!mapRuntimeRef.current.map) {
         mapRuntimeRef.current.map = new kakao.maps.Map(mapContainerRef.current, {
@@ -1811,6 +1832,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       }
 
       clearMapOverlays(mapRuntimeRef);
+      mapRuntimeRef.current.scopeBounds = bounds;
+      mapRuntimeRef.current.busScope = boundsData;
+      setMapRevision((revision) => revision + 1);
 
       mapRuntimeRef.current.marker = new kakao.maps.Marker({ position: center, map: mapRuntimeRef.current.map });
       mapRuntimeRef.current.rectangle = new kakao.maps.Rectangle({
@@ -1839,12 +1863,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         rectWidth: width,
         rectHeight: height,
       });
-      if (showBikeStationsOnMap && bikeStations.length) {
-        syncBikeStationOverlays({
-          mapRuntimeRef,
-          stations: bikeStations,
-        });
-      }
 
       setMapStatus("조사 영역에 걸친 도로를 자동 조사하는 중입니다.");
       const roadScopeResult = await collectRoadRowsInScope({
@@ -2051,9 +2069,29 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               />
               <span>따릉이 위치 표시</span>
             </label>
+            <label className="checkbox-label map-toggle-control bus-map-toggle">
+              <input type="checkbox" checked={showBusStopsOnMap} onChange={(event) => setShowBusStopsOnMap(event.target.checked)} />
+              <span>버스정류장 표시</span>
+            </label>
             <h3>카카오 지도</h3>
           </div>
           <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
+          <div id="selected-bus-stop-info" aria-live="polite">
+            {selectedBusDetails ? (
+              <section className="bus-stop-detail" aria-label="선택한 버스정류장 정보">
+                <div className="bus-stop-detail-heading">
+                  <h4>{selectedBusDetails.name}</h4>
+                  <button type="button" className="ghost" onClick={() => setSelectedBusStop(null)} aria-label="버스정류장 정보 닫기">닫기</button>
+                </div>
+                <dl>
+                  <dt>정류장번호</dt><dd>{selectedBusDetails.number}</dd>
+                  <dt>경유 버스</dt><dd>{selectedBusDetails.routes}</dd>
+                  <dt>사업지와 거리</dt><dd>{selectedBusDetails.distance}</dd>
+                </dl>
+                <p>서울시 공식 파일{selectedBusDetails.sourceDate ? ` · ${selectedBusDetails.sourceDate} 기준` : ""} · 실시간 운행정보 아님</p>
+              </section>
+            ) : null}
+          </div>
           <p className="map-status" role="status">{mapStatus}</p>
         </div>
       </section>
@@ -3445,6 +3483,9 @@ function clearMapOverlays(mapRuntimeRef) {
   }
   clearSurveyCandidateOverlays(mapRuntimeRef);
   clearBikeStationOverlays(mapRuntimeRef);
+  clearBusStopOverlays(mapRuntimeRef);
+  mapRuntimeRef.current.busScope = null;
+  mapRuntimeRef.current.scopeBounds = null;
 }
 
 function clearBikeStationOverlays(mapRuntimeRef) {

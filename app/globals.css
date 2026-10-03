@@ -564,6 +564,58 @@ button.mini-button {
   display: block;
 }
 
+.bus-stop-marker { position: relative; }
+.bus-stop-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  min-height: 0;
+  padding: 4px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #b44b16;
+  color: #fff;
+  box-shadow: 0 2px 7px rgba(84, 36, 12, 0.28);
+  cursor: pointer;
+}
+.bus-stop-button svg { width: 18px; height: 18px; fill: currentColor; }
+.bus-stop-button:hover { background: #853309; }
+.bus-stop-button:focus-visible { outline: 3px solid #142d42; outline-offset: 2px; }
+.bus-stop-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 9px;
+  border: 1px solid #b44b16;
+  border-radius: 8px;
+  background: #fffaf5;
+  color: #392217;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.bus-stop-marker:hover .bus-stop-tooltip,
+.bus-stop-marker:focus-within .bus-stop-tooltip { display: block; }
+.bus-map-toggle input { accent-color: #b44b16; }
+.bus-stop-detail {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #dfc4b3;
+  border-radius: 12px;
+  background: #fffaf5;
+  overflow-wrap: anywhere;
+}
+.bus-stop-detail-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bus-stop-detail-heading h4 { margin: 0; font-size: 15px; }
+.bus-stop-detail dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 10px 0; font-size: 13px; }
+.bus-stop-detail dt { font-weight: 700; }
+.bus-stop-detail dd { margin: 0; }
+.bus-stop-detail p { margin: 0; font-size: 11px; color: #655a52; }
+
 .tag-strip {
   display: flex;
   gap: 10px;
