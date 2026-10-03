@@ -169,12 +169,17 @@ h3 {
 
 .step-nav-panel {
   display: grid;
-  grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: center;
   margin-top: 18px;
   padding: 18px 20px;
 }
+
+.step-nav-panel > * { min-width: 0; }
+.step-nav-panel .investigation-progress { grid-column: 1 / -1; margin: 0; }
+.step-nav-header { grid-column: 1 / -1; }
+.step-nav-panel .step-nav { grid-column: 1 / -1; width: 100%; }
 
 .step-nav-header h2 {
   font-size: 20px;
@@ -1396,7 +1401,11 @@ button.mini-button {
   }
 
   .step-nav-panel {
-    align-content: center;
+    align-content: start;
+  }
+
+  .step-nav {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .panel,
@@ -1558,4 +1567,117 @@ button.mini-button {
   .step-nav {
     grid-template-columns: 1fr;
   }
+}
+
+.bus-route-map-label {
+  position: absolute;
+  top: 0;
+  left: 36px;
+  width: 250px;
+  padding: 8px 10px;
+  border: 1px solid #ad581f;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 3px 12px #0002;
+  color: #24211e;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.bus-route-map-label strong,
+.bus-route-map-label span {
+  display: block;
+}
+
+.bus-route-map-label strong {
+  margin-bottom: 3px;
+  color: #853d11;
+}
+
+.app-shell.map-expanded {
+  display: block;
+  max-width: none;
+  padding: 0;
+}
+
+.app-shell.map-expanded > :not(.project-panel) {
+  display: none;
+}
+
+.app-shell.map-expanded > .project-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: auto;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 12px;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.map-expanded .project-map-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.map-expanded .project-map-card .map-header {
+  flex-flow: row wrap;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.map-expanded .map-header button {
+  width: auto;
+}
+
+.map-expanded .map-header [hidden] {
+  display: none;
+}
+
+.map-expanded .project-map-card .map-view {
+  flex: 1;
+  height: 0;
+  min-height: 120px;
+}
+
+.expanded-map-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.expanded-map-tools label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.expanded-map-tools p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--muted);
+}
+
+.map-expanded #selected-bus-stop-info {
+  max-height: 25vh;
+  overflow: auto;
+  flex-shrink: 0;
+}
+
+.map-expanded .map-status {
+  display: block;
+  font-size: 12px;
+  margin: 6px 0 0;
 }

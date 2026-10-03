@@ -57,8 +57,9 @@ const STEP_NAV_ITEMS = [
   { step: 2, label: "사전조사지점" },
   { step: 3, label: "토지이용/용도지역" },
   { step: 4, label: "주변지역 개발계획" },
-  { step: 5, label: "대중교통/교통시설" },
-  { step: 6, label: "교통관련 계획" },
+  { step: 5, label: "버스·지하철" },
+  { step: 6, label: "따릉이" },
+  { step: 7, label: "교통관련 계획" },
 ];
 
 function createBlankBasics() {
@@ -547,6 +548,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [form, setForm] = useState(createBlankState);
   const [activeStep, setActiveStep] = useState(0);
   const [mapCollapsed, setMapCollapsed] = useState(false);
+  const [mapExpanded, setMapExpanded] = useState(false);
+  const [showBusRouteLabels, setShowBusRouteLabels] = useState(false);
+  const mapExpandButtonRef = useRef(null);
+  const wasMapExpandedRef = useRef(false);
   const [mapLoading, setMapLoading] = useState(false);
   const requestGateRef = useRef(null);
   if (!requestGateRef.current) requestGateRef.current = createRequestGate();
@@ -563,7 +568,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [mapRevision, setMapRevision] = useState(0);
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
-  const publicTransportMapContainerRef = useRef(null);
   const mapRuntimeRef = useRef({
     sdkPromise: null,
     loadedKey: "",
@@ -578,6 +582,37 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     busScope: null,
   });
   useEffect(() => () => clearBusStopOverlays(mapRuntimeRef), []);
+
+  useEffect(() => {
+    const restoreFocus = mapExpanded || wasMapExpandedRef.current;
+    wasMapExpandedRef.current = mapExpanded;
+    const frame = window.requestAnimationFrame(() => {
+      const runtime = mapRuntimeRef.current;
+      runtime.map?.relayout();
+      if (runtime.map && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
+      if (restoreFocus) mapExpandButtonRef.current?.focus({ preventScroll: true });
+    });
+    if (!mapExpanded) return () => window.cancelAnimationFrame(frame);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event) => { if (event.key === "Escape") setMapExpanded(false); };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mapExpanded]);
+
+  useEffect(() => {
+    let frame;
+    const observer = new ResizeObserver(() => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => mapRuntimeRef.current.map?.relayout());
+    });
+    if (mapContainerRef.current) observer.observe(mapContainerRef.current);
+    return () => { observer.disconnect(); window.cancelAnimationFrame(frame); };
+  }, []);
 
   useEffect(() => {
     try {
@@ -682,9 +717,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     runtime.busStopLayer = createBusStopLayer({
       map: runtime.map, maps: window.kakao.maps, stops: busStops, bounds: runtime.busScope,
       onSelect: setSelectedBusStop,
+      showRouteLabels: mapExpanded && showBusRouteLabels,
     });
     return () => clearBusStopOverlays(mapRuntimeRef);
-  }, [busStops, showBusStopsOnMap, mapRevision]);
+  }, [busStops, showBusStopsOnMap, mapRevision, mapExpanded, showBusRouteLabels]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1499,11 +1535,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     return createBusRouteTableRows(stations);
   }
 
-  async function copyPublicTransportTables() {
-    const rows = [
+  function publicTransportExportRows(kind = "bus") {
+    if (kind === "bike") return [
       ["따릉이 대여소"],
+      ["자료출처", publicTransportResult.source],
       ...publicBikeTableRows(bikeStations),
-      [],
+    ];
+    return [
       ["버스정류장"],
       ["버스 자료출처", publicTransportResult.busSource, "자료 기준일", publicTransportResult.busSourceDate],
       ...busStopTableRows(busStops),
@@ -1511,32 +1549,26 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ["정류장별 경유 버스노선"],
       ...busRouteTableRows(busStops),
     ];
-    await window.navigator.clipboard.writeText(toClipboardText(rows));
-    setStatusText("대중교통/교통시설 표를 클립보드에 복사했습니다.");
   }
 
-  function downloadPublicTransportCsv() {
-    const rows = [
-      ["따릉이 대여소"],
-      ...publicBikeTableRows(bikeStations),
-      [],
-      ["버스정류장"],
-      ["버스 자료출처", publicTransportResult.busSource, "자료 기준일", publicTransportResult.busSourceDate],
-      ...busStopTableRows(busStops),
-      [],
-      ["정류장별 경유 버스노선"],
-      ...busRouteTableRows(busStops),
-    ];
+  async function copyPublicTransportTables(kind = "bus") {
+    const rows = publicTransportExportRows(kind);
+    await window.navigator.clipboard.writeText(toClipboardText(rows));
+    setStatusText(`${kind === "bike" ? "따릉이" : "버스"} 표를 클립보드에 복사했습니다.`);
+  }
+
+  function downloadPublicTransportCsv(kind = "bus") {
+    const rows = publicTransportExportRows(kind);
     const blob = new Blob([`\uFEFF${toCsvText(rows)}`], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `TIA_STEP5_대중교통시설_${Date.now()}.csv`;
+    link.download = `TIA_${kind === "bike" ? "STEP6_따릉이" : "STEP5_버스"}_${Date.now()}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    setStatusText("대중교통/교통시설 CSV 파일을 내려받았습니다.");
+    setStatusText(`${kind === "bike" ? "따릉이" : "버스"} CSV 파일을 내려받았습니다.`);
   }
 
   function addSurveyRecommendation(recommendation) {
@@ -2018,7 +2050,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   return (
-    <main className={`app-shell${embedded ? " embedded-shell" : ""}${mapCollapsed ? " map-collapsed" : ""}`}>
+    <main className={`app-shell${embedded ? " embedded-shell" : ""}${mapCollapsed ? " map-collapsed" : ""}${mapExpanded ? " map-expanded" : ""}`}>
       <section className="hero-card">
         <div className="hero-main">
           <p className="eyebrow">TIA Research Builder</p>
@@ -2053,7 +2085,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       <section className="panel project-panel">
         <div className="map-card project-map-card">
           <div className="map-header">
-            <button type="button" className="ghost" aria-expanded={!mapCollapsed} aria-controls="scope-map" onClick={() => {
+            <button type="button" className="ghost" hidden={mapExpanded} aria-expanded={!mapCollapsed} aria-controls="scope-map" onClick={() => {
               setMapCollapsed((current) => !current);
               window.setTimeout(() => {
                 const runtime = mapRuntimeRef.current;
@@ -2061,6 +2093,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 if (runtime.map && runtime.rectangle && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
               }, 100);
             }}>{mapCollapsed ? "지도 펼치기" : "지도 접기 / 표 넓게 보기"}</button>
+            <button ref={mapExpandButtonRef} type="button" className="secondary map-expand-button" aria-expanded={mapExpanded} aria-controls="scope-map" onClick={() => {
+              setMapCollapsed(false);
+              setMapExpanded((current) => !current);
+            }}>{mapExpanded ? "기본 화면으로" : "지도 크게 보기"}</button>
             <label className="checkbox-label map-toggle-control">
               <input
                 type="checkbox"
@@ -2075,6 +2111,19 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             </label>
             <h3>카카오 지도</h3>
           </div>
+          {mapExpanded ? (
+            <div className="expanded-map-tools">
+              <label className="checkbox-label">
+                <input type="checkbox" checked={showBusRouteLabels} disabled={!showBusStopsOnMap} onChange={(event) => setShowBusRouteLabels(event.target.checked)} />
+                <span>버스번호·종류 라벨 표시</span>
+              </label>
+              <button type="button" className="ghost" onClick={() => {
+                const runtime = mapRuntimeRef.current;
+                if (runtime.map && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
+              }}>조사 범위 맞추기</button>
+              <p>버스 종류는 원자료에 있는 경우만 표시합니다. 현재 서울시 파일의 종류 값은 미제공입니다. 라벨이 겹치면 지도를 확대해 주세요.</p>
+            </div>
+          ) : null}
           <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
           <div id="selected-bus-stop-info" aria-live="polite">
             {selectedBusDetails ? (
@@ -2086,6 +2135,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 <dl>
                   <dt>정류장번호</dt><dd>{selectedBusDetails.number}</dd>
                   <dt>경유 버스</dt><dd>{selectedBusDetails.routes}</dd>
+                  <dt>번호·종류</dt><dd>{selectedBusDetails.routeLabels.join(", ") || "노선 정보 미제공"}</dd>
                   <dt>사업지와 거리</dt><dd>{selectedBusDetails.distance}</dd>
                 </dl>
                 <p>서울시 공식 파일{selectedBusDetails.sourceDate ? ` · ${selectedBusDetails.sourceDate} 기준` : ""} · 실시간 운행정보 아님</p>
@@ -2097,9 +2147,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       </section>
 
       <section className="step-nav-panel" aria-label="조사 단계 목차">
-        <p className="investigation-progress" role="status">
-          지도·가로망: {mapLoading ? "조사 중" : "대기 / 완료"} · 통계: {verification?.status === "LOADING" ? "조회 중" : verification?.status === "SUCCESS" ? "완료" : verification?.status === "PARTIAL" ? "일부 누락" : "대기 / 확인 필요"} · 주변사업: {developmentResult.loading ? "조사 중" : developmentResult.complete ? "완료" : "대기 / 확인 필요"} · 대중교통: {publicTransportResult.loading ? "조회 중" : publicTransportResult.searched ? "결과 확인" : "대기"}
-        </p>
         <div className="step-nav-header">
           <p className="eyebrow">Step Index</p>
           <h2>목차</h2>
@@ -2110,6 +2157,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               key={item.step}
               type="button"
               className={activeStep === item.step ? "active" : ""}
+              aria-pressed={activeStep === item.step}
               onClick={() => setActiveStep(item.step)}
             >
               <span>{`Step.${item.step}`}</span>
@@ -2117,6 +2165,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             </button>
           ))}
         </div>
+        <p className="investigation-progress" role="status">
+          지도·가로망: {mapLoading ? "조사 중" : "대기 / 완료"} · 통계: {verification?.status === "LOADING" ? "조회 중" : verification?.status === "SUCCESS" ? "완료" : verification?.status === "PARTIAL" ? "일부 누락" : "대기 / 확인 필요"} · 주변사업: {developmentResult.loading ? "조사 중" : developmentResult.complete ? "완료" : "대기 / 확인 필요"} · 대중교통: {publicTransportResult.loading ? "조회 중" : publicTransportResult.searched ? "결과 확인" : "대기"}
+        </p>
       </section>
 
       <section className={`panel step-section ${shouldShowStep(1) ? "" : "is-hidden"}`}>
@@ -2619,39 +2670,36 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 5</p>
-            <h2>대중교통/교통시설 현황</h2>
+            <h2>버스·지하철 현황</h2>
           </div>
           <div className="panel-header-actions">
             <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading}>
-              {publicTransportResult.loading ? "조회 중" : "대중교통 조회"}
+              {publicTransportResult.loading ? "조회 중" : "버스 조회"}
             </button>
-            <button type="button" className="secondary" onClick={copyPublicTransportTables} disabled={!bikeStations.length && !busStops.length}>표 복사</button>
-            <button type="button" className="secondary" onClick={downloadPublicTransportCsv} disabled={!bikeStations.length && !busStops.length}>CSV 다운로드</button>
+            <button type="button" className="secondary" onClick={() => copyPublicTransportTables("bus")} disabled={!busStops.length}>표 복사</button>
+            <button type="button" className="secondary" onClick={() => downloadPublicTransportCsv("bus")} disabled={!busStops.length}>CSV 다운로드</button>
           </div>
         </div>
 
         <div className="scope-linked-note">
           <strong>조사 기준</strong>
-          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사 범위를 사용합니다. 1차 버전은 서울 주소지의 따릉이 대여소와 버스정류장을 자동 조회합니다.</span>
+          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사 범위를 사용합니다. 현재 서울 버스정류장을 자동 조회하며 지하철 조사는 준비 중입니다.</span>
         </div>
 
         <div className="verification-card">
           <div>
             <p className="eyebrow">Public Transport Facilities</p>
-            <h3>범위 내 교통시설 자동 정리</h3>
+            <h3>범위 내 버스정류장 자동 정리</h3>
           </div>
           <p>
-            {publicTransportResult.error
-              ? publicTransportResult.error
+            {publicTransportResult.loading ? "교통시설 조회 중입니다." : publicTransportResult.busError
+              ? publicTransportResult.busError
               : publicTransportResult.searched
-                ? `조사 범위 안의 따릉이 대여소 ${formatNumber(publicTransportResult.summary?.withinScopeCount || 0)}개와 버스정류장 ${formatNumber(publicTransportResult.busSummary?.returnedCount || 0)}개를 정리했습니다.`
-                : "대중교통 조회를 누르면 따릉이 대여소와 서울 버스정류장, 정류장별 경유 버스노선을 표로 정리합니다."}
-            {publicTransportResult.busError ? ` 버스정류장: ${publicTransportResult.busError}` : ""}
+                ? publicTransportResult.busSummary ? `조사 범위 안의 버스정류장 ${formatNumber(publicTransportResult.busSummary.returnedCount)}개를 정리했습니다.` : publicTransportResult.error || "버스 조회 결과를 확인하지 못했습니다."
+                : "버스 조회를 누르면 서울 버스정류장과 정류장별 경유 버스노선을 표로 정리합니다."}
           </p>
           <p className="verification-source">
-            원자료: {publicTransportResult.source || "서울특별시_공공자전거 대여소 정보(25.12월 기준)"}
-            {publicTransportResult.sourceUrl ? ` / ${publicTransportResult.sourceUrl}` : ""}
-            {publicTransportResult.busSource ? ` / ${publicTransportResult.busSource}` : ""}
+            원자료: {publicTransportResult.busSource || "서울시 버스정류소 위치정보 · 버스노선별 정류소정보"}
             {publicTransportResult.busSourceDate ? ` / 버스 자료 기준일: ${publicTransportResult.busSourceDate} (실시간 자료 아님)` : ""}
             {publicTransportResult.busFetchedAt ? ` / 버스 조회 시각: ${publicTransportResult.busFetchedAt} (UTC)` : ""}
           </p>
@@ -2662,64 +2710,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <p className="verification-source">범위 안 정류장 {publicTransportResult.busSummary.withinScopeCount}개 중 거리순 {publicTransportResult.busSummary.returnedCount}개를 표시합니다.</p>
           ) : null}
         </div>
-
-        <label className="checkbox-label map-toggle-control">
-          <input
-            type="checkbox"
-            checked={showBikeStationsOnMap}
-            onChange={(event) => setShowBikeStationsOnMap(event.target.checked)}
-          />
-          <span>좌측 카카오지도에 따릉이 위치 표시</span>
-        </label>
-
-        <div className="map-card public-transport-map-card">
-          <div className="map-header">
-            <strong>따릉이 위치 지도</strong>
-            <p className="chart-caption">
-              {bikeStations.length
-                ? `상단 주소와 조사 범위 기준으로 따릉이 대여소 ${formatNumber(bikeStations.length)}개를 파란색 점으로 표시합니다.`
-                : "조사 시작 또는 따릉이 조회 후 범위 내 대여소를 지도에 표시합니다."}
-            </p>
-          </div>
-          <div ref={publicTransportMapContainerRef} className="map-view public-transport-map-view" aria-label="따릉이 대여소 위치 지도" />
-        </div>
-
-        <section className="subpanel">
-          <div className="subpanel-header">
-            <h3>따릉이 대여소</h3>
-            <p className="subpanel-source">서울특별시 공공자전거 대여소 마스터 기준 / 거리순</p>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table public-transport-table">
-              <thead>
-                <tr>
-                  <th>대여소번호</th>
-                  <th>대여소명</th>
-                  <th>주소 또는 위치</th>
-                  <th>거치대수</th>
-                  <th>거리</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bikeStations.length ? bikeStations.map((station) => (
-                  <tr key={station.id || `${station.stationNumber}-${station.stationName}`}>
-                    <td>{station.stationNumber || station.id || "-"}</td>
-                    <td>{station.stationName || "-"}</td>
-                    <td>{station.location || "-"}</td>
-                    <td>{formatOptionalNumber(station.rackCount)}</td>
-                    <td>{formatFacilityDistance(station)}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={5} className="empty-cell">
-                      {publicTransportResult.searched ? "조사 범위 안에서 표시할 따릉이 대여소가 없습니다." : "조회 전입니다. 서울 주소지를 입력한 뒤 따릉이 조회를 눌러 주세요."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
 
         <section className="subpanel">
           <div className="subpanel-header">
@@ -2749,7 +2739,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 )) : (
                   <tr>
                     <td colSpan={5} className="empty-cell">
-                      {publicTransportResult.searched ? (publicTransportResult.busError || "조사 범위 안에서 표시할 버스정류장이 없습니다.") : "조회 전입니다. 서울 주소지를 입력한 뒤 대중교통 조회를 눌러 주세요."}
+                      {publicTransportResult.loading ? "조회 중입니다." : publicTransportResult.searched ? (publicTransportResult.busError || (!publicTransportResult.busSummary && publicTransportResult.error) || "조사 범위 안에서 표시할 버스정류장이 없습니다.") : "조회 전입니다. 서울 주소지를 입력한 뒤 버스 조회를 눌러 주세요."}
                     </td>
                   </tr>
                 )}
@@ -2799,6 +2789,50 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 6</p>
+            <h2>따릉이 현황</h2>
+          </div>
+          <div className="panel-header-actions">
+            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading}>{publicTransportResult.loading ? "조회 중" : "따릉이 조회"}</button>
+            <button type="button" className="secondary" onClick={() => copyPublicTransportTables("bike")} disabled={!bikeStations.length}>표 복사</button>
+            <button type="button" className="secondary" onClick={() => downloadPublicTransportCsv("bike")} disabled={!bikeStations.length}>CSV 다운로드</button>
+          </div>
+        </div>
+        <div className="scope-linked-note">
+          <strong>조사 기준</strong>
+          <span>상단 주소와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 범위 안의 서울 따릉이 대여소를 조회합니다. 지도 표시 여부는 지도 상단에서 선택합니다.</span>
+        </div>
+        <div className="verification-card">
+          <p>{publicTransportResult.loading ? "교통시설 조회 중입니다." : publicTransportResult.error || (publicTransportResult.searched ? `따릉이 대여소 ${formatNumber(bikeStations.length)}개를 확인했습니다.` : "조사 시작 또는 따릉이 조회를 눌러 주세요.")}</p>
+          <p className="verification-source">원자료: {publicTransportResult.source || "서울특별시_공공자전거 대여소 정보(25.12월 기준)"}</p>
+        </div>
+        <section className="subpanel">
+          <div className="subpanel-header">
+            <h3>따릉이 대여소</h3>
+            <p className="subpanel-source">서울특별시 공공자전거 대여소 마스터 기준 / 거리순</p>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table public-transport-table">
+              <thead><tr><th>대여소번호</th><th>대여소명</th><th>주소 또는 위치</th><th>거치대수</th><th>거리</th></tr></thead>
+              <tbody>
+                {bikeStations.length ? bikeStations.map((station) => (
+                  <tr key={station.id || `${station.stationNumber}-${station.stationName}`}>
+                    <td>{station.stationNumber || station.id || "-"}</td>
+                    <td>{station.stationName || "-"}</td>
+                    <td>{station.location || "-"}</td>
+                    <td>{formatOptionalNumber(station.rackCount)}</td>
+                    <td>{formatFacilityDistance(station)}</td>
+                  </tr>
+                )) : <tr><td colSpan={5} className="empty-cell">{publicTransportResult.loading ? "조회 중입니다." : publicTransportResult.error || (publicTransportResult.searched ? "조사 범위 안에서 표시할 따릉이 대여소가 없습니다." : "서울 주소지를 입력한 뒤 따릉이 조회를 눌러 주세요.")}</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section className={`panel step-section ${shouldShowStep(7) ? "" : "is-hidden"}`}>
+        <div className="panel-header">
+          <div>
+            <p className="eyebrow">Step 7</p>
             <h2>교통관련 계획</h2>
           </div>
         </div>

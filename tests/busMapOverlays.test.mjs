@@ -91,6 +91,51 @@ test("map-wide cleanup also removes buses and scope, preserving unrelated runtim
   assert.equal(removed, true);
   assert.equal(runtime.current.busScope, null);
   assert.equal(runtime.current.map, "keep");
-  assert.match(component, /\[busStops, showBusStopsOnMap, mapRevision\]/);
+  assert.match(component, /\[busStops, showBusStopsOnMap, mapRevision, mapExpanded, showBusRouteLabels\]/);
   assert.match(component, /setMapRevision\(\(revision\) => revision \+ 1\)/);
+});
+
+test("route types are displayed only when supplied, never inferred from route numbers", () => {
+  const details = busStopMapDetails({ ...stop, routes: [
+    { routeName: "470", routeType: "간선" },
+    { routeName: "N37", routeType: "수동 확인 필요" },
+    { routeName: "서초08" },
+  ] });
+  assert.deepEqual(details.routeLabels, ["470 (간선)", "N37 (종류 미제공)", "서초08 (종류 미제공)"]);
+});
+
+test("route labels are opt-in, use safe text and are removed with their markers", () => {
+  const f = fixture();
+  const options = { ...f, map: {}, stops: [stop], bounds, onSelect: () => {} };
+  const basic = createBusStopLayer(options);
+  assert.equal(f.overlays[0].content.children.length, 2);
+  basic.destroy();
+  const labeled = createBusStopLayer({ ...options, showRouteLabels: true });
+  const label = f.overlays[1].content.children[2];
+  assert.equal(label.className, "bus-route-map-label");
+  assert.equal(label.children[0].textContent, "서초구청");
+  assert.match(label.children[1].textContent, /470 \(종류 미제공\)/);
+  assert.equal(label.children[1].innerHTML, undefined);
+  labeled.destroy();
+  assert.equal(f.overlays.filter((overlay) => overlay.map).length, 0);
+});
+
+test("bus and bicycle exports contain only the chosen step's data", () => {
+  const component = readFileSync(new URL("../components/TiaResearchBuilder.jsx", import.meta.url), "utf8");
+  const source = component.slice(component.indexOf('  function publicTransportExportRows('), component.indexOf('  async function copyPublicTransportTables('));
+  const context = vm.createContext({
+    publicTransportResult: { source: "bike source", busSource: "bus source", busSourceDate: "2026-09-30" },
+    bikeStations: ["bike"], busStops: ["bus"],
+    publicBikeTableRows: (rows) => rows.map((row) => [row]),
+    busStopTableRows: (rows) => rows.map((row) => [row]),
+    busRouteTableRows: () => [["route"]],
+  });
+  vm.runInContext(source, context);
+  const bike = JSON.stringify(context.publicTransportExportRows("bike"));
+  const bus = JSON.stringify(context.publicTransportExportRows("bus"));
+  assert.match(bike, /bike source/);
+  assert.doesNotMatch(bike, /bus source|route/);
+  assert.match(bus, /bus source/);
+  assert.match(bus, /route/);
+  assert.doesNotMatch(bus, /bike source/);
 });
