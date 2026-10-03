@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { discoverBusFile, buildBusSnapshot, collectBusSnapshot, refreshBusSnapshot, BusRefreshError } from "../lib/seoulBusRefresh.js";
-import { selectBusSnapshot, getBusSnapshot } from "../lib/seoulBusStore.js";
+import { selectBusSnapshot, getBusSnapshot, isBusStoreConfigured } from "../lib/seoulBusStore.js";
 import { busRefreshStatusText } from "../lib/seoulBusRefreshStatus.js";
 import { searchSeoulBusSnapshot } from "../lib/seoulBusSnapshot.js";
 import XLSX from "xlsx";
@@ -122,10 +122,14 @@ test("stored snapshots drive both scope searches and provenance, corrupt snapsho
 });
 
 test("unconfigured store serves the bundled file and cron is fail-closed without its secret", async () => {
-  const names=["DATABASE_URL","POSTGRES_URL","CRON_SECRET"], saved=names.map(n=>process.env[n]);
+  const names=["SEOUL_BUS_DATABASE_URL","SEOUL_BUS_POSTGRES_URL","DATABASE_URL","POSTGRES_URL","CRON_SECRET"], saved=names.map(n=>process.env[n]);
   names.forEach(n=>delete process.env[n]);
   try {
     assert.equal((await getBusSnapshot()).refresh.status,"NOT_CONFIGURED");
+    process.env.SEOUL_BUS_DATABASE_URL="postgresql://synthetic.invalid/bus";
+    assert.equal(isBusStoreConfigured(),true);
+    assert.equal(process.env.DATABASE_URL,undefined);
+    delete process.env.SEOUL_BUS_DATABASE_URL;
     const require=createRequire(import.meta.url);
     let src=readFileSync(new URL("../app/api/cron/seoul-bus-sync/route.js",import.meta.url),"utf8");
     src=src.replace('"next/server"',JSON.stringify(pathToFileURL(require.resolve("next/server.js")).href));
