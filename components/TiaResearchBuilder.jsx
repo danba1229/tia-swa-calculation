@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import seoulTopisPoints from "../app/seoul-topis-points.json";
 import { BUS_ROUTE_COLUMNS, createBusRouteTableRows } from "../lib/seoulBusTable";
+import { nullableArea, areaStats, createRequestGate } from "../lib/researchIntegrity";
+import { summarizeProjects } from "../lib/tiaScope";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
@@ -192,8 +194,8 @@ function toNullableNumber(value) {
 }
 
 function getScopeDimensions(basics) {
-  const width = toNumber(basics?.rectWidth) || Number(DEFAULT_SCOPE_WIDTH);
-  const height = toNumber(basics?.rectHeight) || Number(DEFAULT_SCOPE_HEIGHT);
+  const width = toNumber(basics?.rectWidth ?? DEFAULT_SCOPE_WIDTH);
+  const height = toNumber(basics?.rectHeight ?? DEFAULT_SCOPE_HEIGHT);
   return { width, height };
 }
 
@@ -247,8 +249,8 @@ function formatOptionalNumber(value) {
 }
 
 function formatSquareKilometers(value) {
+  if (nullableArea(value) === null) return "-";
   const squareKilometers = toNumber(value) / 1000000;
-  if (!Number.isFinite(squareKilometers) || squareKilometers <= 0) return "-";
   return new Intl.NumberFormat("ko-KR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -256,9 +258,10 @@ function formatSquareKilometers(value) {
 }
 
 function formatPercent(value) {
+  if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
-  if (!Number.isFinite(num) || num <= 0) return "-";
-  return `${num.toFixed(1)}%`;
+  if (!Number.isFinite(num) || num < 0) return "-";
+  return `${num.toFixed(2)}%`;
 }
 
 function formatDistance(value) {
@@ -359,13 +362,14 @@ function buildAutoSurveyPoints(address, topisCandidates, gyeonggiCandidates, sur
   }));
 }
 
-function buildStats(entries) {
-  const total = entries.reduce((sum, entry) => sum + entry.value, 0);
+function buildStats(inputEntries, sourceTotal) {
+  const stats = areaStats(inputEntries, sourceTotal);
+  const { entries, total } = stats;
   const ratioMap = new Map();
   const rankMap = new Map();
 
   entries.forEach((entry) => {
-    ratioMap.set(entry.key, total > 0 ? (entry.value / total) * 100 : 0);
+    ratioMap.set(entry.key, stats.consistent && total > 0 && entry.value !== null ? (entry.value / total) * 100 : null);
   });
 
   entries
@@ -376,23 +380,23 @@ function buildStats(entries) {
       rankMap.set(entry.key, index + 1);
     });
 
-  return { entries, total, ratioMap, rankMap };
+  return { ...stats, ratioMap, rankMap };
 }
 
 function computeLanduseStats(form) {
   return buildStats(LANDUSE_CATEGORIES.map((category) => ({
     key: category,
     label: category,
-    value: toNumber(form.landuseAreas[category]),
-  })));
+    value: nullableArea(form.landuseAreas[category]),
+  })), form.landuseSourceTotal);
 }
 
 function computeZoningStats(form) {
   return buildStats(form.zoningRows.map((row, index) => ({
     key: index,
     label: safe(row.name) || `용도지역 ${index + 1}`,
-    value: toNumber(row.area),
-  })));
+    value: nullableArea(row.area),
+  })), form.zoningSourceTotal);
 }
 
 function zoningReportLabel(name) {
@@ -404,12 +408,12 @@ function buildLanduseReportRows(form, stats) {
   const source = safe(form.landuseSource) || "KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구";
   const year = form.landuseBaseYear || form.statisticsYear || DEFAULT_STATISTICS_YEAR;
   const rows = LANDUSE_CATEGORIES.map((category) => {
-    const area = toNumber(form.landuseAreas[category]);
+    const area = nullableArea(form.landuseAreas[category]);
     return {
       key: category,
       label: category === "기타" ? "기타 계" : category,
       area,
-      ratio: stats.total > 0 ? (area / stats.total) * 100 : 0,
+      ratio: stats.consistent && stats.total > 0 && area !== null ? (area / stats.total) * 100 : null,
       rawItem: LANDUSE_RAW_ITEMS[category] || category,
       source,
       year,
@@ -421,7 +425,7 @@ function buildLanduseReportRows(form, stats) {
       key: "합계",
       label: "합계",
       area: stats.total,
-      ratio: stats.total > 0 ? 100 : 0,
+      ratio: stats.total > 0 ? 100 : null,
       rawItem: "전체 계",
       source,
       year,
@@ -434,13 +438,13 @@ function buildZoningReportRows(form, stats) {
   const source = safe(form.zoningSource) || "KOSIS 도시계획현황, 용도지역(시군구)";
   const year = form.zoningBaseYear || form.statisticsYear || DEFAULT_STATISTICS_YEAR;
   const rows = form.zoningRows.map((row, index) => {
-    const area = toNumber(row.area);
+    const area = nullableArea(row.area);
     const rawItem = safe(row.rawItems) || safe(row.name) || `용도지역 ${index + 1}`;
     return {
       key: `${index}-${rawItem}`,
       label: zoningReportLabel(row.name),
       area,
-      ratio: stats.total > 0 ? (area / stats.total) * 100 : 0,
+      ratio: stats.consistent && stats.total > 0 && area !== null ? (area / stats.total) * 100 : null,
       rawItem,
       source,
       year,
@@ -452,7 +456,7 @@ function buildZoningReportRows(form, stats) {
       key: "합계",
       label: "합계",
       area: stats.total,
-      ratio: stats.total > 0 ? 100 : 0,
+      ratio: stats.total > 0 ? 100 : null,
       rawItem: "전체 계",
       source,
       year,
@@ -498,12 +502,14 @@ function pieBackground(slices) {
   if (!slices.length) {
     return "radial-gradient(circle at center, rgba(255,255,255,0.95) 0 34%, transparent 35%), conic-gradient(#d9d4cc 0turn 1turn)";
   }
-  return `radial-gradient(circle at center, rgba(255,255,255,0.95) 0 34%, transparent 35%), conic-gradient(${slices.map((slice) => `${slice.color} ${slice.start}turn ${slice.end}turn`).join(", ")})`;
+  return `radial-gradient(circle at center, rgba(255,255,255,0.95) 0 34%, transparent 35%), conic-gradient(${slices.map((slice) => `${slice.color} ${slice.start}turn ${slice.end}turn`).join(", ")}, #d9d4cc ${slices[slices.length - 1].end}turn 1turn)`;
 }
 
 function mergeLoadedState(parsed) {
   const base = createBlankState();
   const loadedBasics = { ...base.basics, ...(parsed.basics || {}) };
+  const legacyStatistics = Boolean(parsed.statisticsDataKey) && parsed.researchSchemaVersion !== 2;
+  const legacyDevelopment = parsed.developmentResult?.results?.some((result) => typeof result.withinScope !== "boolean");
   return {
     ...base,
     ...parsed,
@@ -526,12 +532,24 @@ function mergeLoadedState(parsed) {
     publicTransportResult: { ...base.publicTransportResult, ...(parsed.publicTransportResult || {}), loading: false },
     trafficPlans: Array.isArray(parsed.trafficPlans) && parsed.trafficPlans.length ? parsed.trafficPlans : base.trafficPlans,
     constructionPlans: Array.isArray(parsed.constructionPlans) && parsed.constructionPlans.length ? parsed.constructionPlans : base.constructionPlans,
+    ...(legacyStatistics ? {
+      statisticsVerification: { status: "REFRESH_REQUIRED", message: "이전에 저장된 자동 통계값입니다. 누락값 처리 변경을 반영하려면 KOSIS 자료를 다시 추출해 주세요." },
+      reportStatus: "REFRESH_REQUIRED",
+    } : {}),
+    ...(legacyDevelopment ? {
+      developmentResult: { ...base.developmentResult, error: "이전 검색은 원형 범위 기준입니다. 사각형 범위를 적용하려면 다시 검색해 주세요." },
+    } : {}),
   };
 }
 
 export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [form, setForm] = useState(createBlankState);
   const [activeStep, setActiveStep] = useState(0);
+  const [mapCollapsed, setMapCollapsed] = useState(false);
+  const [mapLoading, setMapLoading] = useState(false);
+  const requestGateRef = useRef(null);
+  if (!requestGateRef.current) requestGateRef.current = createRequestGate();
+  useEffect(() => () => requestGateRef.current.cancel(), []);
   const [statusText, setStatusText] = useState("초기 화면을 준비하는 중입니다.");
   const [mapStatus, setMapStatus] = useState('배포 환경에 카카오 지도 키를 설정한 뒤 "조사 시작" 버튼을 눌러 주세요.');
   const [topisCandidates, setTopisCandidates] = useState([]);
@@ -608,20 +626,18 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const autoSurveyPoints = buildAutoSurveyPoints(form.basics.siteAddress, topisCandidates, gyeonggiCandidates, surveyRecommendations);
   const selectedSurveyPoint = selectSurveyPoint(autoSurveyPoints);
   const roadNameSignature = form.roads.map((row) => safe(row.name)).filter(Boolean).join("|");
-  const landuseSlices = buildPieSlices(landuseStats.entries, landuseStats.total);
-  const zoningSlices = buildPieSlices(zoningStats.entries, zoningStats.total);
+  const landuseSlices = landuseStats.consistent ? buildPieSlices(landuseStats.entries, landuseStats.total) : [];
+  const zoningSlices = zoningStats.consistent ? buildPieSlices(zoningStats.entries, zoningStats.total) : [];
   const landuseReportRows = buildLanduseReportRows(form, landuseStats);
   const zoningReportRows = buildZoningReportRows(form, zoningStats);
   const verification = form.statisticsVerification;
   const developmentSearch = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
   const developmentResult = { ...createBlankDevelopmentResult(), ...(form.developmentResult || {}) };
-  const developmentRadius = getDevelopmentRadiusMeters(form.basics);
   const developmentAdmin = deriveDevelopmentAdmin(form.basics.siteAddress);
   const developmentResults = Array.isArray(developmentResult.results) ? developmentResult.results : [];
   const displayedDevelopmentResults = developmentResults.filter((result) => {
     const statusMatches = developmentSearch.statusFilter === "전체" || result.reflectionStatus === developmentSearch.statusFilter;
-    const hasUsableDistance = Number.isFinite(Number(result.distanceMeters)) && Number(result.distanceMeters) <= developmentRadius;
-    const canShow = developmentSearch.includeFailed ? true : result.geocodeStatus === "success" && hasUsableDistance;
+    const canShow = result.withinScope === true || (developmentSearch.includeFailed && result.geocodeStatus === "failed");
     return statusMatches && canShow;
   });
   const publicTransportResult = { ...createBlankPublicTransportResult(), ...(form.publicTransportResult || {}) };
@@ -915,6 +931,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   ]);
 
   function updateBasics(field, value) {
+    if (["siteAddress", "rectWidth", "rectHeight"].includes(field)) {
+      requestGateRef.current.cancel();
+      setMapLoading(false);
+      clearMapOverlays(mapRuntimeRef);
+    }
     setForm((current) => {
       const next = {
         ...current,
@@ -933,17 +954,24 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         if (sourcePatch.zoningSource && shouldUpdateLocalStatisticsSource(current.zoningSource)) {
           next.zoningSource = sourcePatch.zoningSource;
         }
-        if (current.statisticsDataKey) {
-          next.statisticsDataKey = "";
-          next.statisticsVerification = null;
-          next.landuseAreas = createBlankLanduseAreas();
-          next.zoningRows = ZONING_DEFAULTS.map((name) => createZoningRow({ name }));
-        }
+        next.landuseSourceTotal = null;
+        next.zoningSourceTotal = null;
+        next.landuseBaseYear = "";
+        next.zoningBaseYear = "";
+        next.reportStatus = "";
+        next.statisticsDataKey = "";
+        next.statisticsVerification = null;
+        next.landuseAreas = createBlankLanduseAreas();
+        next.zoningRows = ZONING_DEFAULTS.map((name) => createZoningRow({ name }));
       }
 
       if (field === "siteAddress" || field === "rectWidth" || field === "rectHeight") {
         next.developmentResult = createBlankDevelopmentResult();
         next.publicTransportResult = createBlankPublicTransportResult();
+        next.roads = [createRoadRow({ roadClass: "로" })];
+        if (next.statisticsVerification?.status === "LOADING") {
+          next.statisticsVerification = { status: "CANCELLED", message: "입력값 변경으로 조회를 취소했습니다. 다시 조회해 주세요." };
+        }
       }
 
       return next;
@@ -957,42 +985,48 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }
   }
   function updateListItem(listName, index, patch) {
+    if (listName === "zoningRows") requestGateRef.current.cancel("statistics");
     setForm((current) => ({
       ...current,
-      ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null } : {}),
+      ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null, zoningSourceTotal: null } : {}),
       [listName]: current[listName].map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)),
     }));
   }
 
   function addRow(listName, factory) {
+    if (listName === "zoningRows") requestGateRef.current.cancel("statistics");
     setForm((current) => ({
       ...current,
-      ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null } : {}),
+      ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null, zoningSourceTotal: null } : {}),
       [listName]: [...current[listName], factory()],
     }));
   }
 
   function removeRow(listName, index, factory) {
+    if (listName === "zoningRows") requestGateRef.current.cancel("statistics");
     setForm((current) => {
       const next = current[listName].filter((_, itemIndex) => itemIndex !== index);
       return {
         ...current,
-        ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null } : {}),
+        ...(listName === "zoningRows" ? { statisticsDataKey: "", statisticsVerification: null, zoningSourceTotal: null } : {}),
         [listName]: next.length ? next : [factory()],
       };
     });
   }
 
   function updateLanduseArea(category, value) {
+    requestGateRef.current.cancel("statistics");
     setForm((current) => ({
       ...current,
       statisticsDataKey: "",
       statisticsVerification: null,
+      landuseSourceTotal: null,
       landuseAreas: { ...current.landuseAreas, [category]: value },
     }));
   }
 
   function updateStatisticsYear(value) {
+    requestGateRef.current.cancel("statistics");
     const nextYear = value || DEFAULT_STATISTICS_YEAR;
     setForm((current) => ({
       ...current,
@@ -1002,6 +1036,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       reportStatus: "",
       landuseBaseYear: "",
       zoningBaseYear: "",
+      landuseSourceTotal: null,
+      zoningSourceTotal: null,
       ...(shouldUpdateLocalStatisticsSource(current.landuseSource) || shouldUpdateLocalStatisticsSource(current.zoningSource)
         ? buildLocalStatisticsSources(current.basics.siteAddress, nextYear)
         : {}),
@@ -1012,6 +1048,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   function updateDevelopmentSearch(patch) {
+    if (["startYear", "endYear", "projectType"].some((key) => key in patch)) {
+      requestGateRef.current.cancel("development");
+      setForm((current) => ({ ...current, developmentResult: createBlankDevelopmentResult() }));
+    }
     setForm((current) => ({
       ...current,
       developmentSearch: {
@@ -1028,6 +1068,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     return {
       siteAddress: safe(form.basics.siteAddress),
       radiusMeters: getDevelopmentRadiusMeters(form.basics),
+      ...getScopeDimensions(form.basics),
       startYear: toNumber(search.startYear) || "",
       endYear: toNumber(search.endYear) || "",
       sido: admin.sido,
@@ -1037,6 +1078,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   async function searchDevelopmentPlans() {
+    const request = requestGateRef.current.start("development");
     const payload = getDevelopmentPayload();
 
     if (!payload.siteAddress) {
@@ -1061,47 +1103,73 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       developmentResult: createBlankDevelopmentResult({ loading: true, searched: true }),
     }));
 
+    let accumulated = [];
     try {
-      const response = await fetch("/api/tia/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
+      let offset = 0;
+      let datasetId;
+      do {
+        const response = await fetch("/api/tia/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, offset, datasetId }),
+          signal: request.signal,
+        });
+        const result = await response.json();
+        if (!request.current()) return;
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "교통영향평가 API 호출 실패");
-      }
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || "교통영향평가 API 호출 실패");
+        }
 
-      setForm((current) => ({
-        ...current,
-        developmentResult: {
-          site: result.site,
-          summary: result.summary,
-          results: result.results || [],
-          noticeSearches: result.noticeSearches || [],
-          dataMode: result.dataMode || "",
-          dbConfigured: Boolean(result.dbConfigured),
-          searched: true,
-          loading: false,
-          error: "",
-        },
-      }));
-      setStatusText(`주변지역 개발계획 후보 ${formatNumber(result.summary?.withinRadiusCount || 0)}건을 반경 안에서 확인했습니다.`);
+        accumulated = [...accumulated, ...(result.results || [])].sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity));
+        const results = accumulated;
+        const summary = summarizeProjects(result.summary?.totalRawCount || 0, results);
+        const nextOffset = result.pagination?.nextOffset ?? null;
+        if (nextOffset !== null && nextOffset <= offset) throw new Error("후보사업 조회가 진행되지 않았습니다. 다시 검색해 주세요.");
+        offset = nextOffset;
+        datasetId = result.pagination?.datasetId;
+        const warnings = (result.debug?.apiErrors || []).filter(Boolean).join(" / ");
+        const complete = offset === null;
+        setForm((current) => request.current() ? ({
+          ...current,
+          developmentResult: {
+            site: result.site,
+            summary,
+            results,
+            progress: `${result.pagination?.processedCount ?? results.length} / ${result.pagination?.candidateCount ?? results.length}건 좌표 조사`,
+            complete,
+            warnings,
+            noticeSearches: result.noticeSearches || [],
+            dataMode: result.dataMode || "",
+            dbConfigured: Boolean(result.dbConfigured),
+            searched: true,
+            loading: !complete,
+            error: "",
+          },
+        }) : current);
+        setStatusText(complete
+          ? `수집된 후보 중 ${formatNumber(summary.withinRadiusCount)}건이 사각형 조사 범위 안에 있습니다.${warnings ? " 일부 출처 조회가 실패하여 전체 결과가 아닐 수 있습니다." : ""}`
+          : `주변사업 ${results.length}건 조사 중입니다. 아직 최종 결과가 아닙니다.`);
+      } while (offset !== null && request.current());
     } catch (error) {
+      if (!request.current()) return;
       console.error(error);
       setForm((current) => ({
         ...current,
-        developmentResult: createBlankDevelopmentResult({
+        developmentResult: {
+          ...current.developmentResult,
           searched: true,
-          error: error.message || "교통영향평가 API 호출 실패",
-        }),
+          loading: false,
+          complete: false,
+          error: `조사 미완료: ${error.message || "교통영향평가 API 호출 실패"}. 현재 결과만으로 주변사업 부재를 판단할 수 없습니다.`,
+        },
       }));
       setStatusText(error.message || "주변지역 개발계획 조회에 실패했습니다.");
     }
   }
 
   function formatDevelopmentDistance(result) {
+    if (result.distanceKm === null || result.distanceKm === undefined) return "거리계산 불가";
     const km = Number(result.distanceKm);
     if (!Number.isFinite(km)) return "거리계산 불가";
     return `${km.toFixed(2)}km`;
@@ -1117,11 +1185,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function developmentTableRows(results) {
     return [
-      ["번호", "사업명", "위치", "사업구분", "용도/시설", "규모", "사업기간", "심의결과", "사업지와 거리", "반영여부", "반영사유", "출처"],
+      ["번호", "사업명", "위치", "좌표 확인", "확인 주소", "사업구분", "용도/시설", "규모", "사업기간", "심의결과", "사업지와 거리", "반영여부", "반영사유", "출처"],
       ...results.map((result, index) => [
         index + 1,
         result.projectName || "-",
         result.location || "-",
+        developmentGeocodeText(result),
+        result.matchedAddress || "-",
         result.projectType || "-",
         result.facilityType || "-",
         developmentScaleText(result),
@@ -1133,6 +1203,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         result.source || "TIA_API",
       ]),
     ];
+  }
+
+  function developmentGeocodeText(result) {
+    const method = { ORIGINAL: "원문 주소", NORMALIZED: "주소 정리", PARCEL_FALLBACK: "지번 재검색" }[result.geocodeMethod];
+    const status = result.geocodeStatus === "success" ? `${method || "주소 조회"}: 상세 주소 일치` : result.geocodeMessage || "위치 미확인";
+    const attempts = (result.geocodeAttempts || []).map((attempt) => `${attempt.query}: ${attempt.message || attempt.code || "조회"}`).join(" / ");
+    return attempts ? `${status}\n검색 기록: ${attempts}` : status;
   }
 
   function toClipboardText(rows) {
@@ -1167,17 +1244,21 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   async function copyDevelopmentDraft() {
+    if (!developmentResult.complete || developmentResult.warnings) {
+      setStatusText("조사가 미완료되었거나 출처 오류가 있어 문장 초안을 확정할 수 없습니다.");
+      return;
+    }
     const summary = developmentResult.summary || {};
-    const radius = getDevelopmentRadiusMeters(form.basics);
     const reflect = toNumber(summary.reflectCount);
     const review = toNumber(summary.reviewCount);
     const reference = toNumber(summary.referenceCount);
-    const text = `사업지 주변 장래 개발계획을 검토한 결과, 검색반경 ${formatNumber(radius)}m 이내에서 교통영향평가 관련 사업 ${formatNumber(summary.withinRadiusCount || 0)}건이 확인되었다. 이 중 사업기간, 심의결과 및 위치정보 등을 고려하여 ${formatNumber(reflect)}건은 장래 교통수요 반영 여부를 검토하고, ${formatNumber(review + reference)}건은 참고자료로 검토하였다.`;
+    const { width, height } = getScopeDimensions(form.basics);
+    const text = `사업지 주변 장래 개발계획을 검토한 결과, 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m의 사각형 조사 범위에서 수집된 교통영향평가 관련 사업 ${formatNumber(summary.withinRadiusCount || 0)}건이 확인되었다. 이 중 사업기간, 심의결과 및 위치정보 등을 고려하여 ${formatNumber(reflect)}건은 장래 교통수요 반영 여부를 검토하고, ${formatNumber(review + reference)}건은 참고자료로 검토하였다. 수집자료 및 좌표변환 한계로 사업이 누락될 수 있어 원자료 확인이 필요하다.`;
     await window.navigator.clipboard.writeText(text);
     setStatusText("주변지역 개발계획 문장 초안을 클립보드에 복사했습니다.");
   }
 
-  async function resolveScopeCenter(centerOverride = null) {
+  async function resolveScopeCenter(centerOverride = null, request = null) {
     const overrideLat = Number(centerOverride?.lat);
     const overrideLng = Number(centerOverride?.lng);
 
@@ -1197,6 +1278,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address }),
+      signal: request?.signal,
     });
     const result = await response.json();
 
@@ -1211,7 +1293,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       throw new Error("주소 좌표 변환 결과가 올바르지 않습니다.");
     }
 
-    setForm((current) => ({
+    if (request && !request.current()) throw new DOMException("취소된 조사", "AbortError");
+    setForm((current) => request && !request.current() ? current : ({
       ...current,
       basics: {
         ...current.basics,
@@ -1224,6 +1307,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   async function searchPublicTransportFacilities(options = {}) {
+    const request = requestGateRef.current.start("transport");
     const address = safe(options.address ?? form.basics.siteAddress);
     const { width, height } = options.width && options.height
       ? { width: toNumber(options.width), height: toNumber(options.height) }
@@ -1273,7 +1357,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }));
 
     try {
-      const center = await resolveScopeCenter(options.center);
+      const center = await resolveScopeCenter(options.center, request);
+      if (!request.current()) return;
       const bounds = computeRectangleBounds(center.lat, center.lng, width, height);
       const requestBody = JSON.stringify({
         center,
@@ -1283,6 +1368,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       });
       const [bikeSettled, busSettled] = await Promise.allSettled([
         fetch("/api/seoul-bike", {
+          signal: request.signal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: requestBody,
@@ -1294,6 +1380,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           return result;
         }),
         fetch("/api/seoul-bus", {
+          signal: request.signal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: requestBody,
@@ -1306,6 +1393,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         }),
       ]);
 
+      if (!request.current()) return;
       const bikeResult = bikeSettled.status === "fulfilled" ? bikeSettled.value : null;
       const busResult = busSettled.status === "fulfilled" ? busSettled.value : null;
       const bikeError = bikeSettled.status === "rejected" ? bikeSettled.reason?.message || "따릉이 대여소 조회에 실패했습니다." : "";
@@ -1315,7 +1403,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         throw new Error([bikeError, busError].filter(Boolean).join(" / ") || "대중교통/교통시설 조회에 실패했습니다.");
       }
 
-      setForm((current) => ({
+      setForm((current) => request.current() ? ({
         ...current,
         publicTransportResult: {
           bikeStations: bikeResult?.stations || [],
@@ -1333,12 +1421,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           busFetchedAt: busResult?.fetchedAt || "",
           busSourceDate: busResult?.sourceDate || "",
         },
-      }));
+      }) : current);
 
       setStatusText(
         `조사 범위 안의 따릉이 ${formatNumber(bikeResult?.summary?.withinScopeCount || 0)}개, 버스정류장 ${formatNumber(busResult?.summary?.returnedCount || 0)}개를 확인했습니다.`,
       );
     } catch (error) {
+      if (!request.current()) return;
       console.error(error);
       setForm((current) => ({
         ...current,
@@ -1471,12 +1560,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     setStatusText(`${candidate.pointCode} 지점번호 후보를 사전조사지점 표에 추가했습니다.`);
   }
 
-  async function fetchLocalStatistics(address) {
+  async function fetchLocalStatistics(address, request) {
     try {
       const response = await fetch("/api/local-statistics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address, year: form.statisticsYear || DEFAULT_STATISTICS_YEAR }),
+        signal: request.signal,
       });
       const payload = await response.json();
 
@@ -1484,7 +1574,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         throw new Error(payload.error || "KOSIS 자료를 추출하지 못했습니다.");
       }
 
-      const patch = {};
+      const patch = {
+        researchSchemaVersion: 2,
+        landuseAreas: createBlankLanduseAreas(),
+        zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
+        landuseSourceTotal: null,
+        zoningSourceTotal: null,
+        landuseBaseYear: "",
+        zoningBaseYear: "",
+        statisticsDataKey: "",
+      };
       const messages = [];
       if (payload.debug) {
         console.info("[TIA KOSIS extraction debug]", payload.debug);
@@ -1493,6 +1592,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       if (payload.landuse?.areas) {
         patch.landuseAreas = { ...createBlankLanduseAreas(), ...payload.landuse.areas };
+        patch.landuseSourceTotal = payload.landuse.total;
         patch.landuseSource = payload.landuse.source || "";
         patch.landuseBaseYear = payload.landuse.tableBaseYear || payload.landuse.year || "";
         patch.statisticsDataKey = `kosis-landuse:${payload.landuse.regionName || payload.target}:${payload.landuse.year || ""}`;
@@ -1501,6 +1601,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       if (Array.isArray(payload.zoning?.rows) && payload.zoning.rows.length) {
         patch.zoningRows = payload.zoning.rows.map((row) => createZoningRow(row));
+        patch.zoningSourceTotal = payload.zoning.total;
         patch.zoningSource = payload.zoning.source || "";
         patch.zoningBaseYear = payload.zoning.tableBaseYear || payload.zoning.year || "";
         patch.statisticsDataKey = patch.statisticsDataKey || `kosis-zoning:${payload.zoning.regionName || payload.target}:${payload.zoning.year || ""}`;
@@ -1543,6 +1644,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   async function refreshLocalStatisticsOnly() {
+    const request = requestGateRef.current.start("statistics");
     const address = safe(form.basics.siteAddress);
     if (!address) {
       setStatusText("KOSIS 자료를 조회하려면 먼저 주소지를 입력해 주세요.");
@@ -1569,11 +1671,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       },
     }));
 
-    const result = await fetchLocalStatistics(address);
-    setForm((current) => ({
+    const result = await fetchLocalStatistics(address, request);
+    if (!request.current()) return;
+    setForm((current) => request.current() ? ({
       ...current,
       ...result.patch,
-    }));
+    }) : current);
     setStatusText(result.message);
   }
 
@@ -1584,9 +1687,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ["조사년도", rows[0]?.year || form.statisticsYear || DEFAULT_STATISTICS_YEAR],
       [],
       ["항목", ...rows.map((row) => row.label)],
-      ["면적_m2", ...rows.map((row) => row.area || 0)],
-      ["면적_km2", ...rows.map((row) => Number(((row.area || 0) / 1000000).toFixed(2)))],
-      ["구성비_%", ...rows.map((row) => Number((row.ratio || 0).toFixed(2)))],
+      ["면적_m2", ...rows.map((row) => row.area)],
+      ["면적_km2", ...rows.map((row) => row.area === null ? null : Number((row.area / 1000000).toFixed(2)))],
+      ["구성비_%", ...rows.map((row) => row.ratio === null ? null : Number(row.ratio.toFixed(2)))],
       ["원자료항목", ...rows.map((row) => row.rawItem)],
     ];
   }
@@ -1596,7 +1699,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ["구분", "면적_m2", "구성비_%"],
       ...rows
         .filter((row) => !row.isTotal && row.area > 0)
-        .map((row) => [row.label, row.area, Number((row.ratio || 0).toFixed(2))]),
+        .map((row) => [row.label, row.area, row.ratio === null ? null : Number(row.ratio.toFixed(2))]),
     ];
   }
 
@@ -1642,7 +1745,24 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }
   }
 
+  async function startInvestigation() {
+    if (!safe(form.basics.siteAddress)) {
+      setStatusText("주소지를 먼저 입력해 주세요.");
+      return;
+    }
+    const { width, height } = getScopeDimensions(form.basics);
+    if (!(width >= 1 && height >= 1 && width <= 100000 && height <= 100000)) {
+      setStatusText("가로·세로 조사 범위는 1~100,000m로 입력해 주세요.");
+      return;
+    }
+    void refreshLocalStatisticsOnly();
+    void searchDevelopmentPlans();
+    void searchPublicTransportFacilities({ auto: true });
+    void renderScopeMap();
+  }
+
   async function renderScopeMap() {
+    const request = requestGateRef.current.start("map");
     const address = safe(form.basics.siteAddress);
     const { width, height } = getScopeDimensions(form.basics);
 
@@ -1665,11 +1785,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }
 
     try {
+      setMapLoading(true);
       setMapStatus("카카오 지도 SDK를 불러오는 중입니다.");
       setStatusText("조사 범위를 지도에 표시하고 가로망을 자동 조사하는 중입니다.");
 
       await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
+      if (!request.current()) return;
       const result = await geocodeAddress(address);
+      if (!request.current()) return;
       const lat = Number(result.y);
       const lng = Number(result.x);
       const kakao = window.kakao;
@@ -1678,6 +1801,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       const sw = new kakao.maps.LatLng(boundsData.south, boundsData.west);
       const ne = new kakao.maps.LatLng(boundsData.north, boundsData.east);
       const bounds = new kakao.maps.LatLngBounds(sw, ne);
+      mapRuntimeRef.current.scopeBounds = bounds;
 
       if (!mapRuntimeRef.current.map) {
         mapRuntimeRef.current.map = new kakao.maps.Map(mapContainerRef.current, {
@@ -1724,15 +1848,16 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       setMapStatus("조사 영역에 걸친 도로를 자동 조사하는 중입니다.");
       const roadScopeResult = await collectRoadRowsInScope({
+        signal: request.signal,
         lat,
         lng,
         width,
         height,
       });
+      if (!request.current()) return;
       const autoRoadRows = roadScopeResult.rows;
-      const statisticsResult = await fetchLocalStatistics(address);
 
-      setForm((current) => ({
+      setForm((current) => request.current() ? ({
         ...current,
         basics: {
           ...current.basics,
@@ -1742,26 +1867,20 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           centerLng: lng.toFixed(6),
         },
         roads: autoRoadRows.length ? autoRoadRows : [createRoadRow({ roadClass: "로" })],
-        ...statisticsResult.patch,
-      }));
+      }) : current);
       setMapStatus(`"${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위를 지도에 표시했고, 범위에 걸친 도로 ${autoRoadRows.length}건을 자동 조사했습니다.`);
-      setStatusText(`${autoRoadRows.length ? "지도 범위와 가로망 자동조사를 갱신했습니다." : "지도 범위는 표시했지만 범위에 걸친 도로를 찾지 못했습니다."} ${statisticsResult.message}`);
-      void searchDevelopmentPlans();
-      void searchPublicTransportFacilities({
-        auto: true,
-        address,
-        width,
-        height,
-        center: { lat, lng },
-      });
     } catch (error) {
+      if (!request.current()) return;
       console.error(error);
       setMapStatus(error.message || "지도 표시 중 오류가 발생했습니다.");
-      setStatusText("지도 범위를 표시하지 못했습니다.");
+    } finally {
+      if (request.current()) setMapLoading(false);
     }
   }
 
   function applySampleState(nextForm, label) {
+    requestGateRef.current.cancel();
+    setMapLoading(false);
     setForm(nextForm);
     clearMapOverlays(mapRuntimeRef);
     setMapStatus(`${label} 샘플 데이터를 채웠습니다. 필요하면 바로 조사 범위를 표시할 수 있습니다.`);
@@ -1867,6 +1986,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function resetAll() {
     if (!window.confirm("입력된 내용을 모두 초기화할까요?")) return;
+    requestGateRef.current.cancel();
+    setMapLoading(false);
 
     setForm(createBlankState());
     clearMapOverlays(mapRuntimeRef);
@@ -1879,7 +2000,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   return (
-    <main className={`app-shell${embedded ? " embedded-shell" : ""}`}>
+    <main className={`app-shell${embedded ? " embedded-shell" : ""}${mapCollapsed ? " map-collapsed" : ""}`}>
       <section className="hero-card">
         <div className="hero-main">
           <p className="eyebrow">TIA Research Builder</p>
@@ -1902,7 +2023,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </div>
         </div>
         <div className="hero-actions">
-          <button type="button" onClick={renderScopeMap}>조사 시작</button>
+          <button type="button" onClick={startInvestigation}>조사 시작</button>
           <div className="hero-action-stack">
             <button type="button" className="secondary" onClick={fillSeoulSampleData}>서울 샘플</button>
             <button type="button" className="secondary" onClick={fillGyeonggiSampleData}>경기도 샘플</button>
@@ -1914,6 +2035,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       <section className="panel project-panel">
         <div className="map-card project-map-card">
           <div className="map-header">
+            <button type="button" className="ghost" aria-expanded={!mapCollapsed} aria-controls="scope-map" onClick={() => {
+              setMapCollapsed((current) => !current);
+              window.setTimeout(() => {
+                const runtime = mapRuntimeRef.current;
+                runtime.map?.relayout();
+                if (runtime.map && runtime.rectangle && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
+              }, 100);
+            }}>{mapCollapsed ? "지도 펼치기" : "지도 접기 / 표 넓게 보기"}</button>
             <label className="checkbox-label map-toggle-control">
               <input
                 type="checkbox"
@@ -1924,11 +2053,15 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             </label>
             <h3>카카오 지도</h3>
           </div>
-          <div ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
+          <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
+          <p className="map-status" role="status">{mapStatus}</p>
         </div>
       </section>
 
       <section className="step-nav-panel" aria-label="조사 단계 목차">
+        <p className="investigation-progress" role="status">
+          지도·가로망: {mapLoading ? "조사 중" : "대기 / 완료"} · 통계: {verification?.status === "LOADING" ? "조회 중" : verification?.status === "SUCCESS" ? "완료" : verification?.status === "PARTIAL" ? "일부 누락" : "대기 / 확인 필요"} · 주변사업: {developmentResult.loading ? "조사 중" : developmentResult.complete ? "완료" : "대기 / 확인 필요"} · 대중교통: {publicTransportResult.loading ? "조회 중" : publicTransportResult.searched ? "결과 확인" : "대기"}
+        </p>
         <div className="step-nav-header">
           <p className="eyebrow">Step Index</p>
           <h2>목차</h2>
@@ -2155,7 +2288,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <th>면적_m2</th>
                     {landuseReportRows.map((row) => (
                       <td key={`landuse-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(landuseStats.rankMap.get(row.key))}>
-                        {row.isTotal ? formatNumber(row.area) : (
+                        {row.isTotal ? formatOptionalNumber(row.area) : (
                           <input className="table-input" type="number" value={form.landuseAreas[row.key] || ""} onChange={(event) => updateLanduseArea(row.key, event.target.value)} placeholder="면적 입력" />
                         )}
                       </td>
@@ -2209,7 +2342,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <th>면적_m2</th>
                     {zoningReportRows.map((row, index) => (
                       <td key={`zoning-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(zoningStats.rankMap.get(index))}>
-                        {row.isTotal ? formatNumber(row.area) : <input className="table-input" type="number" value={form.zoningRows[index]?.area || ""} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />}
+                        {row.isTotal ? formatOptionalNumber(row.area) : <input className="table-input" type="number" value={form.zoningRows[index]?.area || ""} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />}
                       </td>
                     ))}
                   </tr>
@@ -2240,6 +2373,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
 
         <div className="chart-grid">
+          {(!landuseStats.consistent || !zoningStats.consistent) && <p className="data-warning">세부 면적의 합이 원자료 합계를 초과합니다. 해당 표의 구성비와 그래프를 보류했으니 원자료를 확인해 주세요.</p>}
+          {(!landuseStats.complete || !zoningStats.complete) && <p className="data-warning">누락된 면적은 0으로 계산하지 않습니다. 원자료 합계가 있으면 확인된 항목의 구성비만 계산하며, 그래프의 회색 부분은 미확인 면적입니다. 합계가 없으면 구성비와 그래프를 보류합니다.</p>}
           <section className="chart-card">
             <div className="chart-header">
               <h3>지목별 토지이용 원형 그래프</h3>
@@ -2289,15 +2424,15 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <button type="button" className="secondary" onClick={searchDevelopmentPlans} disabled={developmentResult.loading}>
               {developmentResult.loading ? "검색 중" : "주변사업 검색"}
             </button>
-            <button type="button" className="secondary" onClick={copyDevelopmentTable} disabled={!displayedDevelopmentResults.length}>표 복사</button>
-            <button type="button" className="secondary" onClick={downloadDevelopmentCsv} disabled={!displayedDevelopmentResults.length}>CSV 다운로드</button>
-            <button type="button" className="secondary" onClick={copyDevelopmentDraft} disabled={!developmentResult.summary}>2장 문장 복사</button>
+            <button type="button" className="secondary" onClick={copyDevelopmentTable} disabled={!displayedDevelopmentResults.length || !developmentResult.complete}>표 복사</button>
+            <button type="button" className="secondary" onClick={downloadDevelopmentCsv} disabled={!displayedDevelopmentResults.length || !developmentResult.complete}>CSV 다운로드</button>
+            <button type="button" className="secondary" onClick={copyDevelopmentDraft} disabled={!developmentResult.complete || Boolean(developmentResult.warnings)}>2장 문장 복사</button>
           </div>
         </div>
 
         <div className="scope-linked-note">
           <strong>검색 기준</strong>
-          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사범위를 사용합니다. 행정구역은 {developmentAdmin.sido || "-"} / {developmentAdmin.sigungu || "-"}로 자동 적용하고, 주변사업 검색 반경은 중심점 기준 약 {formatNumber(developmentRadius)}m입니다.</span>
+          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 사각형 조사범위를 사용합니다. 행정구역은 {developmentAdmin.sido || "-"} / {developmentAdmin.sigungu || "-"}로 자동 적용합니다.</span>
         </div>
 
         <div className="form-grid compact-grid development-form">
@@ -2323,7 +2458,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </label>
           <label className="checkbox-label">
             <input type="checkbox" checked={Boolean(developmentSearch.includeFailed)} onChange={(event) => updateDevelopmentSearch({ includeFailed: event.target.checked })} />
-            <span>좌표변환 실패 포함 보기</span>
+            <span>위치 미확인 사업 포함 보기</span>
           </label>
         </div>
 
@@ -2335,10 +2470,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <p>
             {developmentResult.error
         ? developmentResult.error
+        : developmentResult.loading ? `${developmentResult.progress || "후보 조회 중"}. 조사가 끝나기 전까지 잠정 결과입니다.`
         : developmentResult.searched
                 ? `${developmentResult.dataMode === "DB_CACHE" ? "누적 DB 자료" : "실시간 공공 API"}를 기준으로 사업지 좌표와 후보사업 좌표를 계산했습니다. 반영여부는 자동판정이므로 보고서 작성 전 원자료 확인이 필요합니다.`
                 : "사업지 주소 입력 후 주변사업 검색을 누르면 누적 DB 자료를 우선 조회하고, DB 자료가 없으면 교통영향평가 공공 API를 실시간 조회합니다."}
           </p>
+          {developmentResult.warnings && <p className="data-warning">일부 출처 조회 실패: {developmentResult.warnings}. 현재 결과만으로 주변사업 부재를 판단할 수 없습니다.</p>}
+          {developmentResult.progress && <p>{developmentResult.progress} / {developmentResult.complete ? "수집 후보 처리 완료" : "미완료"}</p>}
+          <p className="verification-source">좌표변환 실패 사업과 원자료 미수록 사업은 범위 내 여부를 확인할 수 없습니다. 0건이어도 사업이 없다고 단정하지 마세요.</p>
           <p className="verification-source">
             원자료: {developmentResult.dataMode === "DB_CACHE" ? "누적 DB(TIA businessSearch 수집자료)" : "국토교통부 교통영향평가_사업정보 API + 교통영향평가정보지원시스템 API"}
             {" / "}DB 연결: {developmentResult.dbConfigured ? "연결됨" : "미연결"}
@@ -2350,7 +2489,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <div className="development-summary-grid">
             <div><strong>{formatNumber(developmentResult.summary.totalRawCount)}</strong><span>원자료</span></div>
             <div><strong>{formatNumber(developmentResult.summary.geocodedCount)}</strong><span>좌표변환</span></div>
-            <div><strong>{formatNumber(developmentResult.summary.withinRadiusCount)}</strong><span>반경 내</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.withinRadiusCount)}</strong><span>사각형 범위 내</span></div>
             <div><strong>{formatNumber(developmentResult.summary.reflectCount)}</strong><span>반영</span></div>
             <div><strong>{formatNumber(developmentResult.summary.reviewCount)}</strong><span>반영검토</span></div>
             <div><strong>{formatNumber(developmentResult.summary.referenceCount)}</strong><span>참고</span></div>
@@ -2361,7 +2500,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <section className="subpanel">
           <div className="subpanel-header">
             <h3>주변 교통영향평가 사업 후보</h3>
-            <p className="subpanel-source">기본 정렬: 거리순 / 좌표변환 실패 사업은 하단 표시</p>
+            <p className="subpanel-source">기본 정렬: 거리순 / 위치 미확인 사업은 하단 표시</p>
           </div>
           <div className="table-wrap">
             <table className="data-table development-table">
@@ -2370,6 +2509,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   <th>번호</th>
                   <th>사업명</th>
                   <th>위치</th>
+                  <th>좌표 확인</th>
+                  <th>확인 주소</th>
                   <th>사업구분</th>
                   <th>용도/시설</th>
                   <th>규모</th>
@@ -2387,6 +2528,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <td>{index + 1}</td>
                     <td>{result.projectName || "-"}</td>
                     <td>{result.location || "-"}</td>
+                    <td>
+                      <span>{result.geocodeStatus === "success" ? "상세 주소 일치" : "위치 미확인"}</span>
+                      <details>
+                        <summary>조회 과정·사유</summary>
+                        <div className="geocode-details">{developmentGeocodeText(result)}</div>
+                      </details>
+                    </td>
+                    <td>{result.matchedAddress || "-"}</td>
                     <td>{result.projectType || "-"}</td>
                     <td>{result.facilityType || "-"}</td>
                     <td>{developmentScaleText(result)}</td>
@@ -2399,7 +2548,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={12} className="empty-cell">
+                    <td colSpan={14} className="empty-cell">
                       {developmentResult.searched ? "표시할 주변지역 개발계획 후보가 없습니다." : "검색 전입니다. 입력값을 확인한 뒤 주변사업 검색을 눌러 주세요."}
                     </td>
                   </tr>
@@ -3106,12 +3255,13 @@ function buildRoadRowsFromBuckets(roadBuckets) {
     });
 }
 
-async function collectRoadRowsInScope({ lat, lng, width, height }) {
+async function collectRoadRowsInScope({ lat, lng, width, height, signal }) {
   const geocoder = new window.kakao.maps.services.Geocoder();
   const points = buildScopeSamplePoints(lat, lng, width, height);
   const roadBuckets = new Map();
 
   for (let index = 0; index < points.length; index += 6) {
+    if (signal?.aborted) throw new DOMException("취소된 조사", "AbortError");
     const chunk = points.slice(index, index + 6);
     const results = await Promise.all(
       chunk.map((point) => coordToAddress(geocoder, point.lng, point.lat).catch(() => null)),
@@ -3420,17 +3570,25 @@ function loadKakaoSdk(key, mapRuntimeRef) {
 
   mapRuntimeRef.current.loadedKey = key;
   mapRuntimeRef.current.sdkPromise = new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error("지도 로딩 시간이 초과되었습니다. 다른 STEP 조회는 계속 진행됩니다.")), 20000);
     const script = document.createElement("script");
     script.async = true;
     script.src = `https://dapi.kakao.com/v2/maps/sdk.js?autoload=false&libraries=services&appkey=${encodeURIComponent(key)}`;
     script.onload = () => {
       if (!window.kakao?.maps?.load) {
+        window.clearTimeout(timer);
         reject(new Error("카카오 지도 SDK 로딩에 실패했습니다."));
         return;
       }
-      window.kakao.maps.load(() => resolve(window.kakao));
+      window.kakao.maps.load(() => {
+        window.clearTimeout(timer);
+        resolve(window.kakao);
+      });
     };
-    script.onerror = () => reject(new Error("카카오 지도 스크립트를 불러오지 못했습니다."));
+    script.onerror = () => {
+      window.clearTimeout(timer);
+      reject(new Error("카카오 지도 스크립트를 불러오지 못했습니다."));
+    };
     document.head.appendChild(script);
   }).catch((error) => {
     mapRuntimeRef.current.sdkPromise = null;

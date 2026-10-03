@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { residualArea } from "../../../lib/researchIntegrity";
 
 export const runtime = "nodejs";
 
@@ -335,10 +336,6 @@ function areaFromRows(rows, expectedCode, expectedNames = []) {
   return toNumber(byName?.DT);
 }
 
-function sumKnown(values) {
-  return values.reduce((total, value) => total + (toNumber(value) ?? 0), 0);
-}
-
 function makeLanduseAreas(rows) {
   const areas = {};
   LANDUSE_REPORT_ITEMS.forEach((item) => {
@@ -346,8 +343,7 @@ function makeLanduseAreas(rows) {
   });
 
   const total = areaFromRows(rows, LANDUSE_CATEGORY_CODES.계, ["계", "합계", "총계"]);
-  const majorTotal = sumKnown(Object.values(areas));
-  areas.기타 = total === null ? "" : toAreaString(Math.max(0, total - majorTotal));
+  areas.기타 = toAreaString(residualArea(total, Object.values(areas)));
   return { areas, total };
 }
 
@@ -365,8 +361,7 @@ function makeZoningRows(urbanRows, nonUrbanRows) {
 
   const urbanTotal = areaFromRows(urbanRows, ZONING_CATEGORY_CODES.도시지역, ["도시지역"]);
   const nonUrbanTotal = areaFromRows(nonUrbanRows, ZONING_CATEGORY_CODES.비도시지역, ["비도시지역"]);
-  const total = (urbanTotal ?? 0) + (nonUrbanTotal ?? 0);
-  const majorTotal = sumKnown(Object.values(byCategory));
+  const total = urbanTotal === null || nonUrbanTotal === null ? null : urbanTotal + nonUrbanTotal;
   const rows = ZONING_REPORT_ITEMS.map((name) => ({
     name,
     area: toAreaString(byCategory[name]),
@@ -375,11 +370,11 @@ function makeZoningRows(urbanRows, nonUrbanRows) {
 
   rows.push({
     name: "기타",
-    area: total > 0 ? toAreaString(Math.max(0, total - majorTotal)) : "",
+    area: toAreaString(residualArea(total, Object.values(byCategory))),
     rawItems: "도시지역+비도시지역 합계 - 주요 항목 합계",
   });
 
-  return { rows: rows.filter((row) => row.name === "기타" || row.area !== ""), total };
+  return { rows, total };
 }
 
 async function chooseDataRowsByCandidates(table, year, candidates, objectParamsFactory) {
@@ -427,7 +422,7 @@ async function extractLanduse(target, year) {
 
   const { areas, total } = makeLanduseAreas(data.rows);
   return {
-    status: data.rows.length ? "SUCCESS" : "DATA_NOT_FOUND",
+    status: !data.rows.length ? "DATA_NOT_FOUND" : total !== null && Object.values(areas).every((area) => area !== "") ? "SUCCESS" : "PARTIAL",
     table: LANDUSE_TABLE,
     metaCount: meta.length,
     regionName: data.selected ? rowName(data.selected.row) : target.preferred,
@@ -480,7 +475,7 @@ async function extractZoning(target, year) {
 
   const { rows, total } = makeZoningRows(urban.rows, nonUrban.rows);
   return {
-    status: urban.rows.length || nonUrban.rows.length ? "SUCCESS" : "DATA_NOT_FOUND",
+    status: !urban.rows.length && !nonUrban.rows.length ? "DATA_NOT_FOUND" : total !== null && rows.every((row) => row.area !== "") ? "SUCCESS" : "PARTIAL",
     tables: [ZONING_URBAN_TABLE, ZONING_NON_URBAN_TABLE],
     urbanMetaCount: urbanMeta.length,
     nonUrbanMetaCount: nonUrbanMeta.length,
@@ -499,11 +494,11 @@ async function extractZoning(target, year) {
 
 function makeExtractionSummary({ target, year, landuse, zoning }) {
   const successCount = [landuse.status, zoning.status].filter((status) => status === "SUCCESS").length;
-  const status = successCount === 2 ? "SUCCESS" : successCount === 1 ? "PARTIAL" : "DATA_NOT_FOUND";
+  const status = successCount === 2 ? "SUCCESS" : [landuse.status, zoning.status].some((value) => value === "SUCCESS" || value === "PARTIAL") ? "PARTIAL" : "DATA_NOT_FOUND";
   const message = status === "SUCCESS"
     ? `${target.preferred} ${year}년 수록기간 기준 KOSIS 지목별/용도지역 자료를 추출했습니다.`
     : status === "PARTIAL"
-      ? `${target.preferred} ${year}년 KOSIS 자료 중 일부 표만 추출했습니다.`
+      ? `${target.preferred} ${year}년 KOSIS 자료에 누락된 표 또는 항목이 있습니다. 누락값은 0으로 처리하지 않으며 기타 면적 계산을 보류합니다.`
       : `${target.preferred} ${year}년 KOSIS 자료를 찾지 못했습니다.`;
 
   return {
@@ -549,7 +544,8 @@ export async function POST(request) {
       base_year: year,
       extraction,
       verification: extraction,
-      landuse: landuse.status === "SUCCESS" ? {
+      landuse: ["SUCCESS", "PARTIAL"].includes(landuse.status) ? {
+        total: landuse.total,
         areas: landuse.areas,
         year,
         regionName: landuse.regionName,
@@ -559,7 +555,8 @@ export async function POST(request) {
         tableTitle: LANDUSE_TABLE.name,
         tableId: LANDUSE_TABLE.tblId,
       } : null,
-      zoning: zoning.status === "SUCCESS" ? {
+      zoning: ["SUCCESS", "PARTIAL"].includes(zoning.status) ? {
+        total: zoning.total,
         rows: zoning.rows,
         year,
         regionName: zoning.regionName,
