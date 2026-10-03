@@ -489,6 +489,17 @@ button.mini-button {
   order: 1;
 }
 
+.project-map-card .map-header {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-map-card .map-header > * {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .project-map-card .map-toggle-control {
   order: 2;
   margin: 0;
@@ -564,7 +575,7 @@ button.mini-button {
   display: block;
 }
 
-.bus-stop-marker { position: relative; }
+.bus-stop-marker { position: relative; pointer-events: none; }
 .bus-stop-button {
   display: grid;
   place-items: center;
@@ -578,9 +589,10 @@ button.mini-button {
   color: #fff;
   box-shadow: 0 2px 7px rgba(84, 36, 12, 0.28);
   cursor: pointer;
+  pointer-events: auto;
 }
-.bus-stop-button svg { width: 18px; height: 18px; fill: currentColor; }
-.bus-stop-button:hover { background: #853309; }
+.bus-stop-button svg { width: 18px; height: 18px; fill: currentColor; pointer-events: none; }
+.bus-stop-button:hover { background: #853309; transform: none; }
 .bus-stop-button:focus-visible { outline: 3px solid #142d42; outline-offset: 2px; }
 .bus-stop-tooltip {
   display: none;
@@ -615,6 +627,13 @@ button.mini-button {
 .bus-stop-detail dt { font-weight: 700; }
 .bus-stop-detail dd { margin: 0; }
 .bus-stop-detail p { margin: 0; font-size: 11px; color: #655a52; }
+
+@media (min-width: 992px) {
+  .app-shell > .project-panel {
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+}
 
 .tag-strip {
   display: flex;
