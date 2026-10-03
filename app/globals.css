@@ -1080,6 +1080,14 @@ button.mini-button {
   min-width: 860px;
 }
 
+.bus-stop-table {
+  min-width: 720px;
+}
+
+.bus-route-table {
+  min-width: 1280px;
+}
+
 .future-transport-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

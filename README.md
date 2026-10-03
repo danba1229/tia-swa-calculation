@@ -1,5 +1,15 @@
 # TIA Research Builder
 
+## 서울 버스정류장 조사
+
+STEP5의 `POST /api/seoul-bus`는 서울시 공식 XLSX 자료를 변환한 `data/seoul-bus-snapshot.json`을 사용합니다. 기준일은 2026-09-02이며 실시간 자료가 아닙니다. 인증키와 외부 API 연결 없이 조사 직사각형 안의 정류장 전체, 직선거리, 고유 정차 노선을 표시합니다. 자료 기준일은 화면과 CSV/표 복사 결과에 포함합니다.
+
+- 출처: [정류소 위치정보](https://data.seoul.go.kr/dataList/OA-15067/S/1/datasetView.do), [노선별 정류소정보](https://data.seoul.go.kr/dataList/OA-1095/S/1/datasetView.do).
+- 정류소 NODE_ID로만 연결하며 동일 노선 중복 정차는 한 건으로 정리합니다. 한강선착장은 제외합니다. 정류소 마스터에 없는 노선 행은 제외하고 생성 파일 diagnostics에 개수를 기록합니다.
+- 버스종류, 기종점, 첫차, 막차, 배차간격은 파일에 없으므로 추정하지 않고 수동 확인 상태로 표시합니다. 연결된 노선이 없는 정류장도 삭제하지 않습니다.
+- 갱신: 공식 파일의 기준일/다운로드 식별자를 확인해 `scripts/import_seoul_bus_snapshot.mjs`를 갱신하고 `node scripts/import_seoul_bus_snapshot.mjs`로 재생성 후 재배포합니다. 매 검색마다 최신 파일을 다운로드하는 방식은 아닙니다.
+- `lib/seoulBus.js`는 향후 HTTPS API 연결을 위한 별도 모듈로 남아 있으며 현재 기본 조회에서는 호출하지 않습니다. `SEOUL_BUS_API_KEY`도 현재 파일 조회에는 필요하지 않습니다.
+
 Next.js App Router 기반 교통영향평가 조사 초안 작성 보조 웹앱입니다. 주소지를 입력하면 조사 범위, 가로망, 사전조사지점, 토지이용 및 용도지역, 주변지역 개발계획, 교통관련 계획을 한 화면에서 정리할 수 있습니다.
 
 ## 1차 버전 범위
