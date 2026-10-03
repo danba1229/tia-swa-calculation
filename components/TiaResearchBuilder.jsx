@@ -6,6 +6,7 @@ import { BUS_ROUTE_COLUMNS, createBusRouteTableRows } from "../lib/seoulBusTable
 import { nullableArea, areaStats, createRequestGate } from "../lib/researchIntegrity";
 import { summarizeProjects } from "../lib/tiaScope";
 import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../lib/busMapOverlays";
+import { loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
@@ -149,6 +150,10 @@ function createBlankPublicTransportResult(overrides = {}) {
     busSourceUrl: "",
     busFetchedAt: "",
     busSourceDate: "",
+    busDetailLoading: false,
+    busDetailCompleted: 0,
+    busDetailTotal: 0,
+    busDetailError: "",
     ...overrides,
   };
 }
@@ -531,7 +536,13 @@ function mergeLoadedState(parsed) {
     zoningRows: Array.isArray(parsed.zoningRows) && parsed.zoningRows.length ? parsed.zoningRows : base.zoningRows,
     developmentSearch: { ...base.developmentSearch, ...(parsed.developmentSearch || {}) },
     developmentResult: { ...base.developmentResult, ...(parsed.developmentResult || {}), loading: false },
-    publicTransportResult: { ...base.publicTransportResult, ...(parsed.publicTransportResult || {}), loading: false },
+    publicTransportResult: { ...base.publicTransportResult, ...(parsed.publicTransportResult || {}), loading: false,
+      busDetailLoading: false,
+      ...(parsed.publicTransportResult?.busDetailLoading ? {
+        busStops: markPendingBusDetails(parsed.publicTransportResult.busStops || [], "이전 상세조회 중단 · 다시 조회해 주세요."),
+        busDetailError: "이전 상세조회가 완료되기 전에 화면을 나갔습니다. 다시 조회해 주세요.",
+      } : {}),
+    },
     trafficPlans: Array.isArray(parsed.trafficPlans) && parsed.trafficPlans.length ? parsed.trafficPlans : base.trafficPlans,
     constructionPlans: Array.isArray(parsed.constructionPlans) && parsed.constructionPlans.length ? parsed.constructionPlans : base.constructionPlans,
     ...(legacyStatistics ? {
@@ -1484,6 +1495,27 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       setStatusText(
         `조사 범위 안의 따릉이 ${formatNumber(bikeResult?.summary?.withinScopeCount || 0)}개, 버스정류장 ${formatNumber(busResult?.summary?.returnedCount || 0)}개를 확인했습니다.`,
       );
+      if (busResult?.busStops?.length) {
+        try {
+          await loadBusDetails({ stations: busResult.busStops, scope: { center, bounds, width, height }, request,
+            onProgress: (progress) => setForm((current) => request.current() ? ({
+              ...current,
+              publicTransportResult: { ...current.publicTransportResult,
+                busStops: progress.stations, busDetailLoading: progress.loading,
+                busDetailCompleted: progress.completed, busDetailTotal: progress.total, busDetailError: progress.error,
+              },
+            }) : current),
+          });
+        } catch {
+          if (!request.current()) return;
+          setForm((current) => request.current() ? ({ ...current,
+            publicTransportResult: { ...current.publicTransportResult,
+              busStops: markPendingBusDetails(current.publicTransportResult.busStops, "상세조회 처리 중단"),
+              busDetailLoading: false, busDetailError: "상세정보 처리에 실패했습니다. 기본 목록은 유지합니다.",
+            },
+          }) : current);
+        }
+      }
     } catch (error) {
       if (!request.current()) return;
       console.error(error);
@@ -2121,7 +2153,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                 const runtime = mapRuntimeRef.current;
                 if (runtime.map && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
               }}>조사 범위 맞추기</button>
-              <p>버스 종류는 원자료에 있는 경우만 표시합니다. 현재 서울시 파일의 종류 값은 미제공입니다. 라벨이 겹치면 지도를 확대해 주세요.</p>
+              <p>버스 종류는 API 상세조회에서 확인된 경우만 표시합니다. 미조회·미제공 값은 추정하지 않습니다. 라벨이 겹치면 지도를 확대해 주세요.</p>
             </div>
           ) : null}
           <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
@@ -2673,8 +2705,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             <h2>버스·지하철 현황</h2>
           </div>
           <div className="panel-header-actions">
-            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading}>
-              {publicTransportResult.loading ? "조회 중" : "버스 조회"}
+            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading || publicTransportResult.busDetailLoading}>
+              {publicTransportResult.loading || publicTransportResult.busDetailLoading ? "조회 중" : "버스 조회"}
             </button>
             <button type="button" className="secondary" onClick={() => copyPublicTransportTables("bus")} disabled={!busStops.length}>표 복사</button>
             <button type="button" className="secondary" onClick={() => downloadPublicTransportCsv("bus")} disabled={!busStops.length}>CSV 다운로드</button>
@@ -2703,6 +2735,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             {publicTransportResult.busSourceDate ? ` / 버스 자료 기준일: ${publicTransportResult.busSourceDate} (실시간 자료 아님)` : ""}
             {publicTransportResult.busFetchedAt ? ` / 버스 조회 시각: ${publicTransportResult.busFetchedAt} (UTC)` : ""}
           </p>
+          {publicTransportResult.busDetailTotal > 0 ? (
+            <p className="verification-source" role="status">노선 상세 API: {publicTransportResult.busDetailLoading ? "조회 중" : publicTransportResult.busDetailError ? "조회 중단" : "조회 시도 완료"} ({publicTransportResult.busDetailCompleted}/{publicTransportResult.busDetailTotal}개 노선). 항목별 제공 여부는 표의 조회 상태를 확인해 주세요.</p>
+          ) : null}
+          {publicTransportResult.busDetailError ? <p className="verification-source" role="alert">{publicTransportResult.busDetailError} 기본 정류장·경유노선 목록은 유지합니다.</p> : null}
           {publicTransportResult.busSummary?.partial ? (
             <p className="verification-source">버스 정보 일부 조회 실패: 경유노선 {publicTransportResult.busSummary.failedStationRoutes || 0}개 정류장, 노선 상세 {publicTransportResult.busSummary.failedRouteDetails || 0}건, 정류장 첫·막차 {publicTransportResult.busSummary.failedStationTimes || 0}건. 조회된 결과는 유지하며 누락 항목은 수동 확인이 필요합니다.</p>
           ) : null}
@@ -2751,7 +2787,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <section className="subpanel">
           <div className="subpanel-header">
             <h3>정류장별 경유 버스노선</h3>
-            <p className="subpanel-source">공식 파일의 정차 노선번호를 표시합니다. 버스종류·기종점·첫차·막차·배차시간은 파일에 없어 수동 확인이 필요합니다. 조회 시각과 자료 기준일은 다릅니다.</p>
+            <p className="subpanel-source">정차 노선은 공식 파일 기준이며 종류·기종점·첫차·막차·일반 배차간격은 서울시 API로 추가 조회합니다. 평일·토요일·공휴일별 간격은 별도 제공이 확인되지 않아 수동 확인으로 남깁니다. 조회 시각은 자료 기준일과 다릅니다.</p>
           </div>
           <div className="table-wrap">
             <table className="data-table bus-route-table">

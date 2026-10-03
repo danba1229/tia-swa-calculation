@@ -34,7 +34,7 @@ async function mocked(run, handler = () => undefined) {
     calls.push(url);
     assert.equal(options.cache, "no-store");
     assert.equal(options.redirect, "error");
-    assert.equal(url.protocol, "https:");
+    assert.equal(url.protocol, "http:");
     assert.equal(url.hostname, "ws.bus.go.kr");
     assert.ok(options.signal instanceof AbortSignal);
     const custom = await handler(url, options);
@@ -304,7 +304,7 @@ test("actual component CSV/clipboard serializers retain row shape and escape spe
   assert.ok(csv(rows).includes("배차시간(토요일)"));
 });
 
-test("normal HTTPS API success exposes only parsed data, not provider messages or request URLs", async () => {
+test("approved HTTP API success exposes only parsed data, not provider messages or request URLs", async () => {
   const { POST } = await loadApiRoute();
   await mocked(async () => {
     const response = await POST({ json: async () => scope });
@@ -317,15 +317,15 @@ test("normal HTTPS API success exposes only parsed data, not provider messages o
   }, (url) => url.pathname.endsWith("/getStationByPos") ? new Response(xml(stops).replace("provider-message", "https://ws.bus.go.kr/path?serviceKey=synthetic-test-key")) : undefined);
 });
 
-const sensitiveUrl = "https://ws.bus.go.kr/path?serviceKey=synthetic-test-key";
+const sensitiveUrl = "http://ws.bus.go.kr/path?serviceKey=synthetic-test-key";
 const securityCases = [
-  ["HTTP downgrade redirect", () => new Response(null, { status: 302, headers: { Location: "http://ws.bus.go.kr/path?serviceKey=synthetic-test-key" } }), /리디렉션을 차단/],
+  ["same-host HTTP redirect", () => new Response(null, { status: 302, headers: { Location: "http://ws.bus.go.kr/path?serviceKey=synthetic-test-key" } }), /리디렉션을 차단/],
   ["other-host HTTPS redirect", () => new Response(null, { status: 307, headers: { Location: "https://other.invalid/path?serviceKey=synthetic-test-key" } }), /리디렉션을 차단/],
   ["native fetch redirect refusal", () => { throw new TypeError(sensitiveUrl, { cause: new Error("unexpected redirect") }); }, /리디렉션을 차단/],
-  ["HTTPS timeout", () => { throw new DOMException(sensitiveUrl, "TimeoutError"); }, /HTTPS 응답 시간 초과\(10초\)/],
+  ["HTTP timeout", () => { throw new DOMException(sensitiveUrl, "TimeoutError"); }, /HTTP 응답 시간 초과\(10초\)/],
   ["TLS certificate failure", () => { throw new TypeError(sensitiveUrl, { cause: Object.assign(new Error(sensitiveUrl), { code: "CERT_HAS_EXPIRED" }) }); }, /HTTPS 인증서 확인 실패/],
-  ["HTTPS connection failure", () => { throw new TypeError(sensitiveUrl, { cause: Object.assign(new Error(sensitiveUrl), { code: "ECONNREFUSED" }) }); }, /HTTPS 연결 실패/],
-  ["HTTP429 secret-bearing provider body", () => new Response(sensitiveUrl, { status: 429 }), /HTTPS 요청 실패 \(HTTP 429\)/],
+  ["HTTP connection failure", () => { throw new TypeError(sensitiveUrl, { cause: Object.assign(new Error(sensitiveUrl), { code: "ECONNREFUSED" }) }); }, /HTTP 연결 실패/],
+  ["HTTP429 secret-bearing provider body", () => new Response(sensitiveUrl, { status: 429 }), /HTTP 요청 실패 \(HTTP 429\)/],
 ];
 for (const [name, handler, expected] of securityCases) {
   test(`${name}: API error and logs never expose key/URL and no redirect is followed`, async () => {
