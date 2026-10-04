@@ -51,9 +51,9 @@ test("rectangle search returns every stop without the former 35-stop cap, sorted
 test("missing operations data stays manual, never inferred from route number or zero", () => {
   const result = searchSeoulBusSnapshot(scope());
   const rows = createBusRouteTableRows(result.busStops);
-  assert.equal(rows[0].length, 11);
+  assert.equal(rows[0].length, 12);
   for (const row of rows.slice(1)) {
-    assert.equal(row.length, 11);
+    assert.equal(row.length, 12);
     if (row[2] === "-") continue;
     assert.match(row[1], /수동 확인/);
     row.slice(3).forEach(cell => assert.match(cell, /수동 확인/));

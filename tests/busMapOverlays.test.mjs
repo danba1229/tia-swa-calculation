@@ -129,6 +129,7 @@ test("bus and bicycle exports contain only the chosen step's data", () => {
     publicBikeTableRows: (rows) => rows.map((row) => [row]),
     busStopTableRows: (rows) => rows.map((row) => [row]),
     busRouteTableRows: () => [["route"]],
+    createSubwayRows: () => [["subway"]],
   });
   vm.runInContext(source, context);
   const bike = JSON.stringify(context.publicTransportExportRows("bike"));
@@ -137,5 +138,7 @@ test("bus and bicycle exports contain only the chosen step's data", () => {
   assert.doesNotMatch(bike, /bus source|route/);
   assert.match(bus, /bus source/);
   assert.match(bus, /route/);
+  assert.match(bus, /subway/);
+  assert.doesNotMatch(bike, /subway/);
   assert.doesNotMatch(bus, /bike source/);
 });

@@ -188,7 +188,7 @@ test("missing key fails without sending any request", async () => {
 
 test("UI/CSV have identical row widths and never reuse old inferred weekday times", () => {
   const rows = createBusRouteTableRows([{ stationName: "legacy", routes: [{ routeName: "123", firstBusTime: "05:00", weekdayInterval: "12분" }] }, { stationName: "failed", routeError: "조회 실패" }]);
-  assert.equal(BUS_ROUTE_COLUMNS.length, 11);
+  assert.equal(BUS_ROUTE_COLUMNS.length, 12);
   assert.ok(rows.every((row) => row.length === BUS_ROUTE_COLUMNS.length));
   assert.match(rows[1][3], /미제공/);
   assert.match(rows[1][10], /미제공/);
@@ -314,7 +314,7 @@ test("actual component CSV/clipboard serializers retain row shape and escape spe
   assert.equal(csv([['A,"B"', "한글\n표", "00123"]]), '"A,""B""","한글\n표",00123');
   assert.equal(clipboard([["A\tB", "한글\n표", "00123"]]), "A B\t한글 표\t00123");
   const rows = createBusRouteTableRows([{ stationName: "A", routes: [route] }]);
-  assert.equal(clipboard(rows).split("\n")[0].split("\t").length, 11);
+  assert.equal(clipboard(rows).split("\n")[0].split("\t").length, 12);
   assert.ok(csv(rows).includes("정류장 첫차"));
   assert.ok(csv(rows).includes("배차시간(토요일)"));
 });
