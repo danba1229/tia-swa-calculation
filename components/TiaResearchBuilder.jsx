@@ -1510,7 +1510,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           error: region === "seoul" ? bikeError : "따릉이는 서울 지역만 지원합니다.",
           busError,
           transportRegion: region,
-          subwayStations: subwayResult?.stations || [], subwaySource: subwayResult?.source || "", subwayError,
+          subwayStations: subwayResult?.stations || [], subwaySource: subwayResult?.source || "", subwayError, subwayCacheInfo: subwayResult?.cacheInfo,
           subwayTruncated: Boolean(subwayResult?.truncated), subwayDetailLoading: Boolean(subwayResult?.stations?.some((s) => s.subwayStationId)),
           source: bikeResult?.source || "",
           sourceUrl: bikeResult?.sourceUrl || "",
@@ -1518,6 +1518,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           busSourceUrl: busResult?.sourceUrl || "",
           busFetchedAt: busResult?.fetchedAt || "",
           busSourceDate: busResult?.sourceDate || "",
+          busCacheInfo: busResult?.cacheInfo,
+          busSourceRetrievedAt: busResult?.sourceRetrievedAt || "",
           busRefresh: busResult?.refresh || null,
         },
       }) : current);
@@ -1537,7 +1539,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             if (!response.ok || !update.success || update.stationId !== station.subwayStationId) throw new Error();
           } catch { update = { schedules: [], status: "MANUAL_REQUIRED", error: "시간표 조회 실패 · 역 목록은 유지합니다." }; }
           setForm((current) => request.current() ? ({ ...current, publicTransportResult: { ...current.publicTransportResult,
-            subwayStations: (current.publicTransportResult.subwayStations || []).map((s) => s.id === station.id ? { ...s, schedules: update.schedules, status: update.status, error: update.error, fetchedAt: update.fetchedAt } : s),
+            subwayStations: (current.publicTransportResult.subwayStations || []).map((s) => s.id === station.id ? { ...s, schedules: update.schedules, status: update.status, error: update.error, fetchedAt: update.fetchedAt, cacheInfo: update.cacheInfo } : s),
           } }) : current);
         }
         setForm((current) => request.current() ? ({ ...current, publicTransportResult: { ...current.publicTransportResult, subwayDetailLoading: false } }) : current);
@@ -2792,7 +2794,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             {publicTransportResult.busSourceDate ? ` / 버스 자료 기준일: ${publicTransportResult.busSourceDate} (실시간 자료 아님)` : ""}
             {publicTransportResult.busFetchedAt ? ` / 버스 조회 시각: ${publicTransportResult.busFetchedAt} (UTC)` : ""}
           </p>
-          {publicTransportResult.busSourceDate ? <p className="verification-source">{publicTransportResult.transportRegion === "gyeonggi" ? "GBIS 원자료 버전 기준 · 서버 메모리 캐시 최대 6시간 · 조회 시점은 자료 갱신일과 다릅니다." : busRefreshStatusText(publicTransportResult.busRefresh)}</p> : null}
+          {publicTransportResult.busSourceDate ? <p className="verification-source">{publicTransportResult.transportRegion === "gyeonggi" ? `GBIS 원자료 버전 기준 · ${publicTransportResult.busCacheInfo?.storage === "DATABASE" ? "DB 저장 자료 재사용 · 매월 5일 04시 이후 첫 조회에 갱신" : "메모리 임시 저장 · 서버 재시작 시 재조회 가능"} · 조회 시점은 자료 갱신일과 다릅니다.` : busRefreshStatusText(publicTransportResult.busRefresh)}</p> : null}
+          {publicTransportResult.busCacheInfo?.stale && <p role="alert">버스 기반정보 갱신 실패로 이전 정상 저장 자료를 표시합니다. 최신 운행 여부는 공식 자료를 확인해 주세요.</p>}
+          {[...new Set((publicTransportResult.busStops || []).flatMap((stop) => (stop.routes || []).flatMap((route) => [route.cacheWarning, route.supplementError]).filter(Boolean)))].map((warning) => <p className="hint" role="alert" key={warning}>{warning}</p>)}
           {publicTransportResult.busDetailTotal > 0 ? (
             <p className="verification-source" role="status">노선 상세 API: {publicTransportResult.busDetailLoading ? "조회 중" : publicTransportResult.busDetailError ? "조회 중단" : "조회 시도 완료"} ({publicTransportResult.busDetailCompleted}/{publicTransportResult.busDetailTotal}개 노선). 미제공 항목은 수동 확인이 필요합니다.</p>
           ) : null}

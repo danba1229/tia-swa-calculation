@@ -4,7 +4,8 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import vm from "node:vm";
-import { fetchBusDetailBatch, validateDetailRouteIds } from "../lib/seoulBusDetails.js";
+import { fetchBusDetailBatch as fetchCachedBusDetailBatch, validateDetailRouteIds } from "../lib/seoulBusDetails.js";
+import { createPersistentTransportCache } from "../lib/transportCache.js";
 import { applyBusDetailUpdates, loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader.js";
 import { createBusRouteTableRows } from "../lib/seoulBusTable.js";
 import { createRequestGate } from "../lib/researchIntegrity.js";
@@ -21,6 +22,7 @@ const scope = { center: { lat: 37.4837, lng: 127.0347 }, width: 800, height: 800
 const update = { busRouteId: "100100596", detail: { routeType: "3", startStation: "기점", endStation: "종점", interval: "12분" },
   stationTimes: [{ stationId: "121000213", arsId: "22289", stationFirstBusTime: "05:10", stationLastBusTime: "25:10" }], fetchedAt: "2026-10-03T00:00:00Z" };
 const xml = (items) => `<ServiceResult><headerCd>0</headerCd>${items.map((item) => `<itemList>${Object.entries(item).map(([k,v])=>`<${k}>${v}</${k}>`).join("")}</itemList>`).join("")}</ServiceResult>`;
+const fetchBusDetailBatch = (ids) => fetchCachedBusDetailBatch(ids, { cache: createPersistentTransportCache({ store: null }) });
 
 test("detail IDs must belong to the server's in-scope snapshot and respect the batch limit", () => {
   validateDetailRouteIds(stations, ["100100596"]);
@@ -53,6 +55,12 @@ test("ambiguous repeat visits and conflicting station IDs never pick an arbitrar
   assert.match(result[0].routes[0].stationFirstBusTime, /미제공/);
   const conflict = applyBusDetailUpdates(stations, [{ ...update, stationTimes: [{ ...update.stationTimes[0], stationId: "wrong" }] }]);
   assert.match(conflict[0].routes[0].stationFirstBusTime, /미제공/);
+});
+
+test("stale cache warning preserves the last verified station timetable", () => {
+  const result = applyBusDetailUpdates(stations, [{ ...update, cacheWarning: "이전 저장 자료 사용" }]);
+  assert.equal(result[0].routes[0].stationFirstBusTime, "05:10");
+  assert.equal(result[0].routes[0].cacheWarning, "이전 저장 자료 사용");
 });
 
 test("client requests each unique route once and applies progressive updates", async () => {
