@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { createHash } from "node:crypto";
-import { nullableArea, residualArea, areaStats, createRequestGate } from "../lib/researchIntegrity.js";
+import { nullableArea, residualArea, areaStats, createRequestGate, validSurveyCenter } from "../lib/researchIntegrity.js";
 import { isInsideScope, summarizeProjects } from "../lib/tiaScope.js";
 import { geocodeProject } from "../lib/projectGeocode.js";
 
@@ -44,6 +44,67 @@ test("missing nonurban table never becomes a zero total or disappears from zonin
   assert.equal(result.total, null);
   assert.equal(result.rows.find((r) => r.name === "관리지역").area, "");
   assert.equal(result.rows.find((r) => r.name === "기타").area, "");
+});
+
+test("KOSIS decimal areas are not rounded before residuals and ratios are calculated", () => {
+  const result = vm.runInContext(`makeLanduseAreas([
+    {C3_NM:"계",DT:"46965620.8"},
+    {C3_NM:"전",DT:"2171229.6"},{C3_NM:"답",DT:"1543487.2"},
+    {C3_NM:"임야",DT:"17814902.9"},{C3_NM:"대",DT:"13132851.8"},
+    {C3_NM:"도로",DT:"6310354.2"},{C3_NM:"하천",DT:"2491084.1"},
+    {C3_NM:"학교",DT:"910064.8"},{C3_NM:"공원",DT:"1057796.1"}
+  ])`, statsContext);
+  assert.equal(result.areas.전, "2171229.6");
+  assert.equal(result.areas.기타, "1533850.1");
+  const stats = areaStats(Object.values(result.areas).map((value) => ({ value })), result.total);
+  assert.equal(stats.complete, true);
+  assert.equal(stats.consistent, true);
+  assert.ok(Math.abs(stats.knownTotal - result.total) < 1e-7);
+  assert.equal(vm.runInContext('toNumber(" ")', statsContext), null);
+});
+
+test("floating point noise is tolerated but a real area overrun is not", () => {
+  assert.equal(areaStats([{value:0.1},{value:0.2}],0.3).consistent, true);
+  assert.equal(residualArea(0.3,[0.1,0.2]), 0);
+  assert.equal(areaStats([{value:100.01}],100).consistent, false);
+  assert.equal(residualArea(100,[100.01]), null);
+});
+
+test("administrative parsing uses the province token, not a substring of a city or road", () => {
+  for (const [address, province, preferred] of [
+    ["서울특별시 송파구 양재대로 1239", "서울", "송파구"],
+    ["경기도 광주시 송정동 1", "경기", "광주시"],
+    ["경기도 수원시 장안구 정조로 950", "경기", "수원시"],
+    ["경기도 성남시 분당구 불정로 6", "경기", "성남시"],
+    ["경기도 양평군 양평읍 군청앞길 2", "경기", "양평군"],
+    ["광주광역시 북구 용봉로 77", "광주", "북구"],
+  ]) {
+    const context = vm.createContext({ residualArea, address });
+    vm.runInContext(statsSource, context);
+    const target = vm.runInContext('resolveAdminArea(address)', context);
+    assert.equal(target.province.short, province);
+    assert.equal(target.preferred, preferred);
+  }
+});
+
+test("same-name districts outside the province and unrelated children are not fallback candidates", () => {
+  const result = vm.runInContext(`findObjectCodes([
+    {OBJ_ID:"region",ITM_ID:"seoul-jung",ITM_NM:"중구",UP_ITM_ID:"seoul"},
+    {OBJ_ID:"region",ITM_ID:"busan-jung",ITM_NM:"중구",UP_ITM_ID:"busan"},
+    {OBJ_ID:"region",ITM_ID:"seoul-jongno",ITM_NM:"종로구",UP_ITM_ID:"seoul"}
+  ], "region", ["중구"], "seoul")`, statsContext);
+  assert.deepEqual(Array.from(result, (row) => row.code), ["seoul-jung"]);
+  assert.equal(vm.runInContext('sameAdminUnit("수원시(계)", "수원시")', statsContext), true);
+  assert.equal(vm.runInContext('sameAdminUnit("성남시(계)", "성남시")', statsContext), true);
+  assert.equal(vm.runInContext('sameAdminUnit("수원시장안구", "수원시")', statsContext), false);
+  assert.equal(vm.runInContext('sameAdminUnit("성남시분당구", "성남시")', statsContext), false);
+});
+
+test("empty survey center never becomes the Gulf of Guinea coordinate", () => {
+  for (const values of [["",""],[null,null],[undefined,undefined],[0,0],[" ",127],[91,127],[37.5,181]]) {
+    assert.equal(validSurveyCenter(...values), false);
+  }
+  assert.equal(validSurveyCenter("37.4837","127.0347"), true);
 });
 
 test("request gate discards stale responses on replacement, input change and reset", () => {
@@ -137,6 +198,25 @@ test("actual handler surfaces systemic geocoder errors rather than reporting zer
 });
 
 const component = readFileSync(new URL("../components/TiaResearchBuilder.jsx", import.meta.url), "utf8");
+
+test("nearest candidate selection preserves sub-100m distance differences", () => {
+  const source = component.slice(component.indexOf("function compareSurveyRows("), component.indexOf("function buildStats("));
+  const context = vm.createContext({
+    safe: (value) => String(value ?? "").trim(),
+    isFilled: (value) => value !== null && value !== undefined && String(value).trim() !== "",
+    toSortableNumber: Number,
+    surveyPriority: () => 0,
+    detectSurveyRegion: () => "seoul",
+    createSurveyRow: (row) => row,
+  });
+  vm.runInContext(source, context);
+  const rows = context.buildAutoSurveyPoints("서울", [
+    {code:"first",name:"Z",distanceKm:1.91},
+    {code:"second",name:"A",distanceKm:1.94},
+  ], [], []);
+  assert.equal(context.selectSurveyPoint(rows).pointCode,"first");
+});
+
 function getFunction(name) {
   let start = component.indexOf(`function ${name}(`);
   assert.ok(start >= 0);

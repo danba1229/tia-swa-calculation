@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import seoulTopisPoints from "../app/seoul-topis-points.json";
 import { BUS_ROUTE_COLUMNS, createBusRouteTableRows } from "../lib/seoulBusTable";
-import { nullableArea, areaStats, createRequestGate } from "../lib/researchIntegrity";
+import { nullableArea, areaStats, createRequestGate, validSurveyCenter } from "../lib/researchIntegrity";
 import { summarizeProjects } from "../lib/tiaScope";
 import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../lib/busMapOverlays";
 import { loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader";
@@ -254,7 +254,7 @@ function formatNumber(value) {
 
 function formatOptionalNumber(value) {
   if (value === null || value === undefined || value === "") return "-";
-  return formatNumber(value);
+  return new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 10 }).format(toNumber(value));
 }
 
 function formatSquareKilometers(value) {
@@ -337,7 +337,7 @@ function buildAutoSurveyPoints(address, topisCandidates, gyeonggiCandidates, sur
       pointCode: candidate.code,
       pointName: candidate.name,
       jurisdiction: "서울특별시",
-      distanceKm: Number.isFinite(candidate.distanceKm) ? candidate.distanceKm.toFixed(1) : "",
+      distanceKm: Number.isFinite(candidate.distanceKm) ? candidate.distanceKm : "",
       dataType: "time",
       note: `서울 TOPIS 최근접 후보 / ${candidate.address}`,
       source: "서울시 TOPIS",
@@ -351,7 +351,7 @@ function buildAutoSurveyPoints(address, topisCandidates, gyeonggiCandidates, sur
       pointCode: candidate.pointCode,
       pointName: `${candidate.routeName} / ${candidate.sectionName}`,
       jurisdiction: candidate.jurisdiction,
-      distanceKm: Number.isFinite(candidate.distanceKm) ? candidate.distanceKm.toFixed(1) : "",
+      distanceKm: Number.isFinite(candidate.distanceKm) ? candidate.distanceKm : "",
       dataType: "time",
       note: `경기 GITS 근사 추천 / ${candidate.sectionName}`,
       source: "경기도교통정보시스템",
@@ -739,6 +739,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     let cancelled = false;
 
     async function loadTopisCandidates() {
+      setTopisCandidates([]);
       if (detectSurveyRegion(form.basics.siteAddress) !== "seoul") {
         setTopisCandidates([]);
         setTopisStatus("");
@@ -765,7 +766,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         const sourceLng = Number(form.basics.centerLng);
         let origin = null;
 
-        if (Number.isFinite(sourceLat) && Number.isFinite(sourceLng)) {
+        if (validSurveyCenter(form.basics.centerLat, form.basics.centerLng)) {
           origin = { y: String(sourceLat), x: String(sourceLng) };
         } else {
           origin = await geocodeAddress(form.basics.siteAddress);
@@ -778,6 +779,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         let missingCount = 0;
 
         for (const point of seoulTopisPoints) {
+          if (cancelled) return;
           const cached = stored[point.code];
           if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lng)) {
             enriched.push({ ...point, lat: cached.lat, lng: cached.lng });
@@ -842,6 +844,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     let cancelled = false;
 
     async function loadGyeonggiCandidates() {
+      setGyeonggiCandidates([]);
       if (detectSurveyRegion(form.basics.siteAddress) !== "gyeonggi") {
         setGyeonggiCandidates([]);
         setGyeonggiStatus("");
@@ -897,7 +900,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         const sourceLng = Number(form.basics.centerLng);
         let origin = null;
 
-        if (Number.isFinite(sourceLat) && Number.isFinite(sourceLng)) {
+        if (validSurveyCenter(form.basics.centerLat, form.basics.centerLng)) {
           origin = { y: String(sourceLat), x: String(sourceLng) };
         } else {
           origin = await geocodeAddress(form.basics.siteAddress);
@@ -908,6 +911,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         let updated = false;
 
         for (const point of payload.points) {
+          if (cancelled) return;
           const cached = stored[point.pointCode];
           if (cached && Number.isFinite(cached.lat) && Number.isFinite(cached.lng)) {
             enriched.push({ ...point, lat: cached.lat, lng: cached.lng, locationResolved: true });
@@ -1005,6 +1009,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     if (["siteAddress", "rectWidth", "rectHeight"].includes(field)) {
       requestGateRef.current.cancel();
       setMapLoading(false);
+      setTopisCandidates([]);
+      setGyeonggiCandidates([]);
       clearMapOverlays(mapRuntimeRef);
     }
     setForm((current) => {
@@ -1966,6 +1972,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   function applySampleState(nextForm, label) {
     requestGateRef.current.cancel();
     setMapLoading(false);
+    setTopisCandidates([]);
+    setGyeonggiCandidates([]);
     setForm(nextForm);
     clearMapOverlays(mapRuntimeRef);
     setMapStatus(`${label} 샘플 데이터를 채웠습니다. 필요하면 바로 조사 범위를 표시할 수 있습니다.`);
@@ -2073,6 +2081,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     if (!window.confirm("입력된 내용을 모두 초기화할까요?")) return;
     requestGateRef.current.cancel();
     setMapLoading(false);
+    setTopisCandidates([]);
+    setGyeonggiCandidates([]);
 
     setForm(createBlankState());
     clearMapOverlays(mapRuntimeRef);
@@ -2413,7 +2423,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     {landuseReportRows.map((row) => (
                       <td key={`landuse-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(landuseStats.rankMap.get(row.key))}>
                         {row.isTotal ? formatOptionalNumber(row.area) : (
-                          <input className="table-input" type="number" value={form.landuseAreas[row.key] || ""} onChange={(event) => updateLanduseArea(row.key, event.target.value)} placeholder="면적 입력" />
+                          <input className="table-input" type="number" min="0" step="any" value={form.landuseAreas[row.key] ?? ""} onChange={(event) => updateLanduseArea(row.key, event.target.value)} placeholder="면적 입력" />
                         )}
                       </td>
                     ))}
@@ -2466,7 +2476,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <th>면적_m2</th>
                     {zoningReportRows.map((row, index) => (
                       <td key={`zoning-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(zoningStats.rankMap.get(index))}>
-                        {row.isTotal ? formatOptionalNumber(row.area) : <input className="table-input" type="number" value={form.zoningRows[index]?.area || ""} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />}
+                        {row.isTotal ? formatOptionalNumber(row.area) : <input className="table-input" type="number" min="0" step="any" value={form.zoningRows[index]?.area ?? ""} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />}
                       </td>
                     ))}
                   </tr>
@@ -2512,7 +2522,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <span className="legend-swatch" style={{ background: slice.color }} />
                     <span>{slice.label}</span>
                   </div>
-                )) : <p className="chart-caption">입력된 지목별 면적이 없습니다.</p>}
+                )) : <p className="chart-caption">{!landuseStats.consistent ? "면적 합계가 일치하지 않아 그래프를 보류했습니다." : landuseStats.total === null && landuseStats.knownTotal > 0 ? "합계 면적을 확인하지 못해 그래프를 보류했습니다." : "입력된 지목별 면적이 없습니다."}</p>}
               </div>
             </div>
           </section>
@@ -2530,7 +2540,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                     <span className="legend-swatch" style={{ background: slice.color }} />
                     <span>{slice.label}</span>
                   </div>
-                )) : <p className="chart-caption">입력된 용도지역 면적이 없습니다.</p>}
+                )) : <p className="chart-caption">{!zoningStats.consistent ? "면적 합계가 일치하지 않아 그래프를 보류했습니다." : zoningStats.total === null && zoningStats.knownTotal > 0 ? "합계 면적을 확인하지 못해 그래프를 보류했습니다." : "입력된 용도지역 면적이 없습니다."}</p>}
               </div>
             </div>
           </section>
@@ -3502,7 +3512,7 @@ function syncSurveyCandidateOverlays({
   const lng = Number(centerLng);
   const { width, height } = getScopeDimensions({ rectWidth, rectHeight });
 
-  if (!Number.isFinite(lat) || !Number.isFinite(lng) || width <= 0 || height <= 0) return;
+  if (!validSurveyCenter(centerLat, centerLng) || width <= 0 || height <= 0) return;
 
   const candidates = buildSurveyMapCandidates(address, topisCandidates, gyeonggiCandidates);
   if (!candidates.length) return;

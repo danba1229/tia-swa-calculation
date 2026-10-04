@@ -111,14 +111,14 @@ function normalizeYear(value) {
 }
 
 function toNumber(value) {
-  if (value === null || value === undefined || value === "" || value === "-") return null;
+  if (value === null || value === undefined || String(value).trim() === "" || value === "-") return null;
   const parsed = Number(String(value).replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : null;
 }
 
 function toAreaString(value) {
   const parsed = toNumber(value);
-  return parsed === null ? "" : String(Math.round(parsed));
+  return parsed === null ? "" : String(parsed);
 }
 
 function readKosisApiKey() {
@@ -264,8 +264,8 @@ async function fetchDataRows(table, year, objectParams) {
 }
 
 function detectProvince(address) {
-  const compact = normalizeName(address);
-  return PROVINCES.find((province) => province.aliases.some((alias) => compact.includes(normalizeName(alias)))) || null;
+  const firstPart = safe(address).split(/\s+/)[0];
+  return PROVINCES.find((province) => province.aliases.includes(firstPart)) || null;
 }
 
 function resolveAdminArea(address) {
@@ -310,6 +310,8 @@ function scoreNameMatch(row, names) {
 
 function findObjectCodes(meta, objectId, names, parentCode = "") {
   return objectRows(meta, objectId)
+    .filter((row) => scoreNameMatch(row, names) > 0)
+    .filter((row) => !parentCode || !safe(row.UP_ITM_ID) || safe(row.UP_ITM_ID) === parentCode)
     .map((row) => ({
       row,
       code: rowCode(row),
@@ -317,6 +319,11 @@ function findObjectCodes(meta, objectId, names, parentCode = "") {
     }))
     .filter((item) => item.code && item.score > 0)
     .sort((left, right) => right.score - left.score);
+}
+
+function sameAdminUnit(name, preferred) {
+  const stripTotal = (value) => normalizeName(safe(value).replace(/\s*\((?:계|합계|소계|총계)\)\s*$/, ""));
+  return stripTotal(name) === stripTotal(preferred);
 }
 
 function categoryName(row) {
@@ -404,9 +411,7 @@ async function extractLanduse(target, year) {
 
   const regionCandidates = findObjectCodes(meta, LANDUSE_TABLE.regionObjId, [
     target.preferred,
-    target.city,
-    target.district,
-  ]).slice(0, 12);
+  ]).filter((item) => sameAdminUnit(rowName(item.row), target.preferred)).slice(0, 12);
   if (!regionCandidates.length) throw new Error(`KOSIS 지목별 표에서 ${target.preferred} 행정구역 코드를 찾지 못했습니다.`);
 
   const data = await chooseDataRowsByCandidates(
@@ -447,9 +452,7 @@ async function extractZoning(target, year) {
   const provinceCode = provinceCandidates[0]?.code || "";
   const regionCandidates = findObjectCodes(urbanMeta, ZONING_URBAN_TABLE.regionObjId, [
     target.preferred,
-    target.city,
-    target.district,
-  ], provinceCode).slice(0, 16);
+  ], provinceCode).filter((item) => sameAdminUnit(rowName(item.row), target.preferred)).slice(0, 16);
   if (!regionCandidates.length) throw new Error(`KOSIS 용도지역 표에서 ${target.preferred} 행정구역 코드를 찾지 못했습니다.`);
 
   const urban = await chooseDataRowsByCandidates(
