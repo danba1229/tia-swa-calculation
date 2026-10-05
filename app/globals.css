@@ -1698,6 +1698,11 @@ button.mini-button {
 .accident-stale { opacity: .6; }
 .accident-survey .muted { color: #64748b; font-size: 13px; line-height: 1.6; }
 .accident-survey .table-wrap { overflow-x: auto; }
+.accident-survey table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.accident-survey th, .accident-survey td { padding: 10px 8px; border: 1px solid var(--line); vertical-align: top; text-align: left; background: rgba(255,255,255,.56); }
+.accident-survey th { background: rgba(160,79,47,.08); white-space: nowrap; }
+.accident-survey td:first-child { white-space: nowrap; }
+.accident-survey td:nth-child(2) { min-width: 120px; }
 .accident-survey td { font-variant-numeric: tabular-nums; }
 .accident-survey button:disabled { opacity: .5; cursor: not-allowed; }
 @media(max-width: 640px) { .accident-address { flex-direction: column; align-items: stretch; } .accident-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
