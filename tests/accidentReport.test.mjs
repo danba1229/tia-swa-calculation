@@ -9,6 +9,33 @@ const radius = (year, type, extra = {}) => ({ kind: 'radius', query: { year, typ
 const official = (year, accidents) => ({ kind: 'official', query: { year }, state: 'success', data: { sections: { statistics: { status: 'success', rows: [{ std_year: year, acc_cl_nm: '전체사고', sido_sgg_nm: '서울특별시 노원구', acc_cnt: accidents, dth_dnv_cnt: '0', injpsn_cnt: '1,234' }, { std_year: year, acc_cl_nm: '보행자사고', sido_sgg_nm: '서울특별시 노원구', acc_cnt: 999 }] } } } });
 const records = [official(2022, 100), official(2023, 110), official(2024, 121), radius(2024, 'all'), radius(2024, 'pedestrian'), radius(2024, 'bicycle'), radius(2024, 'all', { intersection: 1, data: { counts: { accidents: 0, deaths: 0, serious: 0, minor: 0, reported: 0 } } }), radius(2024, 'all', { intersection: 2, state: 'error', message: 'TAAS 연결 실패' })];
 
+test('collision counts preserve scope, failures, railway remainder and Excel numeric cells', async () => {
+  const collision = (type, accidents, extra = {}) => radius(2024, type, { data: { counts: { accidents } }, ...extra });
+  const input = [radius(2024, 'all'), collision('vehicleVehicle', 6), collision('vehiclePerson', 2), collision('singleVehicle', 1), collision('railway', 1), collision('vehicleVehicle', 99, { intersection: 1 })];
+  const tables = buildAccidentReport(input, { ...snapshot, years: '1' });
+  const nearby = tables.find(t => t.id === 'nearby');
+  assert.deepEqual(nearby.rows[0].values.slice(-3), [6, 2, 1]);
+  assert.ok(nearby.notes.some(n => n.includes('철길건널목 사고 1건')));
+  assert.ok(nearby.notes.some(n => n.includes('검산 완료')));
+  const book = buildReportWorkbook(ExcelJS, tables, new Map());
+  const loaded = new ExcelJS.Workbook();
+  await loaded.xlsx.load(await book.xlsx.writeBuffer());
+  assert.equal(loaded.getWorksheet('보고서_사업지주변').getCell('G6').value, 6);
+  const failed = buildAccidentReport([...input.filter(r => r.query.type !== 'singleVehicle'), collision('singleVehicle', 0, { state: 'error', message: '조회 실패' })], { ...snapshot, years: '1' }).find(t => t.id === 'nearby');
+  assert.equal(failed.rows[0].values.at(-1), null);
+  assert.ok(!failed.notes.some(n => n.includes('검산 완료')));
+  const mismatch = buildAccidentReport([...input.filter(r => r.query.type !== 'railway'), collision('railway', 0)], { ...snapshot, years: '1' }).find(t => t.id === 'nearby');
+  assert.ok(mismatch.notes.some(n => n.includes('합계 확인 필요')));
+});
+
+test('old saved label warnings are reclassified in report notes without overwriting evidence', () => {
+  const record = radius(2024, 'all', { data: { counts: { accidents: 121, casualties: 158, deaths: 2, serious: 31, minor: 116, reported: 11 }, qualityWarnings: ['원문 합계 확인 필요'], evidence: '사상자수 : 158' } });
+  const table = buildAccidentReport([record], { ...snapshot, years: '1' }).find(t => t.id === 'nearby');
+  assert.ok(table.notes.some(n => n.includes('부상자 합계')));
+  assert.ok(!table.notes.some(n => n.includes('원문 합계 확인 필요')));
+  assert.equal(record.data.evidence, '사상자수 : 158');
+});
+
 test('report follows source columns, keeps annual scope separate and uses only overall statistics', () => {
   const tables = buildAccidentReport(records, snapshot);
   const annual = tables[0];

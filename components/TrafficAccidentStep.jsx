@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ACCIDENT_TYPES, TAAS_URL, validateAccidentQuery } from '../lib/accidentSurvey';
+import { ACCIDENT_TYPES, COLLISION_TYPES, radiusQuality, TAAS_URL, validateAccidentQuery } from '../lib/accidentSurvey';
 import { buildAccidentReport } from '../lib/accidentReport';
 import { buildReportWorkbook } from '../lib/accidentReportExcel';
 import AccidentReportTables from './AccidentReportTables';
@@ -71,7 +71,7 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
       }
       for (let i = 0; i < form.intersections.length; i++) {
         const row = form.intersections[i];
-        jobs.push({ kind: 'radius', intersection: i + 1, name: row.name || `교차로 ${i + 1}`, query: validateAccidentQuery({ ...row, year: base.year, type: 'all' }) });
+        for (const type of ['all', ...Object.keys(COLLISION_TYPES)]) jobs.push({ kind: 'radius', intersection: i + 1, name: row.name || `교차로 ${i + 1}`, query: validateAccidentQuery({ ...row, year: base.year, type }) });
       }
     } catch (e) { setStatus(e.message); return; }
     const id = ++run.current;
@@ -91,8 +91,9 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
       }
       if (run.current === id) {
         const errors = collected.filter(r => r.state === 'error' || Object.values(r.data?.sections || {}).some(s => s.status === 'error')).length;
-        const warnings = collected.filter(r => r.data?.qualityWarnings?.length).length;
-        setStatus(`조사 종료 · ${collected.length}/${jobs.length}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}${warnings ? ` · ${warnings}개 결과의 원문 합계 확인이 필요합니다.` : ''}`);
+        const warnings = collected.filter(r => radiusQuality(r.data?.counts).warnings.length).length;
+        const notes = collected.filter(r => radiusQuality(r.data?.counts).notes.length).length;
+        setStatus(`조사 종료 · ${collected.length}/${jobs.length}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}${warnings ? ` · ${warnings}개 결과의 원문 합계 확인이 필요합니다.` : ''}${notes ? ` · ${notes}개 결과에 TAAS 표기 차이 안내가 있습니다.` : ''}`);
       }
     } finally { if (run.current === id) setBusy(false); }
   }
@@ -104,10 +105,11 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
       const sheets = new Map();
       const add = (name, row) => { if (!sheets.has(name)) sheets.set(name, []); sheets.get(name).push(row); };
       for (const r of results) {
-        const common = { 년도: r.query.year, 지점: r.name, 위도: r.query.lat, 경도: r.query.lng, 반경m: r.query.radius, 상태: r.state, 조회일시: r.data?.retrievedAt || '', 오류: r.message || '', 원문검산: r.data?.qualityWarnings?.join(' ') || '' };
+        const quality = radiusQuality(r.data?.counts);
+        const common = { 년도: r.query.year, 지점: r.name, 위도: r.query.lat, 경도: r.query.lng, 반경m: r.query.radius, 상태: r.state, 조회일시: r.data?.retrievedAt || '', 오류: r.message || '', 원문검산: quality.warnings.join(' '), 표기안내: quality.notes.join(' ') };
         if (r.kind === 'radius') {
-          const sheet = r.intersection ? `교차로사고(${r.intersection})` : { all: '사업지 주변', pedestrian: '보행자사고', bicycle: '자전거사고' }[r.query.type];
-          add(sheet, { ...common, 사고구분: ACCIDENT_TYPES[r.query.type], ...Object.fromEntries(Object.entries(countLabels).map(([k, v]) => [v, r.data?.counts?.[k] ?? null])), 출처: TAAS_URL, 원문: r.data?.evidence || '' });
+          const sheet = r.intersection ? `교차로사고(${r.intersection})` : { all: '사업지 주변', pedestrian: '보행자사고', bicycle: '자전거사고' }[r.query.type] || '사고유형 원자료';
+          add(sheet, { ...common, 사고구분: ACCIDENT_TYPES[r.query.type], ...Object.fromEntries(Object.entries(countLabels).map(([k, v]) => [v, r.data?.counts?.[k] ?? null])), '부상자 합계(계산)': quality.injuries, '사망 포함 합계(계산)': quality.total, 사고유형선택코드: r.data?.selectedCollisionCodes || '', 출처: TAAS_URL, 원문: r.data?.evidence || '' });
         } else if (r.data) {
           for (const [key, section] of Object.entries(r.data.sections)) {
             const name = { statistics: '년도별 사고', bicycle: '자전거 다발지역 참고', pedestrian: '보행자 다발지역 참고' }[key];
@@ -117,7 +119,7 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
         } else add('조회오류', common);
       }
       add('조사조건·출처', { 항목: '조사조건', 내용: JSON.stringify(snapshot) });
-      add('조사조건·출처', { 항목: '처리 현황', 내용: `${results.length}/${Number(snapshot.years) * 4 + snapshot.intersections.length}개 처리. 중단된 조사는 완료된 조회만 포함합니다. 각 표의 오류·자료 없음 상태를 확인하세요.` });
+      add('조사조건·출처', { 항목: '처리 현황', 내용: `${results.length}/${Number(snapshot.years) * (1 + Object.keys(ACCIDENT_TYPES).length) + snapshot.intersections.length * (1 + Object.keys(COLLISION_TYPES).length)}개 처리. 중단된 조사는 완료된 조회만 포함합니다. 각 표의 오류·자료 없음 상태를 확인하세요.` });
       add('조사조건·출처', { 항목: '범위', 내용: '사업지 주변·보행자·자전거: TAAS 반경 내 사고 집계. 교차로: 지정 중심 반경 내 전체 사고이며 도로형태별 교차로 사고와 다름. 반경이 겹치면 교차로별 건수를 합산하지 말 것.' });
       add('조사조건·출처', { 항목: 'API', 내용: 'https://opendata.koroad.or.kr/ · 시군구 전체 통계와 사고다발지역 참고자료. 다발지역은 반경 내 전체 사고를 대체하지 않음.' });
       const workbook = buildReportWorkbook(ExcelJS, reportTables, sheets);
@@ -148,10 +150,10 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
     <p role="status" aria-live="polite">{status}</p>
     {stale && <p className="accident-warning">조건이 변경되었습니다. 아래는 이전 조건의 결과입니다. 다시 조사해 주세요.</p>}
     <div className={stale ? 'accident-stale' : ''}>
-      {results.filter(r => r.data?.qualityWarnings?.length).map((r, i) => <p className="accident-warning" key={i}>{r.query.year}년 {r.name} · {ACCIDENT_TYPES[r.query.type]}: {r.data.qualityWarnings.join(' ')}</p>)}
+      {results.filter(r => radiusQuality(r.data?.counts).warnings.length).map((r, i) => <p className="accident-warning" key={i}>{r.query.year}년 {r.name} · {ACCIDENT_TYPES[r.query.type]}: {radiusQuality(r.data?.counts).warnings.join(' ')}</p>)}
       {!!results.length && <><AccidentReportTables tables={reportTables} />
       <details><summary>조회 상태·원문 검증 내역</summary><p>보고서 표에서 —는 미조회·조회 실패·자료 없음입니다. 사고유형의 미수집은 0건을 뜻하지 않습니다.</p>
-        <div className="table-wrap"><table><thead><tr><th>연도</th><th>조회 항목</th><th>조회 상태</th><th>사상자(TAAS 표기)</th><th>조회일시</th></tr></thead><tbody>{results.map((r, i) => <tr key={i}><td>{r.query.year}</td><td>{r.name} · {r.kind === 'radius' ? ACCIDENT_TYPES[r.query.type] : '공단 API'}</td><td>{r.state === 'error' ? r.message : r.kind === 'official' ? Object.entries(r.data.sections).map(([key, section]) => `${{statistics: '시군구', pedestrian: '보행자 다발', bicycle: '자전거 다발'}[key]}: ${section.status === 'success' ? '완료' : section.message || '자료 없음'}`).join(' / ') : '완료'}</td><td>{r.data?.counts?.casualties ?? '—'}</td><td>{r.data?.retrievedAt || '—'}</td></tr>)}</tbody></table></div>
+        <div className="table-wrap"><table><thead><tr><th>연도</th><th>조회 항목</th><th>조회 상태</th><th>사상자(TAAS 표기)</th><th>부상자 합계(계산)</th><th>사망 포함 합계(계산)</th><th>표기 안내</th><th>조회일시</th></tr></thead><tbody>{results.map((r, i) => <tr key={i}><td>{r.query.year}</td><td>{r.name} · {r.kind === 'radius' ? ACCIDENT_TYPES[r.query.type] : '공단 API'}</td><td>{r.state === 'error' ? r.message : r.kind === 'official' ? Object.entries(r.data.sections).map(([key, section]) => `${{statistics: '시군구', pedestrian: '보행자 다발', bicycle: '자전거 다발'}[key]}: ${section.status === 'success' ? '완료' : section.message || '자료 없음'}`).join(' / ') : '완료'}</td><td>{r.data?.counts?.casualties ?? '—'}</td><td>{radiusQuality(r.data?.counts).injuries ?? '—'}</td><td>{radiusQuality(r.data?.counts).total ?? '—'}</td><td>{radiusQuality(r.data?.counts).notes.join(' ') || '—'}</td><td>{r.data?.retrievedAt || '—'}</td></tr>)}</tbody></table></div>
       </details>
       <details><summary>보행자·자전거 사고다발지역 참고자료</summary><p>선정 기준에 해당하는 다발지역 중 중심점이 지정 반경 안에 있는 지점입니다. 전체 사고 건수로 사용하지 않습니다. 보행자 자료는 최근 3년 기준이므로 1년 반경 조회와 직접 비교할 수 없습니다.</p>{results.filter(r => r.kind === 'official').map((r, i) => <div key={i}><h4>{r.query.year}년 요청 · {r.data?.region.name || r.name}</h4>{['pedestrian', 'bicycle'].map(key => { const s = r.data?.sections[key]; return <div key={key}><strong>{ACCIDENT_TYPES[key]} 다발지역</strong><p>{s?.message || r.message || (s?.status === 'no_data' ? '공단 제공자료 없음' : `${s?.rows?.length ?? 0}개 지점`)}</p>{s?.rows?.map((row, j) => <p key={j}>{row.spot_nm} · 중심점 거리 {Math.round(row.distance)}m · 다발지역 사고 {row.occrrnc_cnt}건</p>)}</div>; })}</div>)}</details></>}
     </div>

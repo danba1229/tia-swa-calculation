@@ -1,9 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import proj4 from 'proj4';
-import { validateAccidentQuery, parseRadiusResult, decodeKoroadKey, radiusQualityWarnings } from '../lib/accidentSurvey.js';
+import { validateAccidentQuery, parseRadiusResult, decodeKoroadKey, radiusQualityWarnings, radiusQuality, collisionFilterValues } from '../lib/accidentSurvey.js';
 import { findStatisticsRegion, getKoroadRows } from '../lib/koroad.js';
 const query = { lat: 37.5, lng: 127, radius: 500, year: 2025, type: 'all' };
+test('distinguish TAAS injury-only label from genuine mismatch without changing source values', () => {
+  const counts = { casualties: 158, deaths: 2, serious: 31, minor: 116, reported: 11 };
+  const result = radiusQuality(counts);
+  assert.deepEqual(result.warnings, []);
+  assert.match(result.notes[0], /부상자 합계/);
+  assert.equal(result.injuries, 158);
+  assert.equal(result.total, 160);
+  assert.equal(counts.casualties, 158);
+  assert.equal(radiusQuality({ ...counts, casualties: 160 }).notes.length, 0);
+  assert.equal(radiusQuality({ ...counts, casualties: 159 }).warnings.length, 1);
+  assert.equal(radiusQuality({ ...counts, deaths: 0 }).notes.length, 0);
+  assert.equal(radiusQuality({ ...counts, minor: null }).total, null);
+});
+test('collision selection uses active labels and rejects missing or malformed categories', () => {
+  const options = [{ title: '차대차', value: '210' }, { title: '차대차', value: '235' }, { title: '차대사람', value: '110' }];
+  assert.deepEqual(collisionFilterValues(options, 'vehicleVehicle'), ['210', '235']);
+  assert.deepEqual(collisionFilterValues(options, 'vehiclePerson'), ['110']);
+  assert.throws(() => collisionFilterValues(options, 'railway'), /변경/);
+  assert.throws(() => collisionFilterValues([...options, options[0]], 'vehicleVehicle'), /중복/);
+  assert.throws(() => collisionFilterValues([{ title: '차대차', value: 'bad' }], 'vehicleVehicle'));
+  assert.equal(validateAccidentQuery({ ...query, type: 'singleVehicle' }).type, 'singleVehicle');
+});
 test('reject missing coordinates, unsupported type, excessive radius and noninteger year', () => {
   assert.deepEqual(validateAccidentQuery(query), query);
   for (const change of [{ lat: '' }, { lng: null }, { year: 2025.5 }, { radius: 2001 }, { type: 'intersection' }, { lat: 0 }]) assert.throws(() => validateAccidentQuery({ ...query, ...change }));
