@@ -42,6 +42,14 @@ TAAS 반경 조회에는 별도 인증키가 없다. 서버가 공개 TAAS 화�
 
 Vercel Node.js 함수는 서울 리전에서 Chromium/Playwright를 실행한다. 함수 제한은 반경 조회 180초, 공단 API 90초이며 앱은 한 번에 한 조회씩 실행한다. 동일 인스턴스의 중복 작업은 제한하고 성공한 동일 조건은 메모리에 1시간 저장한다. 캐시는 영구 저장이나 인스턴스 간 공유가 아니다. 입력·완료된 결과는 해당 브라우저에 저장되며 전체 초기화 시 함께 삭제한다.
 
+### 서버 브라우저 자원 관리
+
+2026-10-05 서초구 남부순환로 2584, 500m 연속 조회에서 기존 `launch()` + `newContext()` 종료 시 `core.chromium.*` 파일이 남는 현상을 재현했다. 같은 인스턴스의 `/tmp` 여유 공간이 303MB → 130MB → 15MB로 감소하면서 `ERR_INSUFFICIENT_RESOURCES`와 브라우저 종료 오류가 발생했다.
+
+Linux 운영 환경은 매 조회에 `launchPersistentContext()`로 기본 컨텍스트를 만들고, 고유한 `tia-taas-*` 폴더에 프로필과 TMPDIR을 격리한다. 성공·실패 모두 컨텍스트 → 브라우저 → 해당 조회의 임시 폴더 순으로 정리한다. 공유 `/tmp`, Chromium 실행 파일 및 다른 요청 폴더는 삭제하지 않는다. Windows 로컬 실행은 Edge 채널을 유지한다.
+
+`taas.start`, `taas.success`, `taas.error`, `taas.cleanup-error`, `taas.closed` 구조화 로그에 인스턴스·조회 식별자, 연도·유형·반경, 실패 단계, 경과 시간, 임시 여유 공간·충돌 덤프 수·임시 폴더 수를 기록한다. 주소·좌표·인증키·원문 응답은 기록하지 않는다. 로그의 자원 부족과 원문 사상자 합계 불일치는 서로 다른 문제다. 실패는 계속 0건으로 대체하지 않는다.
+
 ## 출처
 
 - [TAAS 사고 반경분석](https://taas.koroad.or.kr/gis/mcm/mcl/initMap.do?menuId=0)
