@@ -5,7 +5,7 @@ import { ACCIDENT_TYPES, TAAS_URL, validateAccidentQuery } from '../lib/accident
 
 const STORAGE_KEY = 'tia-accident-survey-v1';
 const countLabels = { accidents: '사고건수', casualties: '사상자(TAAS 표기)', deaths: '사망', serious: '중상', minor: '경상', reported: '부상신고' };
-const initial = { address: '', lat: '', lng: '', radius: '500', year: String(new Date().getFullYear() - 1), years: '3', intersections: [] };
+const initial = { radius: '500', year: String(new Date().getFullYear() - 1), years: '3', intersections: [] };
 const endpoint = { radius: '/api/accidents/radius', official: '/api/accidents/official' };
 async function requestJson(url, body, signal) {
   const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
@@ -15,35 +15,46 @@ async function requestJson(url, body, signal) {
   return data;
 }
 
-export default function TrafficAccidentStep({ basics, visible }) {
-  const [form, setForm] = useState(initial), [results, setResults] = useState([]), [snapshot, setSnapshot] = useState(null);
+export default function TrafficAccidentStep({ siteLocation, visible }) {
+  const [settings, setForm] = useState(initial), [results, setResults] = useState([]), [snapshot, setSnapshot] = useState(null);
+  const form = { ...settings, address: siteLocation.address, lat: siteLocation.lat, lng: siteLocation.lng };
+  const siteKey = JSON.stringify([form.address, form.lat, form.lng]);
+  const currentSite = useRef(siteKey);
+  currentSite.current = siteKey;
   const [busy, setBusy] = useState(false), [status, setStatus] = useState(''), [ready, setReady] = useState(false);
   const controller = useRef(null), run = useRef(0);
   useEffect(() => {
-    try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (saved?.form) { setForm({ ...initial, ...saved.form }); setResults(saved.results || []); setSnapshot(saved.snapshot || null); } } catch { /* Unavailable storage does not prevent investigation. */ }
+    try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (saved?.form) { const { radius, year, years, intersections } = { ...initial, ...saved.form }; setForm({ radius, year, years, intersections }); setResults(saved.results || []); setSnapshot(saved.snapshot || null); } } catch { /* Unavailable storage does not prevent investigation. */ }
     setReady(true);
     return () => { run.current++; controller.current?.abort(); };
   }, []);
-  useEffect(() => { if (ready) try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ form, results, snapshot })); } catch { /* Results remain downloadable. */ } }, [form, results, snapshot, ready]);
+  useEffect(() => { if (ready) try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: settings, results, snapshot })); } catch { /* Results remain downloadable. */ } }, [settings, results, snapshot, ready]);
+  useEffect(() => {
+    run.current++;
+    controller.current?.abort();
+    setBusy(false);
+    setStatus('');
+  }, [siteKey]);
   const stale = snapshot && JSON.stringify(form) !== JSON.stringify(snapshot);
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
   const intersectionUpdate = (index, key, value) => setForm(f => ({ ...f, intersections: f.intersections.map((row, i) => i === index ? { ...row, [key]: value } : row) }));
   async function geocode(index) {
-    const address = index == null ? form.address : form.intersections[index].address;
+    const address = form.intersections[index].address;
     const id = ++run.current;
     const abort = new AbortController(); controller.current = abort;
     setBusy(true); setStatus('주소 좌표 확인 중…');
     try {
       const data = await requestJson('/api/geocode', { address }, abort.signal);
       if (run.current !== id) return;
-      if (index == null) setForm(f => ({ ...f, lat: String(data.latitude), lng: String(data.longitude) }));
-      else setForm(f => ({ ...f, intersections: f.intersections.map((r, i) => i === index ? { ...r, lat: String(data.latitude), lng: String(data.longitude) } : r) }));
+      if (currentSite.current !== siteKey) return;
+      setForm(f => ({ ...f, intersections: f.intersections.map((r, i) => i === index ? { ...r, lat: String(data.latitude), lng: String(data.longitude) } : r) }));
       setStatus(`주소 확인: ${data.matchedAddress}`);
     } catch (e) { if (run.current === id) setStatus(e.message); } finally { if (run.current === id) setBusy(false); }
   }
   async function investigate() {
     let jobs;
     try {
+      if (siteLocation.status !== 'ready') throw new Error('상단 주소지의 좌표 확인이 완료된 뒤 조사해 주세요.');
       const count = Number(form.years);
       if (!Number.isInteger(count) || count < 1 || count > 5 || form.intersections.length > 10) throw new Error('조사 기간은 1~5년, 교차로는 최대 10개입니다.');
       const base = validateAccidentQuery({ ...form, type: 'all' });
@@ -65,13 +76,13 @@ export default function TrafficAccidentStep({ basics, visible }) {
     setBusy(true); setResults([]); setSnapshot(JSON.parse(JSON.stringify(form)));
     try {
       for (let i = 0; i < jobs.length; i++) {
-        if (run.current !== id) break;
+        if (run.current !== id || currentSite.current !== siteKey) break;
         const job = jobs[i];
         setStatus(`${i + 1}/${jobs.length} · ${job.query.year}년 ${job.name} ${job.kind === 'radius' ? ACCIDENT_TYPES[job.query.type] : ''} 조회 중…`);
         let record;
         try { record = { ...job, state: 'success', data: await requestJson(endpoint[job.kind], job.query, controller.current.signal) }; }
         catch (e) { if (controller.current.signal.aborted) break; record = { ...job, state: 'error', message: e.message }; }
-        if (run.current !== id) break;
+        if (run.current !== id || currentSite.current !== siteKey) break;
         collected.push(record); setResults([...collected]);
       }
       if (run.current === id) {
@@ -108,17 +119,19 @@ export default function TrafficAccidentStep({ basics, visible }) {
   }
   return <section id="step-8" className="panel step-section accident-survey" hidden={!visible}>
     <div className="section-heading"><div><p className="eyebrow">Step.8</p><h2>교통사고 자동 조사</h2></div></div>
-    <p>주소 또는 좌표와 반경·연도를 지정하면 TAAS에서 사업지 주변, 보행자, 자전거, 교차로별 사고를 조사합니다.</p>
+    <p>상단에 입력한 주소지와 자동 계산된 좌표를 사용합니다. 반경·연도를 정하면 TAAS에서 사업지 주변, 보행자, 자전거, 교차로별 사고를 조사합니다.</p>
+    <div className="accident-site-summary">
+      <strong>조사 주소</strong><p>{form.address || '상단에 주소지를 입력해 주세요.'}</p>
+      {siteLocation.status === 'ready' ? <p>위도 <output aria-label="사업지 위도">{form.lat}</output> · 경도 <output aria-label="사업지 경도">{form.lng}</output></p> : <p role="status">{siteLocation.message}</p>}
+    </div>
     <fieldset disabled={busy || !ready} className="accident-fields">
-      <div className="accident-actions"><button type="button" className="secondary-button" onClick={() => setForm(f => ({ ...f, address: basics.siteAddress || '', lat: String(basics.centerLat || ''), lng: String(basics.centerLng || '') }))}>사업지 정보 가져오기</button></div>
-      <div className="accident-address"><label>조사 주소<input value={form.address} onChange={e => update('address', e.target.value)} placeholder="도로명·건물번호 또는 지번 주소" /></label><button type="button" className="secondary-button" onClick={() => geocode(null)}>주소로 좌표 찾기</button></div>
-      <div className="accident-grid">{[['lat', '위도'], ['lng', '경도'], ['radius', '사업지 반경(m)'], ['year', '기준 연도']].map(([key, label]) => <label key={key}>{label}<input type="number" step={key === 'lat' || key === 'lng' ? 'any' : '1'} value={form[key]} onChange={e => update(key, e.target.value)} /></label>)}<label>조사 기간<select value={form.years} onChange={e => update('years', e.target.value)}>{[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>기준 연도까지 {n}년</option>)}</select></label></div>
+      <div className="accident-grid">{[['radius', '사업지 반경(m)'], ['year', '기준 연도']].map(([key, label]) => <label key={key}>{label}<input type="number" step="1" value={form[key]} onChange={e => update(key, e.target.value)} /></label>)}<label>조사 기간<select value={form.years} onChange={e => update('years', e.target.value)}>{[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>기준 연도까지 {n}년</option>)}</select></label></div>
       <details><summary>교차로 조사 지점 ({form.intersections.length}개)</summary><p>교차로 중심점과 반경을 입력합니다. 기준 연도 1년을 조회하며, 반경이 겹치는 결과는 합산하지 않습니다.</p>
         {form.intersections.map((r, i) => <div className="accident-intersection" key={i}><div className="accident-grid">{[['name', '교차로명'], ['address', '인접 상세 주소'], ['lat', '위도'], ['lng', '경도'], ['radius', '반경(m)']].map(([key, label]) => <label key={key}>{i + 1}. {label}<input value={r[key]} onChange={e => intersectionUpdate(i, key, e.target.value)} /></label>)}</div><div className="accident-actions"><button type="button" className="mini-button" onClick={() => geocode(i)}>주소로 좌표 찾기</button><button type="button" className="mini-button" onClick={() => update('intersections', form.intersections.filter((_, j) => j !== i))}>삭제</button></div></div>)}
         <button type="button" className="secondary-button" disabled={form.intersections.length >= 10} onClick={() => update('intersections', [...form.intersections, { name: '', address: '', lat: '', lng: '', radius: '100' }])}>교차로 추가</button>
       </details>
       <p className="muted">좌표와 조사 조건은 조회를 위해 TAAS·카카오에 전송됩니다. TAAS 자료 제공 연도 내에서 조사하며, 외부 서비스 상태에 따라 수 분 걸릴 수 있습니다.</p>
-      <button type="button" className="primary-button" onClick={investigate}>자동 조사 시작</button>
+      <button type="button" className="primary-button" disabled={siteLocation.status !== 'ready'} onClick={investigate}>자동 조사 시작</button>
     </fieldset>
     <div className="accident-actions">{busy && <button type="button" className="secondary-button" onClick={stop}>조사 중단</button>}<button type="button" className="secondary-button" disabled={!results.length || busy || !!stale} onClick={download}>결과 엑셀 다운로드</button></div>
     <p role="status" aria-live="polite">{status}</p>

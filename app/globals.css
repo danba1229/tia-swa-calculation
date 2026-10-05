@@ -1684,6 +1684,10 @@ button.mini-button {
 /* Traffic accident survey shares the existing research panel styling. */
 .accident-survey[hidden] { display: none; }
 .accident-survey h3 { margin-top: 28px; }
+.site-location-status { color: var(--muted); font-size: 13px; line-height: 1.6; }
+.site-location-status button { margin-left: 8px; }
+.accident-site-summary { margin-top: 18px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.56); }
+.accident-site-summary p { margin: 6px 0 0; overflow-wrap: anywhere; }
 .accident-fields { border: 0; padding: 0; margin: 18px 0; min-width: 0; }
 .accident-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin: 16px 0; }
 .accident-survey label { display: flex; flex-direction: column; gap: 7px; font-weight: 600; }

@@ -10,6 +10,7 @@ import { loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader";
 import { busRefreshStatusText } from "../lib/seoulBusRefreshStatus";
 import SubwayResults from "./SubwayResults";
 import TrafficAccidentStep from "./TrafficAccidentStep";
+import useSiteLocation from "./useSiteLocation";
 import { createSubwayRows } from "../lib/subwayTable";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
@@ -570,6 +571,16 @@ function mergeLoadedState(parsed) {
 
 export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [form, setForm] = useState(createBlankState);
+  const siteLocation = useSiteLocation(form.basics.siteAddress);
+  useEffect(() => {
+    setForm(current => {
+      if (current.basics.siteAddress.trim() !== siteLocation.address) return current;
+      const centerLat = siteLocation.status === 'ready' ? siteLocation.lat : '';
+      const centerLng = siteLocation.status === 'ready' ? siteLocation.lng : '';
+      if (current.basics.centerLat === centerLat && current.basics.centerLng === centerLng) return current;
+      return { ...current, basics: { ...current.basics, centerLat, centerLng } };
+    });
+  }, [siteLocation.address, siteLocation.lat, siteLocation.lng, siteLocation.status]);
   const [activeStep, setActiveStep] = useState(0);
   const [mapCollapsed, setMapCollapsed] = useState(false);
   const [mapExpanded, setMapExpanded] = useState(false);
@@ -1031,7 +1042,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         basics: {
           ...current.basics,
           [field]: value,
-          ...(field === "siteAddress" || field === "rectWidth" || field === "rectHeight" ? { centerLat: "", centerLng: "" } : {}),
+          ...(field === "siteAddress" ? { centerLat: "", centerLng: "" } : {}),
         },
       };
 
@@ -1935,10 +1946,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
       if (!request.current()) return;
-      const result = await geocodeAddress(address);
+      const { lat, lng } = await resolveScopeCenter(null, request);
       if (!request.current()) return;
-      const lat = Number(result.y);
-      const lng = Number(result.x);
       const kakao = window.kakao;
       const boundsData = computeRectangleBounds(lat, lng, width, height);
       const center = new kakao.maps.LatLng(lat, lng);
@@ -2156,6 +2165,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
               <span>주소지</span>
               <input value={form.basics.siteAddress} onChange={(event) => updateBasics("siteAddress", event.target.value)} placeholder="예: 경기도 수원시 팔달구 효원로 241" />
             </label>
+            <div className="full site-location-status" role="status" aria-live="polite">
+              {siteLocation.message}
+              {siteLocation.status === 'ready' && <span> · 위도 {siteLocation.lat} / 경도 {siteLocation.lng}</span>}
+              {siteLocation.status === 'error' && <button type="button" className="mini-button" onClick={siteLocation.retry}>좌표 다시 확인</button>}
+            </div>
             <div className="inline-fields full">
               <label>
                 <span>가로 범위(m)</span>
@@ -3001,7 +3015,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       </section>
 
-      <TrafficAccidentStep key={accidentReset} basics={form.basics} visible={shouldShowStep(8)} />
+      <TrafficAccidentStep key={accidentReset} siteLocation={siteLocation} visible={shouldShowStep(8)} />
 
       <section className="panel status-panel">
         <div>
