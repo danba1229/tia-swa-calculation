@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ACCIDENT_TYPES, TAAS_URL, validateAccidentQuery } from '../lib/accidentSurvey';
 
 const STORAGE_KEY = 'tia-accident-survey-v1';
-const countLabels = { accidents: '사고건수', casualties: '사상자', deaths: '사망', serious: '중상', minor: '경상', reported: '부상신고' };
+const countLabels = { accidents: '사고건수', casualties: '사상자(TAAS 표기)', deaths: '사망', serious: '중상', minor: '경상', reported: '부상신고' };
 const initial = { address: '', lat: '', lng: '', radius: '500', year: String(new Date().getFullYear() - 1), years: '3', intersections: [] };
 const endpoint = { radius: '/api/accidents/radius', official: '/api/accidents/official' };
 async function requestJson(url, body, signal) {
@@ -76,7 +76,8 @@ export default function TrafficAccidentStep({ basics, visible }) {
       }
       if (run.current === id) {
         const errors = collected.filter(r => r.state === 'error' || Object.values(r.data?.sections || {}).some(s => s.status === 'error')).length;
-        setStatus(`조사 종료 · ${collected.length}/${jobs.length}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}`);
+        const warnings = collected.filter(r => r.data?.qualityWarnings?.length).length;
+        setStatus(`조사 종료 · ${collected.length}/${jobs.length}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}${warnings ? ` · ${warnings}개 결과의 원문 합계 확인이 필요합니다.` : ''}`);
       }
     } finally { if (run.current === id) setBusy(false); }
   }
@@ -86,7 +87,7 @@ export default function TrafficAccidentStep({ basics, visible }) {
     const workbook = XLSX.utils.book_new(), sheets = new Map();
     const add = (name, row) => { if (!sheets.has(name)) sheets.set(name, []); sheets.get(name).push(row); };
     for (const r of results) {
-      const common = { 년도: r.query.year, 지점: r.name, 위도: r.query.lat, 경도: r.query.lng, 반경m: r.query.radius, 상태: r.state, 조회일시: r.data?.retrievedAt || '', 오류: r.message || '' };
+      const common = { 년도: r.query.year, 지점: r.name, 위도: r.query.lat, 경도: r.query.lng, 반경m: r.query.radius, 상태: r.state, 조회일시: r.data?.retrievedAt || '', 오류: r.message || '', 원문검산: r.data?.qualityWarnings?.join(' ') || '' };
       if (r.kind === 'radius') {
         const sheet = r.intersection ? `교차로사고(${r.intersection})` : { all: '사업지 주변', pedestrian: '보행자사고', bicycle: '자전거사고' }[r.query.type];
         add(sheet, { ...common, 사고구분: ACCIDENT_TYPES[r.query.type], ...Object.fromEntries(Object.entries(countLabels).map(([k, v]) => [v, r.data?.counts?.[k] ?? null])), 출처: TAAS_URL, 원문: r.data?.evidence || '' });
@@ -123,6 +124,7 @@ export default function TrafficAccidentStep({ basics, visible }) {
     <p role="status" aria-live="polite">{status}</p>
     {stale && <p className="accident-warning">조건이 변경되었습니다. 아래는 이전 조건의 결과입니다. 다시 조사해 주세요.</p>}
     <div className={stale ? 'accident-stale' : ''}>
+      {results.filter(r => r.data?.qualityWarnings?.length).map((r, i) => <p className="accident-warning" key={i}>{r.query.year}년 {r.name} · {ACCIDENT_TYPES[r.query.type]}: {r.data.qualityWarnings.join(' ')}</p>)}
       {!!results.length && <><h3>반경 내 사고 집계</h3><div className="table-wrap"><table><thead><tr><th>연도</th><th>지점·반경</th><th>구분</th>{Object.values(countLabels).map(v => <th key={v}>{v}</th>)}<th>조회 상태</th></tr></thead><tbody>{results.filter(r => r.kind === 'radius').map((r, i) => <tr key={i}><td>{r.query.year}</td><td>{r.name} · {r.query.radius}m</td><td>{r.intersection ? '교차로 주변 전체' : ACCIDENT_TYPES[r.query.type]}</td>{Object.keys(countLabels).map(k => <td key={k}>{r.data?.counts?.[k] ?? '—'}</td>)}<td>{r.state === 'error' ? r.message : r.data.cached ? '완료 (1시간 내 저장자료)' : '완료'}</td></tr>)}</tbody></table></div>
       <h3>시군구 전체 사고 통계</h3><p>사업지가 속한 시군구 전체 통계입니다. 위의 사업지 반경 통계와 범위가 다릅니다.</p><div className="table-wrap"><table><thead><tr><th>연도</th><th>지역</th><th>구분</th><th>사고</th><th>사망</th><th>부상</th></tr></thead><tbody>{results.filter(r => r.kind === 'official').flatMap((r, i) => r.data?.sections.statistics.rows?.length ? r.data.sections.statistics.rows.filter(s => ['전체사고', '보행자사고', '자전거사고'].includes(s.acc_cl_nm)).map(s => <tr key={`${i}-${s.acc_cl_nm}`}><td>{s.std_year}</td><td>{s.sido_sgg_nm}</td><td>{s.acc_cl_nm}</td><td>{s.acc_cnt}</td><td>{s.dth_dnv_cnt}</td><td>{s.injpsn_cnt}</td></tr>) : <tr key={i}><td>{r.query.year}</td><td colSpan="5">{r.message || r.data?.sections.statistics.message || '해당 연도 자료 없음'}</td></tr>)}</tbody></table></div>
       <details><summary>보행자·자전거 사고다발지역 참고자료</summary><p>선정 기준에 해당하는 다발지역 중 중심점이 지정 반경 안에 있는 지점입니다. 전체 사고 건수로 사용하지 않습니다. 보행자 자료는 최근 3년 기준이므로 1년 반경 조회와 직접 비교할 수 없습니다.</p>{results.filter(r => r.kind === 'official').map((r, i) => <div key={i}><h4>{r.query.year}년 요청 · {r.data?.region.name || r.name}</h4>{['pedestrian', 'bicycle'].map(key => { const s = r.data?.sections[key]; return <div key={key}><strong>{ACCIDENT_TYPES[key]} 다발지역</strong><p>{s?.message || r.message || (s?.status === 'no_data' ? '공단 제공자료 없음' : `${s?.rows?.length ?? 0}개 지점`)}</p>{s?.rows?.map((row, j) => <p key={j}>{row.spot_nm} · 중심점 거리 {Math.round(row.distance)}m · 다발지역 사고 {row.occrrnc_cnt}건</p>)}</div>; })}</div>)}</details></>}

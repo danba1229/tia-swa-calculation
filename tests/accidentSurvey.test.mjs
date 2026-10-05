@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import proj4 from 'proj4';
-import { validateAccidentQuery, parseRadiusResult, decodeKoroadKey } from '../lib/accidentSurvey.js';
+import { validateAccidentQuery, parseRadiusResult, decodeKoroadKey, radiusQualityWarnings } from '../lib/accidentSurvey.js';
 import { findStatisticsRegion, getKoroadRows } from '../lib/koroad.js';
 const query = { lat: 37.5, lng: 127, radius: 500, year: 2025, type: 'all' };
 test('reject missing coordinates, unsupported type, excessive radius and noninteger year', () => {
@@ -15,7 +15,10 @@ test('parse verified zero and positive counts; reject missing, stale and inconsi
   assert.equal(parseRadiusResult(text.replace(/79|84|16|61|7(?=$)/g, '0'), 'TIA_test', xy).accidents, 0);
   assert.throws(() => parseRadiusResult(text, 'other', xy));
   assert.throws(() => parseRadiusResult(text, 'TIA_test', [1, 2]));
-  assert.throws(() => parseRadiusResult(text.replace('84', '85'), 'TIA_test', xy));
+  const discrepant = parseRadiusResult(text.replace('84', '85'), 'TIA_test', xy);
+  assert.equal(discrepant.casualties, 85);
+  assert.equal(radiusQualityWarnings(discrepant).length, 1);
+  assert.equal(radiusQualityWarnings(parseRadiusResult(text, 'TIA_test', xy)).length, 0);
   assert.throws(() => parseRadiusResult(text.replace('중상자수 : 16', ''), 'TIA_test', xy));
 });
 test('official Gangnam EPSG:5181 sample round trips to WGS84 without swapping axes', () => {
