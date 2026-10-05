@@ -10,6 +10,7 @@ import { loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader";
 import { busRefreshStatusText } from "../lib/seoulBusRefreshStatus";
 import SubwayResults from "./SubwayResults";
 import TrafficAccidentStep from "./TrafficAccidentStep";
+import TrafficPeakAnalysis from "./TrafficPeakAnalysis";
 import useSiteLocation from "./useSiteLocation";
 import { createSubwayRows } from "../lib/subwayTable";
 
@@ -2419,6 +2420,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </div>
           <p className="priority-note">{buildPriorityNote(selectedSurveyPoint, autoSurveyPoints)}</p>
         </div>
+
+        <TrafficPeakAnalysis key={form.basics.siteAddress} address={form.basics.siteAddress}
+          region={detectSurveyRegion(form.basics.siteAddress)} candidates={topisCandidates} active={shouldShowStep(2)} />
 
       </section>
 

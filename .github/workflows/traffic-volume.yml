@@ -1,0 +1,39 @@
+name: Sync TOPIS monthly traffic
+on:
+  schedule:
+    - cron: '23 22 * * 0'
+  workflow_dispatch:
+    inputs:
+      year:
+        description: 'Backfill year (blank: current and previous year)'
+        required: false
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: topis-monthly-sync
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Validate parser and peak analysis
+        run: node --test tests/trafficPeak.test.mjs
+      - name: Collect published monthly workbooks
+        env:
+          TRAFFIC_DATABASE_URL: ${{ secrets.TRAFFIC_DATABASE_URL }}
+          INPUT_YEAR: ${{ inputs.year }}
+        shell: bash
+        run: |
+          if [ -n "$INPUT_YEAR" ]; then
+            node scripts/sync_topis_monthly.mjs "--year=$INPUT_YEAR"
+          else
+            node scripts/sync_topis_monthly.mjs
+          fi
