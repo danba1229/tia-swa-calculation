@@ -1,0 +1,1398 @@
+{
+  "source": "https://opendata.koroad.or.kr/api/down/stt_codelist_down.jsp",
+  "retrievedAt": "2026-10-05T04:56:29.141Z",
+  "regions": [
+    {
+      "province": "서울특별시",
+      "district": "강남구",
+      "siDo": "1100",
+      "guGun": "1116"
+    },
+    {
+      "province": "서울특별시",
+      "district": "강동구",
+      "siDo": "1100",
+      "guGun": "1117"
+    },
+    {
+      "province": "서울특별시",
+      "district": "강북구",
+      "siDo": "1100",
+      "guGun": "1124"
+    },
+    {
+      "province": "서울특별시",
+      "district": "강서구",
+      "siDo": "1100",
+      "guGun": "1111"
+    },
+    {
+      "province": "서울특별시",
+      "district": "관악구",
+      "siDo": "1100",
+      "guGun": "1115"
+    },
+    {
+      "province": "서울특별시",
+      "district": "광진구",
+      "siDo": "1100",
+      "guGun": "1123"
+    },
+    {
+      "province": "서울특별시",
+      "district": "구로구",
+      "siDo": "1100",
+      "guGun": "1112"
+    },
+    {
+      "province": "서울특별시",
+      "district": "금천구",
+      "siDo": "1100",
+      "guGun": "1125"
+    },
+    {
+      "province": "서울특별시",
+      "district": "노원구",
+      "siDo": "1100",
+      "guGun": "1122"
+    },
+    {
+      "province": "서울특별시",
+      "district": "도봉구",
+      "siDo": "1100",
+      "guGun": "1107"
+    },
+    {
+      "province": "서울특별시",
+      "district": "동대문구",
+      "siDo": "1100",
+      "guGun": "1105"
+    },
+    {
+      "province": "서울특별시",
+      "district": "동작구",
+      "siDo": "1100",
+      "guGun": "1114"
+    },
+    {
+      "province": "서울특별시",
+      "district": "마포구",
+      "siDo": "1100",
+      "guGun": "1110"
+    },
+    {
+      "province": "서울특별시",
+      "district": "서대문구",
+      "siDo": "1100",
+      "guGun": "1109"
+    },
+    {
+      "province": "서울특별시",
+      "district": "서초구",
+      "siDo": "1100",
+      "guGun": "1119"
+    },
+    {
+      "province": "서울특별시",
+      "district": "성동구",
+      "siDo": "1100",
+      "guGun": "1104"
+    },
+    {
+      "province": "서울특별시",
+      "district": "성북구",
+      "siDo": "1100",
+      "guGun": "1106"
+    },
+    {
+      "province": "서울특별시",
+      "district": "송파구",
+      "siDo": "1100",
+      "guGun": "1118"
+    },
+    {
+      "province": "서울특별시",
+      "district": "양천구",
+      "siDo": "1100",
+      "guGun": "1120"
+    },
+    {
+      "province": "서울특별시",
+      "district": "영등포구",
+      "siDo": "1100",
+      "guGun": "1113"
+    },
+    {
+      "province": "서울특별시",
+      "district": "용산구",
+      "siDo": "1100",
+      "guGun": "1103"
+    },
+    {
+      "province": "서울특별시",
+      "district": "은평구",
+      "siDo": "1100",
+      "guGun": "1108"
+    },
+    {
+      "province": "서울특별시",
+      "district": "종로구",
+      "siDo": "1100",
+      "guGun": "1101"
+    },
+    {
+      "province": "서울특별시",
+      "district": "중구",
+      "siDo": "1100",
+      "guGun": "1102"
+    },
+    {
+      "province": "서울특별시",
+      "district": "중랑구",
+      "siDo": "1100",
+      "guGun": "1121"
+    },
+    {
+      "province": "부산광역시",
+      "district": "강서구",
+      "siDo": "1200",
+      "guGun": "1212"
+    },
+    {
+      "province": "부산광역시",
+      "district": "금정구",
+      "siDo": "1200",
+      "guGun": "1211"
+    },
+    {
+      "province": "부산광역시",
+      "district": "기장군",
+      "siDo": "1200",
+      "guGun": "1216"
+    },
+    {
+      "province": "부산광역시",
+      "district": "남구",
+      "siDo": "1200",
+      "guGun": "1207"
+    },
+    {
+      "province": "부산광역시",
+      "district": "동구",
+      "siDo": "1200",
+      "guGun": "1203"
+    },
+    {
+      "province": "부산광역시",
+      "district": "동래구",
+      "siDo": "1200",
+      "guGun": "1206"
+    },
+    {
+      "province": "부산광역시",
+      "district": "북구",
+      "siDo": "1200",
+      "guGun": "1208"
+    },
+    {
+      "province": "부산광역시",
+      "district": "사상구",
+      "siDo": "1200",
+      "guGun": "1215"
+    },
+    {
+      "province": "부산광역시",
+      "district": "사하구",
+      "siDo": "1200",
+      "guGun": "1210"
+    },
+    {
+      "province": "부산광역시",
+      "district": "서구",
+      "siDo": "1200",
+      "guGun": "1202"
+    },
+    {
+      "province": "부산광역시",
+      "district": "수영구",
+      "siDo": "1200",
+      "guGun": "1214"
+    },
+    {
+      "province": "부산광역시",
+      "district": "연제구",
+      "siDo": "1200",
+      "guGun": "1213"
+    },
+    {
+      "province": "부산광역시",
+      "district": "영도구",
+      "siDo": "1200",
+      "guGun": "1204"
+    },
+    {
+      "province": "부산광역시",
+      "district": "중구",
+      "siDo": "1200",
+      "guGun": "1201"
+    },
+    {
+      "province": "부산광역시",
+      "district": "진구",
+      "siDo": "1200",
+      "guGun": "1205"
+    },
+    {
+      "province": "부산광역시",
+      "district": "해운대구",
+      "siDo": "1200",
+      "guGun": "1209"
+    },
+    {
+      "province": "대구광역시",
+      "district": "남구",
+      "siDo": "2200",
+      "guGun": "2204"
+    },
+    {
+      "province": "대구광역시",
+      "district": "달서구",
+      "siDo": "2200",
+      "guGun": "2207"
+    },
+    {
+      "province": "대구광역시",
+      "district": "달성군",
+      "siDo": "2200",
+      "guGun": "2208"
+    },
+    {
+      "province": "대구광역시",
+      "district": "동구",
+      "siDo": "2200",
+      "guGun": "2202"
+    },
+    {
+      "province": "대구광역시",
+      "district": "북구",
+      "siDo": "2200",
+      "guGun": "2205"
+    },
+    {
+      "province": "대구광역시",
+      "district": "서구",
+      "siDo": "2200",
+      "guGun": "2203"
+    },
+    {
+      "province": "대구광역시",
+      "district": "수성구",
+      "siDo": "2200",
+      "guGun": "2206"
+    },
+    {
+      "province": "대구광역시",
+      "district": "중구",
+      "siDo": "2200",
+      "guGun": "2201"
+    },
+    {
+      "province": "대구광역시",
+      "district": "군위군",
+      "siDo": "2200",
+      "guGun": "2235"
+    },
+    {
+      "province": "인천광역시",
+      "district": "강화군",
+      "siDo": "2300",
+      "guGun": "2309"
+    },
+    {
+      "province": "인천광역시",
+      "district": "계양구",
+      "siDo": "2300",
+      "guGun": "2308"
+    },
+    {
+      "province": "인천광역시",
+      "district": "미추홀구",
+      "siDo": "2300",
+      "guGun": "2303"
+    },
+    {
+      "province": "인천광역시",
+      "district": "남동구",
+      "siDo": "2300",
+      "guGun": "2305"
+    },
+    {
+      "province": "인천광역시",
+      "district": "동구",
+      "siDo": "2300",
+      "guGun": "2302"
+    },
+    {
+      "province": "인천광역시",
+      "district": "부평구",
+      "siDo": "2300",
+      "guGun": "2304"
+    },
+    {
+      "province": "인천광역시",
+      "district": "서구",
+      "siDo": "2300",
+      "guGun": "2306"
+    },
+    {
+      "province": "인천광역시",
+      "district": "연수구",
+      "siDo": "2300",
+      "guGun": "2307"
+    },
+    {
+      "province": "인천광역시",
+      "district": "옹진군",
+      "siDo": "2300",
+      "guGun": "2310"
+    },
+    {
+      "province": "인천광역시",
+      "district": "중구",
+      "siDo": "2300",
+      "guGun": "2301"
+    },
+    {
+      "province": "광주광역시",
+      "district": "광산구",
+      "siDo": "2400",
+      "guGun": "2404"
+    },
+    {
+      "province": "광주광역시",
+      "district": "남구",
+      "siDo": "2400",
+      "guGun": "2405"
+    },
+    {
+      "province": "광주광역시",
+      "district": "동구",
+      "siDo": "2400",
+      "guGun": "2401"
+    },
+    {
+      "province": "광주광역시",
+      "district": "북구",
+      "siDo": "2400",
+      "guGun": "2403"
+    },
+    {
+      "province": "광주광역시",
+      "district": "서구",
+      "siDo": "2400",
+      "guGun": "2402"
+    },
+    {
+      "province": "대전광역시",
+      "district": "대덕구",
+      "siDo": "2500",
+      "guGun": "2505"
+    },
+    {
+      "province": "대전광역시",
+      "district": "동구",
+      "siDo": "2500",
+      "guGun": "2501"
+    },
+    {
+      "province": "대전광역시",
+      "district": "서구",
+      "siDo": "2500",
+      "guGun": "2503"
+    },
+    {
+      "province": "대전광역시",
+      "district": "유성구",
+      "siDo": "2500",
+      "guGun": "2504"
+    },
+    {
+      "province": "대전광역시",
+      "district": "중구",
+      "siDo": "2500",
+      "guGun": "2502"
+    },
+    {
+      "province": "울산광역시",
+      "district": "남구",
+      "siDo": "2600",
+      "guGun": "2602"
+    },
+    {
+      "province": "울산광역시",
+      "district": "동구",
+      "siDo": "2600",
+      "guGun": "2603"
+    },
+    {
+      "province": "울산광역시",
+      "district": "북구",
+      "siDo": "2600",
+      "guGun": "2604"
+    },
+    {
+      "province": "울산광역시",
+      "district": "울주군",
+      "siDo": "2600",
+      "guGun": "2605"
+    },
+    {
+      "province": "울산광역시",
+      "district": "중구",
+      "siDo": "2600",
+      "guGun": "2601"
+    },
+    {
+      "province": "세종특별자치시",
+      "district": "세종특별자치시",
+      "siDo": "2700",
+      "guGun": "2701"
+    },
+    {
+      "province": "경기도",
+      "district": "가평군",
+      "siDo": "1300",
+      "guGun": "1322"
+    },
+    {
+      "province": "경기도",
+      "district": "고양시",
+      "siDo": "1300",
+      "guGun": "1318"
+    },
+    {
+      "province": "경기도",
+      "district": "과천시",
+      "siDo": "1300",
+      "guGun": "1332"
+    },
+    {
+      "province": "경기도",
+      "district": "광명시",
+      "siDo": "1300",
+      "guGun": "1309"
+    },
+    {
+      "province": "경기도",
+      "district": "광주시",
+      "siDo": "1300",
+      "guGun": "1319"
+    },
+    {
+      "province": "경기도",
+      "district": "구리시",
+      "siDo": "1300",
+      "guGun": "1310"
+    },
+    {
+      "province": "경기도",
+      "district": "군포시",
+      "siDo": "1300",
+      "guGun": "1333"
+    },
+    {
+      "province": "경기도",
+      "district": "김포시",
+      "siDo": "1300",
+      "guGun": "1327"
+    },
+    {
+      "province": "경기도",
+      "district": "남양주시",
+      "siDo": "1300",
+      "guGun": "1334"
+    },
+    {
+      "province": "경기도",
+      "district": "동두천시",
+      "siDo": "1300",
+      "guGun": "1330"
+    },
+    {
+      "province": "경기도",
+      "district": "부천시",
+      "siDo": "1300",
+      "guGun": "1306"
+    },
+    {
+      "province": "경기도",
+      "district": "성남시",
+      "siDo": "1300",
+      "guGun": "1303"
+    },
+    {
+      "province": "경기도",
+      "district": "수원시",
+      "siDo": "1300",
+      "guGun": "1302"
+    },
+    {
+      "province": "경기도",
+      "district": "시흥시",
+      "siDo": "1300",
+      "guGun": "1316"
+    },
+    {
+      "province": "경기도",
+      "district": "안산시",
+      "siDo": "1300",
+      "guGun": "1307"
+    },
+    {
+      "province": "경기도",
+      "district": "안성시",
+      "siDo": "1300",
+      "guGun": "1326"
+    },
+    {
+      "province": "경기도",
+      "district": "안양시",
+      "siDo": "1300",
+      "guGun": "1305"
+    },
+    {
+      "province": "경기도",
+      "district": "양주시",
+      "siDo": "1300",
+      "guGun": "1311"
+    },
+    {
+      "province": "경기도",
+      "district": "양평군",
+      "siDo": "1300",
+      "guGun": "1323"
+    },
+    {
+      "province": "경기도",
+      "district": "여주시",
+      "siDo": "1300",
+      "guGun": "1313"
+    },
+    {
+      "province": "경기도",
+      "district": "연천군",
+      "siDo": "1300",
+      "guGun": "1320"
+    },
+    {
+      "province": "경기도",
+      "district": "오산시",
+      "siDo": "1300",
+      "guGun": "1335"
+    },
+    {
+      "province": "경기도",
+      "district": "용인시",
+      "siDo": "1300",
+      "guGun": "1325"
+    },
+    {
+      "province": "경기도",
+      "district": "의왕시",
+      "siDo": "1300",
+      "guGun": "1336"
+    },
+    {
+      "province": "경기도",
+      "district": "의정부시",
+      "siDo": "1300",
+      "guGun": "1304"
+    },
+    {
+      "province": "경기도",
+      "district": "이천시",
+      "siDo": "1300",
+      "guGun": "1324"
+    },
+    {
+      "province": "경기도",
+      "district": "파주시",
+      "siDo": "1300",
+      "guGun": "1317"
+    },
+    {
+      "province": "경기도",
+      "district": "평택시",
+      "siDo": "1300",
+      "guGun": "1308"
+    },
+    {
+      "province": "경기도",
+      "district": "포천시",
+      "siDo": "1300",
+      "guGun": "1321"
+    },
+    {
+      "province": "경기도",
+      "district": "하남시",
+      "siDo": "1300",
+      "guGun": "1337"
+    },
+    {
+      "province": "경기도",
+      "district": "화성시",
+      "siDo": "1300",
+      "guGun": "1315"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "강릉시",
+      "siDo": "1400",
+      "guGun": "1404"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "고성군",
+      "siDo": "1400",
+      "guGun": "1422"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "동해시",
+      "siDo": "1400",
+      "guGun": "1403"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "삼척시",
+      "siDo": "1400",
+      "guGun": "1407"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "속초시",
+      "siDo": "1400",
+      "guGun": "1405"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "양구군",
+      "siDo": "1400",
+      "guGun": "1420"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "양양군",
+      "siDo": "1400",
+      "guGun": "1423"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "영월군",
+      "siDo": "1400",
+      "guGun": "1415"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "원주시",
+      "siDo": "1400",
+      "guGun": "1402"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "인제군",
+      "siDo": "1400",
+      "guGun": "1421"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "정선군",
+      "siDo": "1400",
+      "guGun": "1417"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "철원군",
+      "siDo": "1400",
+      "guGun": "1418"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "춘천시",
+      "siDo": "1400",
+      "guGun": "1401"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "태백시",
+      "siDo": "1400",
+      "guGun": "1406"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "평창군",
+      "siDo": "1400",
+      "guGun": "1416"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "홍천군",
+      "siDo": "1400",
+      "guGun": "1412"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "화천군",
+      "siDo": "1400",
+      "guGun": "1419"
+    },
+    {
+      "province": "강원특별자치도",
+      "district": "횡성군",
+      "siDo": "1400",
+      "guGun": "1413"
+    },
+    {
+      "province": "충청북도",
+      "district": "괴산군",
+      "siDo": "1500",
+      "guGun": "1516"
+    },
+    {
+      "province": "충청북도",
+      "district": "단양군",
+      "siDo": "1500",
+      "guGun": "1520"
+    },
+    {
+      "province": "충청북도",
+      "district": "보은군",
+      "siDo": "1500",
+      "guGun": "1512"
+    },
+    {
+      "province": "충청북도",
+      "district": "영동군",
+      "siDo": "1500",
+      "guGun": "1514"
+    },
+    {
+      "province": "충청북도",
+      "district": "옥천군",
+      "siDo": "1500",
+      "guGun": "1513"
+    },
+    {
+      "province": "충청북도",
+      "district": "음성군",
+      "siDo": "1500",
+      "guGun": "1517"
+    },
+    {
+      "province": "충청북도",
+      "district": "제천시",
+      "siDo": "1500",
+      "guGun": "1503"
+    },
+    {
+      "province": "충청북도",
+      "district": "증평군",
+      "siDo": "1500",
+      "guGun": "1521"
+    },
+    {
+      "province": "충청북도",
+      "district": "진천군",
+      "siDo": "1500",
+      "guGun": "1515"
+    },
+    {
+      "province": "충청북도",
+      "district": "청원군",
+      "siDo": "1500",
+      "guGun": "1511"
+    },
+    {
+      "province": "충청북도",
+      "district": "청주시",
+      "siDo": "1500",
+      "guGun": "1501"
+    },
+    {
+      "province": "충청북도",
+      "district": "충주시",
+      "siDo": "1500",
+      "guGun": "1502"
+    },
+    {
+      "province": "충청남도",
+      "district": "계룡시",
+      "siDo": "1600",
+      "guGun": "1624"
+    },
+    {
+      "province": "충청남도",
+      "district": "공주시",
+      "siDo": "1600",
+      "guGun": "1605"
+    },
+    {
+      "province": "충청남도",
+      "district": "금산군",
+      "siDo": "1600",
+      "guGun": "1611"
+    },
+    {
+      "province": "충청남도",
+      "district": "논산시",
+      "siDo": "1600",
+      "guGun": "1615"
+    },
+    {
+      "province": "충청남도",
+      "district": "당진시",
+      "siDo": "1600",
+      "guGun": "1623"
+    },
+    {
+      "province": "충청남도",
+      "district": "보령시",
+      "siDo": "1600",
+      "guGun": "1604"
+    },
+    {
+      "province": "충청남도",
+      "district": "부여군",
+      "siDo": "1600",
+      "guGun": "1616"
+    },
+    {
+      "province": "충청남도",
+      "district": "서산시",
+      "siDo": "1600",
+      "guGun": "1606"
+    },
+    {
+      "province": "충청남도",
+      "district": "서천군",
+      "siDo": "1600",
+      "guGun": "1617"
+    },
+    {
+      "province": "충청남도",
+      "district": "아산시",
+      "siDo": "1600",
+      "guGun": "1603"
+    },
+    {
+      "province": "충청남도",
+      "district": "연기군",
+      "siDo": "1600",
+      "guGun": "1613"
+    },
+    {
+      "province": "충청남도",
+      "district": "예산군",
+      "siDo": "1600",
+      "guGun": "1621"
+    },
+    {
+      "province": "충청남도",
+      "district": "천안시",
+      "siDo": "1600",
+      "guGun": "1602"
+    },
+    {
+      "province": "충청남도",
+      "district": "청양군",
+      "siDo": "1600",
+      "guGun": "1619"
+    },
+    {
+      "province": "충청남도",
+      "district": "태안군",
+      "siDo": "1600",
+      "guGun": "1612"
+    },
+    {
+      "province": "충청남도",
+      "district": "홍성군",
+      "siDo": "1600",
+      "guGun": "1620"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "고창군",
+      "siDo": "1700",
+      "guGun": "1719"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "군산시",
+      "siDo": "1700",
+      "guGun": "1702"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "김제시",
+      "siDo": "1700",
+      "guGun": "1706"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "남원시",
+      "siDo": "1700",
+      "guGun": "1705"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "무주군",
+      "siDo": "1700",
+      "guGun": "1713"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "부안군",
+      "siDo": "1700",
+      "guGun": "1720"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "순창군",
+      "siDo": "1700",
+      "guGun": "1717"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "완주군",
+      "siDo": "1700",
+      "guGun": "1711"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "익산시",
+      "siDo": "1700",
+      "guGun": "1723"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "임실군",
+      "siDo": "1700",
+      "guGun": "1715"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "장수군",
+      "siDo": "1700",
+      "guGun": "1714"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "전주시",
+      "siDo": "1700",
+      "guGun": "1701"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "정읍시",
+      "siDo": "1700",
+      "guGun": "1704"
+    },
+    {
+      "province": "전북특별자치도",
+      "district": "진안군",
+      "siDo": "1700",
+      "guGun": "1712"
+    },
+    {
+      "province": "전라남도",
+      "district": "강진군",
+      "siDo": "1800",
+      "guGun": "1822"
+    },
+    {
+      "province": "전라남도",
+      "district": "고흥군",
+      "siDo": "1800",
+      "guGun": "1818"
+    },
+    {
+      "province": "전라남도",
+      "district": "곡성군",
+      "siDo": "1800",
+      "guGun": "1813"
+    },
+    {
+      "province": "전라남도",
+      "district": "광양시",
+      "siDo": "1800",
+      "guGun": "1808"
+    },
+    {
+      "province": "전라남도",
+      "district": "구례군",
+      "siDo": "1800",
+      "guGun": "1814"
+    },
+    {
+      "province": "전라남도",
+      "district": "나주시",
+      "siDo": "1800",
+      "guGun": "1806"
+    },
+    {
+      "province": "전라남도",
+      "district": "담양군",
+      "siDo": "1800",
+      "guGun": "1812"
+    },
+    {
+      "province": "전라남도",
+      "district": "목포시",
+      "siDo": "1800",
+      "guGun": "1802"
+    },
+    {
+      "province": "전라남도",
+      "district": "무안군",
+      "siDo": "1800",
+      "guGun": "1825"
+    },
+    {
+      "province": "전라남도",
+      "district": "보성군",
+      "siDo": "1800",
+      "guGun": "1819"
+    },
+    {
+      "province": "전라남도",
+      "district": "순천시",
+      "siDo": "1800",
+      "guGun": "1804"
+    },
+    {
+      "province": "전라남도",
+      "district": "신안군",
+      "siDo": "1800",
+      "guGun": "1832"
+    },
+    {
+      "province": "전라남도",
+      "district": "여수시",
+      "siDo": "1800",
+      "guGun": "1803"
+    },
+    {
+      "province": "전라남도",
+      "district": "영광군",
+      "siDo": "1800",
+      "guGun": "1828"
+    },
+    {
+      "province": "전라남도",
+      "district": "영암군",
+      "siDo": "1800",
+      "guGun": "1824"
+    },
+    {
+      "province": "전라남도",
+      "district": "완도군",
+      "siDo": "1800",
+      "guGun": "1830"
+    },
+    {
+      "province": "전라남도",
+      "district": "장성군",
+      "siDo": "1800",
+      "guGun": "1829"
+    },
+    {
+      "province": "전라남도",
+      "district": "장흥군",
+      "siDo": "1800",
+      "guGun": "1821"
+    },
+    {
+      "province": "전라남도",
+      "district": "진도군",
+      "siDo": "1800",
+      "guGun": "1831"
+    },
+    {
+      "province": "전라남도",
+      "district": "함평군",
+      "siDo": "1800",
+      "guGun": "1827"
+    },
+    {
+      "province": "전라남도",
+      "district": "해남군",
+      "siDo": "1800",
+      "guGun": "1823"
+    },
+    {
+      "province": "전라남도",
+      "district": "화순군",
+      "siDo": "1800",
+      "guGun": "1820"
+    },
+    {
+      "province": "경상북도",
+      "district": "경산시",
+      "siDo": "1900",
+      "guGun": "1935"
+    },
+    {
+      "province": "경상북도",
+      "district": "경주시",
+      "siDo": "1900",
+      "guGun": "1903"
+    },
+    {
+      "province": "경상북도",
+      "district": "고령군",
+      "siDo": "1900",
+      "guGun": "1923"
+    },
+    {
+      "province": "경상북도",
+      "district": "구미시",
+      "siDo": "1900",
+      "guGun": "1906"
+    },
+    {
+      "province": "경상북도",
+      "district": "군위군(구)",
+      "siDo": "1900",
+      "guGun": "1912"
+    },
+    {
+      "province": "경상북도",
+      "district": "김천시",
+      "siDo": "1900",
+      "guGun": "1904"
+    },
+    {
+      "province": "경상북도",
+      "district": "문경시",
+      "siDo": "1900",
+      "guGun": "1909"
+    },
+    {
+      "province": "경상북도",
+      "district": "봉화군",
+      "siDo": "1900",
+      "guGun": "1932"
+    },
+    {
+      "province": "경상북도",
+      "district": "상주시",
+      "siDo": "1900",
+      "guGun": "1910"
+    },
+    {
+      "province": "경상북도",
+      "district": "성주군",
+      "siDo": "1900",
+      "guGun": "1924"
+    },
+    {
+      "province": "경상북도",
+      "district": "안동시",
+      "siDo": "1900",
+      "guGun": "1905"
+    },
+    {
+      "province": "경상북도",
+      "district": "영덕군",
+      "siDo": "1900",
+      "guGun": "1917"
+    },
+    {
+      "province": "경상북도",
+      "district": "영양군",
+      "siDo": "1900",
+      "guGun": "1916"
+    },
+    {
+      "province": "경상북도",
+      "district": "영주시",
+      "siDo": "1900",
+      "guGun": "1907"
+    },
+    {
+      "province": "경상북도",
+      "district": "영천시",
+      "siDo": "1900",
+      "guGun": "1908"
+    },
+    {
+      "province": "경상북도",
+      "district": "예천군",
+      "siDo": "1900",
+      "guGun": "1930"
+    },
+    {
+      "province": "경상북도",
+      "district": "울릉군",
+      "siDo": "1900",
+      "guGun": "1934"
+    },
+    {
+      "province": "경상북도",
+      "district": "울진군",
+      "siDo": "1900",
+      "guGun": "1933"
+    },
+    {
+      "province": "경상북도",
+      "district": "의성군",
+      "siDo": "1900",
+      "guGun": "1913"
+    },
+    {
+      "province": "경상북도",
+      "district": "청도군",
+      "siDo": "1900",
+      "guGun": "1922"
+    },
+    {
+      "province": "경상북도",
+      "district": "청송군",
+      "siDo": "1900",
+      "guGun": "1915"
+    },
+    {
+      "province": "경상북도",
+      "district": "칠곡군",
+      "siDo": "1900",
+      "guGun": "1925"
+    },
+    {
+      "province": "경상북도",
+      "district": "포항시",
+      "siDo": "1900",
+      "guGun": "1902"
+    },
+    {
+      "province": "경상남도",
+      "district": "거제시",
+      "siDo": "2000",
+      "guGun": "2010"
+    },
+    {
+      "province": "경상남도",
+      "district": "거창군",
+      "siDo": "2000",
+      "guGun": "2028"
+    },
+    {
+      "province": "경상남도",
+      "district": "고성군",
+      "siDo": "2000",
+      "guGun": "2022"
+    },
+    {
+      "province": "경상남도",
+      "district": "김해시",
+      "siDo": "2000",
+      "guGun": "2008"
+    },
+    {
+      "province": "경상남도",
+      "district": "남해군",
+      "siDo": "2000",
+      "guGun": "2024"
+    },
+    {
+      "province": "경상남도",
+      "district": "밀양시",
+      "siDo": "2000",
+      "guGun": "2009"
+    },
+    {
+      "province": "경상남도",
+      "district": "사천시",
+      "siDo": "2000",
+      "guGun": "2023"
+    },
+    {
+      "province": "경상남도",
+      "district": "산청군",
+      "siDo": "2000",
+      "guGun": "2026"
+    },
+    {
+      "province": "경상남도",
+      "district": "양산시",
+      "siDo": "2000",
+      "guGun": "2016"
+    },
+    {
+      "province": "경상남도",
+      "district": "의령군",
+      "siDo": "2000",
+      "guGun": "2012"
+    },
+    {
+      "province": "경상남도",
+      "district": "진주시",
+      "siDo": "2000",
+      "guGun": "2003"
+    },
+    {
+      "province": "경상남도",
+      "district": "창녕군",
+      "siDo": "2000",
+      "guGun": "2014"
+    },
+    {
+      "province": "경상남도",
+      "district": "창원시",
+      "siDo": "2000",
+      "guGun": "2030"
+    },
+    {
+      "province": "경상남도",
+      "district": "통영시",
+      "siDo": "2000",
+      "guGun": "2006"
+    },
+    {
+      "province": "경상남도",
+      "district": "하동군",
+      "siDo": "2000",
+      "guGun": "2025"
+    },
+    {
+      "province": "경상남도",
+      "district": "함안군",
+      "siDo": "2000",
+      "guGun": "2013"
+    },
+    {
+      "province": "경상남도",
+      "district": "함양군",
+      "siDo": "2000",
+      "guGun": "2027"
+    },
+    {
+      "province": "경상남도",
+      "district": "합천군",
+      "siDo": "2000",
+      "guGun": "2029"
+    },
+    {
+      "province": "제주특별자치도",
+      "district": "서귀포시",
+      "guGun": "2102",
+      "siDo": "2100"
+    },
+    {
+      "province": "제주특별자치도",
+      "district": "제주시",
+      "guGun": "2101",
+      "siDo": "2100"
+    }
+  ]
+}

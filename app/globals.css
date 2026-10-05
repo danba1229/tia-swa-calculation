@@ -1681,3 +1681,23 @@ button.mini-button {
   font-size: 12px;
   margin: 6px 0 0;
 }
+/* Traffic accident survey shares the existing research panel styling. */
+.accident-survey[hidden] { display: none; }
+.accident-survey h3 { margin-top: 28px; }
+.accident-fields { border: 0; padding: 0; margin: 18px 0; min-width: 0; }
+.accident-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin: 16px 0; }
+.accident-survey label { display: flex; flex-direction: column; gap: 7px; font-weight: 600; }
+.accident-survey input, .accident-survey select { width: 100%; min-width: 0; border: 1px solid #cbd5e1; border-radius: 9px; background: white; padding: 11px 12px; color: #17243a; font: inherit; }
+.accident-address { display: flex; gap: 12px; align-items: end; margin: 16px 0; }
+.accident-address label { flex: 1; }
+.accident-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.accident-survey details { margin: 20px 0; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
+.accident-survey summary { cursor: pointer; font-weight: 700; }
+.accident-intersection { border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; }
+.accident-warning { padding: 14px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; color: #9a3412; }
+.accident-stale { opacity: .6; }
+.accident-survey .muted { color: #64748b; font-size: 13px; line-height: 1.6; }
+.accident-survey .table-wrap { overflow-x: auto; }
+.accident-survey td { font-variant-numeric: tabular-nums; }
+.accident-survey button:disabled { opacity: .5; cursor: not-allowed; }
+@media(max-width: 640px) { .accident-address { flex-direction: column; align-items: stretch; } .accident-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

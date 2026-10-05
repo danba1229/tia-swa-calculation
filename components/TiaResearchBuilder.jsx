@@ -9,6 +9,7 @@ import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../
 import { loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader";
 import { busRefreshStatusText } from "../lib/seoulBusRefreshStatus";
 import SubwayResults from "./SubwayResults";
+import TrafficAccidentStep from "./TrafficAccidentStep";
 import { createSubwayRows } from "../lib/subwayTable";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
@@ -64,6 +65,7 @@ const STEP_NAV_ITEMS = [
   { step: 5, label: "버스·지하철" },
   { step: 6, label: "따릉이" },
   { step: 7, label: "교통관련 계획" },
+  { step: 8, label: "교통사고 조사" },
 ];
 
 function createBlankBasics() {
@@ -588,6 +590,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [showBusStopsOnMap, setShowBusStopsOnMap] = useState(true);
   const [selectedBusStop, setSelectedBusStop] = useState(null);
   const [mapRevision, setMapRevision] = useState(0);
+  const [accidentReset, setAccidentReset] = useState(0);
   const hydratedRef = useRef(false);
   const mapContainerRef = useRef(null);
   const mapRuntimeRef = useRef({
@@ -2125,6 +2128,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function resetAll() {
     if (!window.confirm("입력된 내용을 모두 초기화할까요?")) return;
+    try { localStorage.removeItem('tia-accident-survey-v1'); } catch {}
+    setAccidentReset(value => value + 1);
     requestGateRef.current.cancel();
     setMapLoading(false);
     setTopisCandidates([]);
@@ -2995,6 +3000,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
 
       </section>
+
+      <TrafficAccidentStep key={accidentReset} basics={form.basics} visible={shouldShowStep(8)} />
 
       <section className="panel status-panel">
         <div>
