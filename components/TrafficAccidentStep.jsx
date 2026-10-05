@@ -93,7 +93,8 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
         const errors = collected.filter(r => r.state === 'error' || Object.values(r.data?.sections || {}).some(s => s.status === 'error')).length;
         const warnings = collected.filter(r => radiusQuality(r.data?.counts).warnings.length).length;
         const notes = collected.filter(r => radiusQuality(r.data?.counts).notes.length).length;
-        setStatus(`조사 종료 · ${collected.length}/${jobs.length}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}${warnings ? ` · ${warnings}개 결과의 원문 합계 확인이 필요합니다.` : ''}${notes ? ` · ${notes}개 결과에 TAAS 표기 차이 안내가 있습니다.` : ''}`);
+        const collisionWarnings = buildAccidentReport(collected, form).flatMap(table => table.validationWarnings || []).length;
+        setStatus(`조사 종료 · ${collected.length}/${jobs.length}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}${warnings ? ` · ${warnings}개 결과의 원문 합계 확인이 필요합니다.` : ''}${notes ? ` · ${notes}개 결과에 TAAS 표기 차이 안내가 있습니다.` : ''}${collisionWarnings ? ` · ${collisionWarnings}개 사고유형 합계에 확인이 필요합니다.` : ''}`);
       }
     } finally { if (run.current === id) setBusy(false); }
   }
@@ -150,6 +151,7 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
     <p role="status" aria-live="polite">{status}</p>
     {stale && <p className="accident-warning">조건이 변경되었습니다. 아래는 이전 조건의 결과입니다. 다시 조사해 주세요.</p>}
     <div className={stale ? 'accident-stale' : ''}>
+      {reportTables.flatMap(table => table.validationWarnings || []).map((message, i) => <p className="accident-warning" key={`collision-${i}`}>{message}</p>)}
       {results.filter(r => radiusQuality(r.data?.counts).warnings.length).map((r, i) => <p className="accident-warning" key={i}>{r.query.year}년 {r.name} · {ACCIDENT_TYPES[r.query.type]}: {radiusQuality(r.data?.counts).warnings.join(' ')}</p>)}
       {!!results.length && <><AccidentReportTables tables={reportTables} />
       <details><summary>조회 상태·원문 검증 내역</summary><p>보고서 표에서 —는 미조회·조회 실패·자료 없음입니다. 사고유형의 미수집은 0건을 뜻하지 않습니다.</p>
