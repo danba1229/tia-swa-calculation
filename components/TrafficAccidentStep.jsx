@@ -106,10 +106,10 @@ export default function TrafficAccidentStep({ basics, visible }) {
     for (const [name, rows] of sheets) XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), name);
     XLSX.writeFile(workbook, `교통사고조사_${snapshot.year}.xlsx`);
   }
-  return <section id="step-8" className="panel accident-survey" hidden={!visible}>
+  return <section id="step-8" className="panel step-section accident-survey" hidden={!visible}>
     <div className="section-heading"><div><p className="eyebrow">Step.8</p><h2>교통사고 자동 조사</h2></div></div>
     <p>주소 또는 좌표와 반경·연도를 지정하면 TAAS에서 사업지 주변, 보행자, 자전거, 교차로별 사고를 조사합니다.</p>
-    <fieldset disabled={busy} className="accident-fields">
+    <fieldset disabled={busy || !ready} className="accident-fields">
       <div className="accident-actions"><button type="button" className="secondary-button" onClick={() => setForm(f => ({ ...f, address: basics.siteAddress || '', lat: String(basics.centerLat || ''), lng: String(basics.centerLng || '') }))}>사업지 정보 가져오기</button></div>
       <div className="accident-address"><label>조사 주소<input value={form.address} onChange={e => update('address', e.target.value)} placeholder="도로명·건물번호 또는 지번 주소" /></label><button type="button" className="secondary-button" onClick={() => geocode(null)}>주소로 좌표 찾기</button></div>
       <div className="accident-grid">{[['lat', '위도'], ['lng', '경도'], ['radius', '사업지 반경(m)'], ['year', '기준 연도']].map(([key, label]) => <label key={key}>{label}<input type="number" step={key === 'lat' || key === 'lng' ? 'any' : '1'} value={form[key]} onChange={e => update(key, e.target.value)} /></label>)}<label>조사 기간<select value={form.years} onChange={e => update('years', e.target.value)}>{[1, 2, 3, 4, 5].map(n => <option key={n} value={n}>기준 연도까지 {n}년</option>)}</select></label></div>
