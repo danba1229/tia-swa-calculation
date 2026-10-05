@@ -1709,4 +1709,16 @@ button.mini-button {
 .accident-survey td:nth-child(2) { min-width: 120px; }
 .accident-survey td { font-variant-numeric: tabular-nums; }
 .accident-survey button:disabled { opacity: .5; cursor: not-allowed; }
+.accident-survey .accident-report { margin: 26px 0; padding: 22px; background: #fff; border: 1px solid #d8d8d8; border-radius: 4px; color: #171717; }
+.accident-survey .accident-report h3 { margin: 0 0 8px; font-size: 17px; line-height: 1.6; }
+.accident-report .report-scope { margin: 0 0 12px; color: #555; font-size: 12px; }
+.accident-survey .accident-report table { table-layout: fixed; min-width: 720px; font-size: 13px; border: 1px solid #555; }
+.accident-survey .accident-report th, .accident-survey .accident-report td { text-align: center; vertical-align: middle; padding: 10px 5px; border: 1px solid #777; white-space: pre-line; min-width: 0; background: #fff; overflow-wrap: anywhere; }
+.accident-survey .accident-report thead th { background: #f0f0f0; font-weight: 600; }
+.accident-survey .accident-report tbody th { font-weight: 400; }
+.accident-survey .accident-report .report-growth th, .accident-survey .accident-report .report-growth td { font-weight: 600; border-top: 1px solid #555; }
+.accident-survey .accident-report .report-unavailable { color: #666; }
+.accident-report .report-source, .accident-report .report-note { margin: 6px 0 0; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.accident-report .report-note { color: #555; }
+@media print { .accident-survey .accident-report { border: 0; padding: 0; break-inside: avoid; } .accident-survey .accident-report table { min-width: 0; } }
 @media(max-width: 640px) { .accident-address { flex-direction: column; align-items: stretch; } .accident-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

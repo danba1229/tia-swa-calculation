@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ACCIDENT_TYPES, TAAS_URL, validateAccidentQuery } from '../lib/accidentSurvey';
+import { buildAccidentReport } from '../lib/accidentReport';
+import { buildReportWorkbook } from '../lib/accidentReportExcel';
+import AccidentReportTables from './AccidentReportTables';
 
 const STORAGE_KEY = 'tia-accident-survey-v1';
 const countLabels = { accidents: '사고건수', casualties: '사상자(TAAS 표기)', deaths: '사망', serious: '중상', minor: '경상', reported: '부상신고' };
@@ -36,6 +39,7 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
     setStatus('');
   }, [siteKey]);
   const stale = snapshot && JSON.stringify(form) !== JSON.stringify(snapshot);
+  const reportTables = buildAccidentReport(results, snapshot);
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
   const intersectionUpdate = (index, key, value) => setForm(f => ({ ...f, intersections: f.intersections.map((row, i) => i === index ? { ...row, [key]: value } : row) }));
   async function geocode(index) {
@@ -94,28 +98,35 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
   }
   function stop() { run.current++; controller.current?.abort(); setBusy(false); setStatus('조사를 중단했습니다. 완료된 결과만 표시합니다. 진행 중인 서버 조회는 종료까지 잠시 걸릴 수 있습니다.'); }
   async function download() {
-    const XLSX = await import('xlsx');
-    const workbook = XLSX.utils.book_new(), sheets = new Map();
-    const add = (name, row) => { if (!sheets.has(name)) sheets.set(name, []); sheets.get(name).push(row); };
-    for (const r of results) {
-      const common = { 년도: r.query.year, 지점: r.name, 위도: r.query.lat, 경도: r.query.lng, 반경m: r.query.radius, 상태: r.state, 조회일시: r.data?.retrievedAt || '', 오류: r.message || '', 원문검산: r.data?.qualityWarnings?.join(' ') || '' };
-      if (r.kind === 'radius') {
-        const sheet = r.intersection ? `교차로사고(${r.intersection})` : { all: '사업지 주변', pedestrian: '보행자사고', bicycle: '자전거사고' }[r.query.type];
-        add(sheet, { ...common, 사고구분: ACCIDENT_TYPES[r.query.type], ...Object.fromEntries(Object.entries(countLabels).map(([k, v]) => [v, r.data?.counts?.[k] ?? null])), 출처: TAAS_URL, 원문: r.data?.evidence || '' });
-      } else if (r.data) {
-        for (const [key, section] of Object.entries(r.data.sections)) {
-          const name = { statistics: '년도별 사고', bicycle: '자전거 다발지역 참고', pedestrian: '보행자 다발지역 참고' }[key];
-          if (!section.rows?.length) add(name, { ...common, 행정구역: r.data.region.name, 상태: section.status, 오류: section.message || '', 비고: '자료없음·조회실패를 사고 0건으로 해석하지 않음' });
-          for (const row of section.rows || []) add(name, { ...common, 행정구역: r.data.region.name, ...row });
-        }
-      } else add('조회오류', common);
-    }
-    add('조사조건·출처', { 항목: '조사조건', 내용: JSON.stringify(snapshot) });
-    add('조사조건·출처', { 항목: '처리 현황', 내용: `${results.length}/${Number(snapshot.years) * 4 + snapshot.intersections.length}개 처리. 중단된 조사는 완료된 조회만 포함합니다. 각 표의 오류·자료 없음 상태를 확인하세요.` });
-    add('조사조건·출처', { 항목: '범위', 내용: '사업지 주변·보행자·자전거: TAAS 반경 내 사고 집계. 교차로: 지정 중심 반경 내 전체 사고이며 도로형태별 교차로 사고와 다름. 반경이 겹치면 교차로별 건수를 합산하지 말 것.' });
-    add('조사조건·출처', { 항목: 'API', 내용: 'https://opendata.koroad.or.kr/ · 시군구 전체 통계와 사고다발지역 참고자료. 다발지역은 반경 내 전체 사고를 대체하지 않음.' });
-    for (const [name, rows] of sheets) XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), name);
-    XLSX.writeFile(workbook, `교통사고조사_${snapshot.year}.xlsx`);
+    try {
+      const module = await import('exceljs');
+      const ExcelJS = module.default || module;
+      const sheets = new Map();
+      const add = (name, row) => { if (!sheets.has(name)) sheets.set(name, []); sheets.get(name).push(row); };
+      for (const r of results) {
+        const common = { 년도: r.query.year, 지점: r.name, 위도: r.query.lat, 경도: r.query.lng, 반경m: r.query.radius, 상태: r.state, 조회일시: r.data?.retrievedAt || '', 오류: r.message || '', 원문검산: r.data?.qualityWarnings?.join(' ') || '' };
+        if (r.kind === 'radius') {
+          const sheet = r.intersection ? `교차로사고(${r.intersection})` : { all: '사업지 주변', pedestrian: '보행자사고', bicycle: '자전거사고' }[r.query.type];
+          add(sheet, { ...common, 사고구분: ACCIDENT_TYPES[r.query.type], ...Object.fromEntries(Object.entries(countLabels).map(([k, v]) => [v, r.data?.counts?.[k] ?? null])), 출처: TAAS_URL, 원문: r.data?.evidence || '' });
+        } else if (r.data) {
+          for (const [key, section] of Object.entries(r.data.sections)) {
+            const name = { statistics: '년도별 사고', bicycle: '자전거 다발지역 참고', pedestrian: '보행자 다발지역 참고' }[key];
+            if (!section.rows?.length) add(name, { ...common, 행정구역: r.data.region.name, 상태: section.status, 오류: section.message || '', 비고: '자료없음·조회실패를 사고 0건으로 해석하지 않음' });
+            for (const row of section.rows || []) add(name, { ...common, 행정구역: r.data.region.name, ...row });
+          }
+        } else add('조회오류', common);
+      }
+      add('조사조건·출처', { 항목: '조사조건', 내용: JSON.stringify(snapshot) });
+      add('조사조건·출처', { 항목: '처리 현황', 내용: `${results.length}/${Number(snapshot.years) * 4 + snapshot.intersections.length}개 처리. 중단된 조사는 완료된 조회만 포함합니다. 각 표의 오류·자료 없음 상태를 확인하세요.` });
+      add('조사조건·출처', { 항목: '범위', 내용: '사업지 주변·보행자·자전거: TAAS 반경 내 사고 집계. 교차로: 지정 중심 반경 내 전체 사고이며 도로형태별 교차로 사고와 다름. 반경이 겹치면 교차로별 건수를 합산하지 말 것.' });
+      add('조사조건·출처', { 항목: 'API', 내용: 'https://opendata.koroad.or.kr/ · 시군구 전체 통계와 사고다발지역 참고자료. 다발지역은 반경 내 전체 사고를 대체하지 않음.' });
+      const workbook = buildReportWorkbook(ExcelJS, reportTables, sheets);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const url = URL.createObjectURL(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const link = document.createElement('a'); link.href = url; link.download = `교통사고조사_${snapshot.year}.xlsx`;
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch { setStatus('엑셀 파일을 만들지 못했습니다. 다시 다운로드해 주세요.'); }
   }
   return <section id="step-8" className="panel step-section accident-survey" hidden={!visible}>
     <div className="section-heading"><div><p className="eyebrow">Step.8</p><h2>교통사고 자동 조사</h2></div></div>
@@ -138,8 +149,10 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
     {stale && <p className="accident-warning">조건이 변경되었습니다. 아래는 이전 조건의 결과입니다. 다시 조사해 주세요.</p>}
     <div className={stale ? 'accident-stale' : ''}>
       {results.filter(r => r.data?.qualityWarnings?.length).map((r, i) => <p className="accident-warning" key={i}>{r.query.year}년 {r.name} · {ACCIDENT_TYPES[r.query.type]}: {r.data.qualityWarnings.join(' ')}</p>)}
-      {!!results.length && <><h3>반경 내 사고 집계</h3><div className="table-wrap"><table><thead><tr><th>연도</th><th>지점·반경</th><th>구분</th>{Object.values(countLabels).map(v => <th key={v}>{v}</th>)}<th>조회 상태</th></tr></thead><tbody>{results.filter(r => r.kind === 'radius').map((r, i) => <tr key={i}><td>{r.query.year}</td><td>{r.name} · {r.query.radius}m</td><td>{r.intersection ? '교차로 주변 전체' : ACCIDENT_TYPES[r.query.type]}</td>{Object.keys(countLabels).map(k => <td key={k}>{r.data?.counts?.[k] ?? '—'}</td>)}<td>{r.state === 'error' ? r.message : r.data.cached ? '완료 (1시간 내 저장자료)' : '완료'}</td></tr>)}</tbody></table></div>
-      <h3>시군구 전체 사고 통계</h3><p>사업지가 속한 시군구 전체 통계입니다. 위의 사업지 반경 통계와 범위가 다릅니다.</p><div className="table-wrap"><table><thead><tr><th>연도</th><th>지역</th><th>구분</th><th>사고</th><th>사망</th><th>부상</th></tr></thead><tbody>{results.filter(r => r.kind === 'official').flatMap((r, i) => r.data?.sections.statistics.rows?.length ? r.data.sections.statistics.rows.filter(s => ['전체사고', '보행자사고', '자전거사고'].includes(s.acc_cl_nm)).map(s => <tr key={`${i}-${s.acc_cl_nm}`}><td>{s.std_year}</td><td>{s.sido_sgg_nm}</td><td>{s.acc_cl_nm}</td><td>{s.acc_cnt}</td><td>{s.dth_dnv_cnt}</td><td>{s.injpsn_cnt}</td></tr>) : <tr key={i}><td>{r.query.year}</td><td colSpan="5">{r.message || r.data?.sections.statistics.message || '해당 연도 자료 없음'}</td></tr>)}</tbody></table></div>
+      {!!results.length && <><AccidentReportTables tables={reportTables} />
+      <details><summary>조회 상태·원문 검증 내역</summary><p>보고서 표에서 —는 미조회·조회 실패·자료 없음입니다. 사고유형의 미수집은 0건을 뜻하지 않습니다.</p>
+        <div className="table-wrap"><table><thead><tr><th>연도</th><th>조회 항목</th><th>조회 상태</th><th>사상자(TAAS 표기)</th><th>조회일시</th></tr></thead><tbody>{results.map((r, i) => <tr key={i}><td>{r.query.year}</td><td>{r.name} · {r.kind === 'radius' ? ACCIDENT_TYPES[r.query.type] : '공단 API'}</td><td>{r.state === 'error' ? r.message : r.kind === 'official' ? Object.entries(r.data.sections).map(([key, section]) => `${{statistics: '시군구', pedestrian: '보행자 다발', bicycle: '자전거 다발'}[key]}: ${section.status === 'success' ? '완료' : section.message || '자료 없음'}`).join(' / ') : '완료'}</td><td>{r.data?.counts?.casualties ?? '—'}</td><td>{r.data?.retrievedAt || '—'}</td></tr>)}</tbody></table></div>
+      </details>
       <details><summary>보행자·자전거 사고다발지역 참고자료</summary><p>선정 기준에 해당하는 다발지역 중 중심점이 지정 반경 안에 있는 지점입니다. 전체 사고 건수로 사용하지 않습니다. 보행자 자료는 최근 3년 기준이므로 1년 반경 조회와 직접 비교할 수 없습니다.</p>{results.filter(r => r.kind === 'official').map((r, i) => <div key={i}><h4>{r.query.year}년 요청 · {r.data?.region.name || r.name}</h4>{['pedestrian', 'bicycle'].map(key => { const s = r.data?.sections[key]; return <div key={key}><strong>{ACCIDENT_TYPES[key]} 다발지역</strong><p>{s?.message || r.message || (s?.status === 'no_data' ? '공단 제공자료 없음' : `${s?.rows?.length ?? 0}개 지점`)}</p>{s?.rows?.map((row, j) => <p key={j}>{row.spot_nm} · 중심점 거리 {Math.round(row.distance)}m · 다발지역 사고 {row.occrrnc_cnt}건</p>)}</div>; })}</div>)}</details></>}
     </div>
     <p className="muted">출처: <a href={TAAS_URL} target="_blank" rel="noreferrer">한국도로교통공단 TAAS</a> · <a href="https://opendata.koroad.or.kr/" target="_blank" rel="noreferrer">공단 Open API</a>. 조회 실패·자료 미제공은 0건으로 처리하지 않습니다. 반경 조회는 집계 결과이며 개별 사고 원자료는 포함하지 않습니다.</p>
