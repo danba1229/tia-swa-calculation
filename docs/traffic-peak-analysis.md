@@ -2,9 +2,45 @@
 
 ## Scope
 
-Seoul TOPIS monthly, point/date/direction/hour workbooks. Gyeonggi is explicitly
-unsupported until its hourly source contract is verified. This does not replace
+Seoul TOPIS monthly point/date/direction/hour workbooks and Gyeonggi Data Dream
+continuous general-national-road hourly OpenAPI records. This does not replace
 intersection turning counts or determine statutory survey days automatically.
+
+## Gyeonggi OpenAPI
+
+- Server key: `GG_DATA_DREAM_API_KEY` (never `NEXT_PUBLIC_`).
+- Endpoint: `https://openapi.gg.go.kr/ORDNTMTRNSPORTGENRLTM`.
+- App route: `/api/traffic-volume/gyeonggi` for catalog, or query parameters
+  `station`, `week` (ISO date), `direction` (`both`, `in`, `out`). Internally
+  `in`/`out` identify source codes 1/2 only, NOT Seoul inflow/outflow semantics.
+- `source=YYYY-MM` downloads preserved API rows as JSON with collection time
+  and the SHA-256 of the full source snapshot, not a fabricated XLSX.
+- Collects all pages sequentially (1,000 rows/page), checks total/page lengths,
+  rechecks the first page, rejects duplicate station/date/direction keys, and
+  only publishes a complete snapshot. Network/schema/auth errors expose no key.
+- The Sheet labels TM01 as 00:00-01:00, through TM24 as 23:00-24:00.
+- Source code 0 is inconsistently labelled as downbound but can contain the
+  sum of codes 1 and 2. It remains in raw downloads and is NEVER added to
+  analysis or used as a substitute for missing direction records.
+- Missing values stay null. Daily-total mismatches invalidate the row's hours.
+- Uses separate `gg_traffic_snapshot` / immutable `gg_traffic_versions` tables
+  in the existing traffic database. The Seoul tables are not overwritten.
+- First catalog request initializes/collects; subsequent requests reuse a
+  24-hour snapshot. Refresh after expiry is demand-driven, NOT a newly added
+  scheduled job. DB lease prevents multiple server instances collecting at once;
+  a 2-minute cooldown follows failure. A stale snapshot is explicitly labelled.
+- Gyeonggi points must be selected manually from the actual published catalog.
+  The existing GITS occasional-survey candidates are not assumed equivalent,
+  and unverified coordinates/distances are not shown as nearest-point evidence.
+- Only actual observation months are offered. Portal metadata update dates do
+  not become observation years. Live collection on 2026-10-05 returned 42,304
+  rows, all for 2024; 14,283 code-0 rows excluded, 28,021 code-1/2 rows used.
+- Local key currently lives in the original project `.env.local`; run the app
+  with that key in its server environment. Vercel Production already has the
+  Secret; new application code still requires an authorized deployment.
+
+Tests: `node --test tests/gyeonggiTraffic.test.mjs tests/trafficPeak.test.mjs`.
+Unit/live source verification does not establish deployed UI/DB operation.
 
 ## Cloud collection
 
