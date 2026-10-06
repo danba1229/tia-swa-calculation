@@ -177,6 +177,13 @@ h3 {
 }
 
 .step-nav-panel > * { min-width: 0; }
+.draft-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; grid-column: 1 / -1; }
+.draft-status input[type=file] { width: 180px; font-size: 11px; }
+.draft-error { color: #a12720; border: 1px solid #a12720; padding: 10px; background: #fff4f0; }
+.step-state { display: inline-block; padding: 3px 7px; border-radius: 5px; background: #eee8df; color: #454139; font-size: 11px; }
+.step-state.state-loading { background: #e3eefb; color: #164e89; }
+.step-state.state-complete { background: #e1efdf; color: #245625; }
+.step-state.state-partial, .step-state.state-failed, .step-state.state-stale { background: #ffe4da; color: #9b3117; }
 .step-nav-panel .investigation-progress { grid-column: 1 / -1; margin: 0; }
 .step-nav-header { grid-column: 1 / -1; }
 .step-nav-panel .step-nav { grid-column: 1 / -1; width: 100%; }
@@ -1367,18 +1374,24 @@ button.mini-button {
   }
 
   .hero-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
+    gap: 8px;
   }
 
   .hero-actions > button,
   .hero-action-stack > button {
     min-height: 42px;
+    border-radius: 12px;
+    padding: 10px 8px;
+    white-space: nowrap;
   }
 
   .hero-action-stack {
-    gap: 8px;
+    display: contents;
   }
+  .hero-actions > button:last-child { grid-column: 2; grid-row: 1; }
+  .hero-action-stack > button { grid-row: 2; }
 
   .hero-form {
     grid-template-columns: 1fr;

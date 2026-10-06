@@ -13,6 +13,22 @@ import TrafficAccidentStep from "./TrafficAccidentStep";
 import TrafficPeakAnalysis from "./TrafficPeakAnalysis";
 import useSiteLocation from "./useSiteLocation";
 import { createSubwayRows } from "../lib/subwayTable";
+import { readDraft } from "../lib/draftStorage";
+import useDraftPersistence from "./useDraftPersistence";
+import DraftStatus from "./DraftStatus";
+import StepNavigation from "./StepNavigation";
+import { createDevelopmentSearch } from "../lib/client/createDevelopmentSearch";
+import { createTransportSearch } from "../lib/client/createTransportSearch";
+import { createStatisticsClient } from "../lib/client/createStatisticsClient";
+import { createStatisticsExport } from "../lib/client/createStatisticsExport";
+import { investigationStates } from "../lib/surveyStatus";
+import SurveyMapPanel from "./steps/SurveyMapPanel";
+import SurveyPointsStep from "./steps/SurveyPointsStep";
+import LanduseStep from "./steps/LanduseStep";
+import DevelopmentStep from "./steps/DevelopmentStep";
+import PublicTransportStep from "./steps/PublicTransportStep";
+import BikeStep from "./steps/BikeStep";
+import PlansStep from "./steps/PlansStep";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
@@ -589,11 +605,15 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const mapExpandButtonRef = useRef(null);
   const wasMapExpandedRef = useRef(false);
   const [mapLoading, setMapLoading] = useState(false);
+  const [mapPhase, setMapPhase] = useState('idle');
+  const [accidentPhase, setAccidentPhase] = useState('idle');
+  const [autoRequest, setAutoRequest] = useState(null);
+  const [accidentSeed, setAccidentSeed] = useState(null);
   const requestGateRef = useRef(null);
   if (!requestGateRef.current) requestGateRef.current = createRequestGate();
   useEffect(() => () => requestGateRef.current.cancel(), []);
   const [statusText, setStatusText] = useState("초기 화면을 준비하는 중입니다.");
-  const [mapStatus, setMapStatus] = useState('배포 환경에 카카오 지도 키를 설정한 뒤 "조사 시작" 버튼을 눌러 주세요.');
+  const [mapStatus, setMapStatus] = useState('주소와 범위를 확인하고 "조사 시작" 버튼을 눌러 주세요.');
   const [topisCandidates, setTopisCandidates] = useState([]);
   const [topisStatus, setTopisStatus] = useState("");
   const [gyeonggiCandidates, setGyeonggiCandidates] = useState([]);
@@ -652,23 +672,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }, []);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setForm(mergeLoadedState(JSON.parse(raw)));
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      hydratedRef.current = true;
-      setStatusText("초기 화면이 준비되었습니다.");
-    }
+    let cancelled = false;
+    readDraft(STORAGE_KEY).then(saved => {
+      if (!cancelled && saved) setForm(mergeLoadedState(saved));
+      if (!cancelled) { hydratedRef.current = true; setStatusText('초기 화면이 준비되었습니다.'); }
+    }).catch(() => { if (!cancelled) setStatusText('저장자료를 읽지 못해 자동 덮어쓰기를 보류했습니다. 백업 파일로 복원해 주세요.'); });
+    return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
-  }, [form]);
+  const draftStatus = useDraftPersistence(STORAGE_KEY, form, hydratedRef.current);
 
   useEffect(() => {
     if (!embedded || typeof window === "undefined") return undefined;
@@ -1031,6 +1042,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function updateBasics(field, value) {
     if (["siteAddress", "rectWidth", "rectHeight"].includes(field)) {
+      setMapPhase('idle');
+      setAutoRequest(null);
       requestGateRef.current.cancel();
       setMapLoading(false);
       setTopisCandidates([]);
@@ -1062,6 +1075,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         next.reportStatus = "";
         next.statisticsDataKey = "";
         next.statisticsVerification = null;
+        next.statisticsEvidence = null;
         next.landuseAreas = createBlankLanduseAreas();
         next.zoningRows = ZONING_DEFAULTS.map((name) => createZoningRow({ name }));
       }
@@ -1133,6 +1147,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ...current,
       statisticsYear: nextYear,
       statisticsDataKey: "",
+      statisticsEvidence: null,
       statisticsVerification: null,
       reportStatus: "",
       landuseBaseYear: "",
@@ -1178,95 +1193,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     };
   }
 
-  async function searchDevelopmentPlans() {
-    const request = requestGateRef.current.start("development");
-    const payload = getDevelopmentPayload();
-
-    if (!payload.siteAddress) {
-      setStatusText("주변지역 개발계획을 검색하려면 사업지 주소를 먼저 입력해 주세요.");
-      setForm((current) => ({
-        ...current,
-        developmentResult: createBlankDevelopmentResult({
-          searched: true,
-          error: "사업지 주소를 입력해 주세요.",
-        }),
-      }));
-      return;
-    }
-
-    setStatusText("주변 교통영향평가 후보사업을 조회하고 좌표를 계산하는 중입니다.");
-    setForm((current) => ({
-      ...current,
-      developmentSearch: {
-        ...createBlankDevelopmentSearch(),
-        ...(current.developmentSearch || {}),
-      },
-      developmentResult: createBlankDevelopmentResult({ loading: true, searched: true }),
-    }));
-
-    let accumulated = [];
-    try {
-      let offset = 0;
-      let datasetId;
-      do {
-        const response = await fetch("/api/tia/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...payload, offset, datasetId }),
-          signal: request.signal,
-        });
-        const result = await response.json();
-        if (!request.current()) return;
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "교통영향평가 API 호출 실패");
-        }
-
-        accumulated = [...accumulated, ...(result.results || [])].sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity));
-        const results = accumulated;
-        const summary = summarizeProjects(result.summary?.totalRawCount || 0, results);
-        const nextOffset = result.pagination?.nextOffset ?? null;
-        if (nextOffset !== null && nextOffset <= offset) throw new Error("후보사업 조회가 진행되지 않았습니다. 다시 검색해 주세요.");
-        offset = nextOffset;
-        datasetId = result.pagination?.datasetId;
-        const warnings = (result.debug?.apiErrors || []).filter(Boolean).join(" / ");
-        const complete = offset === null;
-        setForm((current) => request.current() ? ({
-          ...current,
-          developmentResult: {
-            site: result.site,
-            summary,
-            results,
-            progress: `${result.pagination?.processedCount ?? results.length} / ${result.pagination?.candidateCount ?? results.length}건 좌표 조사`,
-            complete,
-            warnings,
-            noticeSearches: result.noticeSearches || [],
-            dataMode: result.dataMode || "",
-            dbConfigured: Boolean(result.dbConfigured),
-            searched: true,
-            loading: !complete,
-            error: "",
-          },
-        }) : current);
-        setStatusText(complete
-          ? `수집된 후보 중 ${formatNumber(summary.withinRadiusCount)}건이 사각형 조사 범위 안에 있습니다.${warnings ? " 일부 출처 조회가 실패하여 전체 결과가 아닐 수 있습니다." : ""}`
-          : `주변사업 ${results.length}건 조사 중입니다. 아직 최종 결과가 아닙니다.`);
-      } while (offset !== null && request.current());
-    } catch (error) {
-      if (!request.current()) return;
-      console.error(error);
-      setForm((current) => ({
-        ...current,
-        developmentResult: {
-          ...current.developmentResult,
-          searched: true,
-          loading: false,
-          complete: false,
-          error: `조사 미완료: ${error.message || "교통영향평가 API 호출 실패"}. 현재 결과만으로 주변사업 부재를 판단할 수 없습니다.`,
-        },
-      }));
-      setStatusText(error.message || "주변지역 개발계획 조회에 실패했습니다.");
-    }
+  async function searchDevelopmentPlans(...args) {
+    return createDevelopmentSearch({ createBlankDevelopmentResult, createBlankDevelopmentSearch, formatNumber, getDevelopmentPayload, requestGateRef, setForm, setStatusText, summarizeProjects })(...args);
   }
 
   function formatDevelopmentDistance(result) {
@@ -1407,195 +1335,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     return { lat, lng };
   }
 
-  async function searchPublicTransportFacilities(options = {}) {
-    const request = requestGateRef.current.start("transport");
-    const address = safe(options.address ?? form.basics.siteAddress);
-    const { width, height } = options.width && options.height
-      ? { width: toNumber(options.width), height: toNumber(options.height) }
-      : getScopeDimensions(form.basics);
-
-    if (!address) {
-      setStatusText("대중교통/교통시설 현황을 조회하려면 주소지를 먼저 입력해 주세요.");
-      setForm((current) => ({
-        ...current,
-        publicTransportResult: createBlankPublicTransportResult({
-          searched: true,
-          error: "주소지를 입력해 주세요.",
-        }),
-      }));
-      return;
-    }
-
-    const region = detectSurveyRegion(address);
-    if (!["seoul", "gyeonggi"].includes(region)) {
-      if (options.auto) {
-        setForm((current) => ({
-          ...current,
-          publicTransportResult: createBlankPublicTransportResult(),
-        }));
-        return;
-      }
-
-      setStatusText("대중교통/교통시설 자동 조회는 현재 서울·경기 주소지를 지원합니다.");
-      setForm((current) => ({
-        ...current,
-        publicTransportResult: createBlankPublicTransportResult({
-          searched: true,
-          error: "서울·경기 버스 및 지하철, 서울 따릉이를 지원합니다.",
-        }),
-      }));
-      return;
-    }
-
-    if (width <= 0 || height <= 0) {
-      setStatusText("가로와 세로 범위를 모두 1m 이상으로 입력해 주세요.");
-      return;
-    }
-
-    setStatusText("조사 범위 안의 버스정류장·지하철역·따릉이를 조회하는 중입니다.");
-    setForm((current) => ({
-      ...current,
-      publicTransportResult: createBlankPublicTransportResult({ loading: true, searched: true }),
-    }));
-
-    try {
-      const center = await resolveScopeCenter(options.center, request);
-      if (!request.current()) return;
-      const bounds = computeRectangleBounds(center.lat, center.lng, width, height);
-      const requestBody = JSON.stringify({
-        center,
-        bounds,
-        width,
-        height,
-      });
-      const [bikeSettled, busSettled, subwaySettled] = await Promise.allSettled([
-        region !== "seoul" ? Promise.resolve(null) : fetch("/api/seoul-bike", {
-          signal: request.signal,
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: requestBody,
-        }).then(async (response) => {
-          const result = await response.json();
-          if (!response.ok || !result.success) {
-            throw new Error(result.message || "따릉이 대여소 조회에 실패했습니다.");
-          }
-          return result;
-        }),
-        fetch(region === "seoul" ? "/api/seoul-bus" : "/api/gyeonggi-bus", {
-          signal: request.signal,
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: requestBody,
-        }).then(async (response) => {
-          const result = await response.json();
-          if (!response.ok || !result.success) {
-            throw new Error(result.message || "버스정류장 조회에 실패했습니다.");
-          }
-          return result;
-        }),
-        fetch("/api/subway", { signal: request.signal, method: "POST", headers: { "Content-Type": "application/json" }, body: requestBody })
-          .then(async (response) => {
-            const result = await response.json();
-            if (!response.ok || !result.success) throw new Error(result.message || "지하철역 조회 실패");
-            return result;
-          }),
-      ]);
-
-      if (!request.current()) return;
-      const bikeResult = bikeSettled.status === "fulfilled" ? bikeSettled.value : null;
-      const busResult = busSettled.status === "fulfilled" ? busSettled.value : null;
-      const subwayResult = subwaySettled.status === "fulfilled" ? subwaySettled.value : null;
-      const subwayError = subwaySettled.status === "rejected" ? subwaySettled.reason?.message || "지하철 조회 실패" : "";
-      const bikeError = bikeSettled.status === "rejected" ? bikeSettled.reason?.message || "따릉이 대여소 조회에 실패했습니다." : "";
-      const busError = busSettled.status === "rejected" ? busSettled.reason?.message || "버스정류장 조회에 실패했습니다." : "";
-
-      if (!bikeResult && !busResult && !subwayResult) {
-        throw new Error([bikeError, busError, subwayError].filter(Boolean).join(" / ") || "대중교통/교통시설 조회에 실패했습니다.");
-      }
-
-      setForm((current) => request.current() ? ({
-        ...current,
-        publicTransportResult: {
-          bikeStations: bikeResult?.stations || [],
-          busStops: busResult?.busStops || [],
-          summary: bikeResult?.summary || null,
-          busSummary: busResult?.summary || null,
-          searched: true,
-          loading: false,
-          error: region === "seoul" ? bikeError : "따릉이는 서울 지역만 지원합니다.",
-          busError,
-          transportRegion: region,
-          subwayStations: subwayResult?.stations || [], subwaySource: subwayResult?.source || "", subwayError, subwayCacheInfo: subwayResult?.cacheInfo,
-          subwayTruncated: Boolean(subwayResult?.truncated), subwayDetailLoading: Boolean(subwayResult?.stations?.some((s) => s.subwayStationId)),
-          source: bikeResult?.source || "",
-          sourceUrl: bikeResult?.sourceUrl || "",
-          busSource: busResult?.source || "",
-          busSourceUrl: busResult?.sourceUrl || "",
-          busFetchedAt: busResult?.fetchedAt || "",
-          busSourceDate: busResult?.sourceDate || "",
-          busCacheInfo: busResult?.cacheInfo,
-          busSourceRetrievedAt: busResult?.sourceRetrievedAt || "",
-          busRefresh: busResult?.refresh || null,
-        },
-      }) : current);
-
-      setStatusText(
-        `조사 범위 안의 버스정류장 ${formatNumber(busResult?.summary?.returnedCount || 0)}개, 지하철역 ${formatNumber(subwayResult?.stations?.length || 0)}개를 확인했습니다. 상세정보를 추가 조회합니다.`,
-      );
-      const subwayDetails = (async () => {
-        for (const station of subwayResult?.stations || []) {
-          if (!request.current()) return;
-          if (!station.subwayStationId) continue;
-          let update;
-          try {
-            const response = await fetch("/api/subway/details", { signal: request.signal, method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ scope: { center, bounds, width, height }, stationId: station.subwayStationId }) });
-            update = await response.json();
-            if (!response.ok || !update.success || update.stationId !== station.subwayStationId) throw new Error();
-          } catch { update = { schedules: [], status: "MANUAL_REQUIRED", error: "시간표 조회 실패 · 역 목록은 유지합니다." }; }
-          setForm((current) => request.current() ? ({ ...current, publicTransportResult: { ...current.publicTransportResult,
-            subwayStations: (current.publicTransportResult.subwayStations || []).map((s) => s.id === station.id ? { ...s, schedules: update.schedules, status: update.status, error: update.error, fetchedAt: update.fetchedAt, cacheInfo: update.cacheInfo } : s),
-          } }) : current);
-        }
-        setForm((current) => request.current() ? ({ ...current, publicTransportResult: { ...current.publicTransportResult, subwayDetailLoading: false } }) : current);
-      })();
-      if (busResult?.busStops?.length) {
-        try {
-          await loadBusDetails({ stations: busResult.busStops, scope: { center, bounds, width, height }, request,
-            endpoint: region === "seoul" ? "/api/seoul-bus/details" : "/api/gyeonggi-bus/details",
-            needsDetail: (route) => region === "seoul" || !route.startStation || !route.endStation
-              || !route.weekdayInterval || !route.saturdayInterval || !route.sundayInterval || !route.holidayInterval,
-            onProgress: (progress) => setForm((current) => request.current() ? ({
-              ...current,
-              publicTransportResult: { ...current.publicTransportResult,
-                busStops: progress.stations, busDetailLoading: progress.loading,
-                busDetailCompleted: progress.completed, busDetailTotal: progress.total, busDetailError: progress.error,
-              },
-            }) : current),
-          });
-        } catch {
-          if (!request.current()) return;
-          setForm((current) => request.current() ? ({ ...current,
-            publicTransportResult: { ...current.publicTransportResult,
-              busStops: markPendingBusDetails(current.publicTransportResult.busStops, "상세조회 처리 중단"),
-              busDetailLoading: false, busDetailError: "상세정보 처리에 실패했습니다. 기본 목록은 유지합니다.",
-            },
-          }) : current);
-        }
-      }
-      await subwayDetails;
-    } catch (error) {
-      if (!request.current()) return;
-      console.error(error);
-      setForm((current) => ({
-        ...current,
-        publicTransportResult: createBlankPublicTransportResult({
-          searched: true,
-          error: error.message || "대중교통/교통시설 조회에 실패했습니다.",
-        }),
-      }));
-      setStatusText(error.message || "대중교통/교통시설 조회에 실패했습니다.");
-    }
+  async function searchPublicTransportFacilities(...args) {
+    return createTransportSearch({ computeRectangleBounds, createBlankPublicTransportResult, detectSurveyRegion, form, formatNumber, getScopeDimensions, loadBusDetails, markPendingBusDetails, requestGateRef, resolveScopeCenter, safe, setForm, setStatusText, toNumber })(...args);
   }
 
   function formatFacilityDistance(station) {
@@ -1716,87 +1457,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     setStatusText(`${candidate.pointCode} 지점번호 후보를 사전조사지점 표에 추가했습니다.`);
   }
 
-  async function fetchLocalStatistics(address, request) {
-    try {
-      const response = await fetch("/api/local-statistics", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, year: form.statisticsYear || DEFAULT_STATISTICS_YEAR }),
-        signal: request.signal,
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || "KOSIS 자료를 추출하지 못했습니다.");
-      }
-
-      const patch = {
-        researchSchemaVersion: 2,
-        landuseAreas: createBlankLanduseAreas(),
-        zoningRows: ZONING_DEFAULTS.map((name) => createZoningRow({ name })),
-        landuseSourceTotal: null,
-        zoningSourceTotal: null,
-        landuseBaseYear: "",
-        zoningBaseYear: "",
-        statisticsDataKey: "",
-      };
-      const messages = [];
-      if (payload.debug) {
-        console.info("[TIA KOSIS extraction debug]", payload.debug);
-      }
-      patch.reportStatus = payload.extraction?.status || "";
-
-      if (payload.landuse?.areas) {
-        patch.landuseAreas = { ...createBlankLanduseAreas(), ...payload.landuse.areas };
-        patch.landuseSourceTotal = payload.landuse.total;
-        patch.landuseSource = payload.landuse.source || "";
-        patch.landuseBaseYear = payload.landuse.tableBaseYear || payload.landuse.year || "";
-        patch.statisticsDataKey = `kosis-landuse:${payload.landuse.regionName || payload.target}:${payload.landuse.year || ""}`;
-        messages.push(`지목별 토지이용은 ${payload.landuse.regionName || payload.target} KOSIS ${payload.landuse.year || "수록기간"} 자료로 채웠습니다.`);
-      }
-
-      if (Array.isArray(payload.zoning?.rows) && payload.zoning.rows.length) {
-        patch.zoningRows = payload.zoning.rows.map((row) => createZoningRow(row));
-        patch.zoningSourceTotal = payload.zoning.total;
-        patch.zoningSource = payload.zoning.source || "";
-        patch.zoningBaseYear = payload.zoning.tableBaseYear || payload.zoning.year || "";
-        patch.statisticsDataKey = patch.statisticsDataKey || `kosis-zoning:${payload.zoning.regionName || payload.target}:${payload.zoning.year || ""}`;
-        messages.push(`용도지역은 ${payload.zoning.regionName || payload.target} KOSIS ${payload.zoning.year || "수록기간"} 자료로 채웠습니다.`);
-      }
-      patch.statisticsVerification = payload.extraction || payload.verification || null;
-      if (patch.statisticsVerification?.message) {
-        messages.push(patch.statisticsVerification.message);
-      }
-
-      if (!messages.length) {
-        return {
-          patch: {
-            reportStatus: payload.extraction?.status || "DATA_NOT_FOUND",
-            statisticsVerification: payload.extraction || payload.verification || {
-              status: "DATA_NOT_FOUND",
-              message: "KOSIS에서 자동 채움 가능한 토지이용/용도지역 자료를 찾지 못했습니다.",
-            },
-          },
-          message: "KOSIS에서 자동 채움 가능한 토지이용/용도지역 자료를 찾지 못했습니다.",
-        };
-      }
-
-      return { patch, message: messages.join(" ") };
-    } catch (error) {
-      console.error(error);
-      const message = error.message || "KOSIS 자동 추출에 실패했습니다. 환경변수 KOSIS_API_KEY와 선택한 수록기간을 확인해 주세요.";
-      return {
-        patch: {
-          reportStatus: "FAILED",
-          statisticsVerification: {
-            status: "FAILED",
-            message,
-            source: "KOSIS OpenAPI",
-          },
-        },
-        message,
-      };
-    }
+  async function fetchLocalStatistics(...args) {
+    return createStatisticsClient({ DEFAULT_STATISTICS_YEAR, ZONING_DEFAULTS, createBlankLanduseAreas, createZoningRow, form })(...args);
   }
 
   async function refreshLocalStatisticsOnly() {
@@ -1865,40 +1527,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }));
   }
 
-  async function exportStep3Excel() {
-    try {
-      const XLSX = await import("xlsx");
-      const workbook = XLSX.utils.book_new();
-      const landuseSource = landuseReportRows[0]?.source || form.landuseSource || "";
-      const zoningSource = zoningReportRows[0]?.source || form.zoningSource || "";
-      const landuseSheetRows = buildExcelReportSheet("지목별 토지이용현황", landuseSource, landuseReportRows);
-      const zoningSheetRows = buildExcelReportSheet("용도지역 현황", zoningSource, zoningReportRows);
-      const landuseChartRows = buildExcelChartSheet(landuseReportRows);
-      const zoningChartRows = buildExcelChartSheet(zoningReportRows);
-      const landuseSheet = XLSX.utils.aoa_to_sheet(landuseSheetRows);
-      const zoningSheet = XLSX.utils.aoa_to_sheet(zoningSheetRows);
-      const landuseChartSheet = XLSX.utils.aoa_to_sheet(landuseChartRows);
-      const zoningChartSheet = XLSX.utils.aoa_to_sheet(zoningChartRows);
-      const maxColumnCount = Math.max(landuseReportRows.length, zoningReportRows.length) + 1;
-
-      fitSheetColumns(landuseSheet, maxColumnCount);
-      fitSheetColumns(zoningSheet, maxColumnCount);
-      fitSheetColumns(landuseChartSheet, 3);
-      fitSheetColumns(zoningChartSheet, 3);
-
-      XLSX.utils.book_append_sheet(workbook, landuseSheet, "지목별 토지이용현황");
-      XLSX.utils.book_append_sheet(workbook, zoningSheet, "용도지역 현황");
-      XLSX.utils.book_append_sheet(workbook, landuseChartSheet, "그래프용_지목");
-      XLSX.utils.book_append_sheet(workbook, zoningChartSheet, "그래프용_용도지역");
-
-      const unitName = deriveLocalStatisticsUnit(form.basics.siteAddress, "대상지").replace(/[\\/:*?"<>|]/g, "");
-      const year = form.statisticsYear || DEFAULT_STATISTICS_YEAR;
-      XLSX.writeFile(workbook, `TIA_STEP3_${unitName}_${year}.xlsx`);
-      setStatusText("지목별 토지이용현황과 용도지역 현황을 엑셀 파일로 출력했습니다. 원형그래프용 데이터 시트도 함께 포함했습니다.");
-    } catch (error) {
-      console.error(error);
-      setStatusText("엑셀 파일을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.");
-    }
+  async function exportStep3Excel(...args) {
+    return createStatisticsExport({ DEFAULT_STATISTICS_YEAR, buildExcelChartSheet, buildExcelReportSheet, deriveLocalStatisticsUnit, fitSheetColumns, form, landuseReportRows, setStatusText, zoningReportRows })(...args);
   }
 
   async function startInvestigation() {
@@ -1915,14 +1545,17 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     void searchDevelopmentPlans();
     void searchPublicTransportFacilities({ auto: true });
     void renderScopeMap();
+    setAutoRequest({ id: Date.now(), address: safe(form.basics.siteAddress) });
   }
 
   async function renderScopeMap() {
+    setMapPhase('loading');
     const request = requestGateRef.current.start("map");
     const address = safe(form.basics.siteAddress);
     const { width, height } = getScopeDimensions(form.basics);
 
     if (!kakaoJsKey) {
+      setMapPhase('failed');
       setMapStatus("앱 설정에 카카오 지도 JavaScript 키가 없습니다. 배포 환경변수 KAKAO_JS_KEY를 설정해 주세요.");
       setStatusText("지도 범위를 표시하지 못했습니다.");
       return;
@@ -2019,10 +1652,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         roads: autoRoadRows.length ? autoRoadRows : [createRoadRow({ roadClass: "로" })],
       }) : current);
       setMapStatus(`"${address}"를 중심으로 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m 범위를 지도에 표시했고, 범위에 걸친 도로 ${autoRoadRows.length}건을 자동 조사했습니다.`);
+      setMapPhase('complete');
     } catch (error) {
       if (!request.current()) return;
       console.error(error);
       setMapStatus(error.message || "지도 표시 중 오류가 발생했습니다.");
+      setMapPhase('failed');
     } finally {
       if (request.current()) setMapLoading(false);
     }
@@ -2138,7 +1773,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   function resetAll() {
     if (!window.confirm("입력된 내용을 모두 초기화할까요?")) return;
-    try { localStorage.removeItem('tia-accident-survey-v1'); } catch {}
+    hydratedRef.current = true;
+    setAccidentSeed({ form: {}, results: [], snapshot: null });
+    setAutoRequest(null);
+    setMapPhase('idle');
     setAccidentReset(value => value + 1);
     requestGateRef.current.cancel();
     setMapLoading(false);
@@ -2151,7 +1789,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       mapContainerRef.current.innerHTML = "";
       mapRuntimeRef.current.map = null;
     }
-    setMapStatus('배포 환경에 카카오 지도 키를 설정한 뒤 "조사 시작" 버튼을 눌러 주세요.');
+    setMapStatus('주소와 범위를 확인하고 "조사 시작" 버튼을 눌러 주세요.');
     setStatusText("모든 입력값을 초기화했습니다.");
   }
 
@@ -2193,93 +1831,21 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
       </section>
 
-      <section className="panel project-panel">
-        <div className="map-card project-map-card">
-          <div className="map-header">
-            <button type="button" className="ghost" hidden={mapExpanded} aria-expanded={!mapCollapsed} aria-controls="scope-map" onClick={() => {
-              setMapCollapsed((current) => !current);
-              window.setTimeout(() => {
-                const runtime = mapRuntimeRef.current;
-                runtime.map?.relayout();
-                if (runtime.map && runtime.rectangle && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
-              }, 100);
-            }}>{mapCollapsed ? "지도 펼치기" : "지도 접기 / 표 넓게 보기"}</button>
-            <button ref={mapExpandButtonRef} type="button" className="secondary map-expand-button" aria-expanded={mapExpanded} aria-controls="scope-map" onClick={() => {
-              setMapCollapsed(false);
-              setMapExpanded((current) => !current);
-            }}>{mapExpanded ? "기본 화면으로" : "지도 크게 보기"}</button>
-            <label className="checkbox-label map-toggle-control">
-              <input
-                type="checkbox"
-                checked={showBikeStationsOnMap}
-                onChange={(event) => setShowBikeStationsOnMap(event.target.checked)}
-              />
-              <span>따릉이 위치 표시</span>
-            </label>
-            <label className="checkbox-label map-toggle-control bus-map-toggle">
-              <input type="checkbox" checked={showBusStopsOnMap} onChange={(event) => setShowBusStopsOnMap(event.target.checked)} />
-              <span>버스정류장 표시</span>
-            </label>
-            <h3>카카오 지도</h3>
-          </div>
-          {mapExpanded ? (
-            <div className="expanded-map-tools">
-              <label className="checkbox-label">
-                <input type="checkbox" checked={showBusRouteLabels} disabled={!showBusStopsOnMap} onChange={(event) => setShowBusRouteLabels(event.target.checked)} />
-                <span>버스번호·종류 라벨 표시</span>
-              </label>
-              <button type="button" className="ghost" onClick={() => {
-                const runtime = mapRuntimeRef.current;
-                if (runtime.map && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
-              }}>조사 범위 맞추기</button>
-              <p>버스 종류는 API 상세조회에서 확인된 경우만 표시합니다. 미조회·미제공 값은 추정하지 않습니다. 라벨이 겹치면 지도를 확대해 주세요.</p>
-            </div>
-          ) : null}
-          <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
-          <div id="selected-bus-stop-info" aria-live="polite">
-            {selectedBusDetails ? (
-              <section className="bus-stop-detail" aria-label="선택한 버스정류장 정보">
-                <div className="bus-stop-detail-heading">
-                  <h4>{selectedBusDetails.name}</h4>
-                  <button type="button" className="ghost" onClick={() => setSelectedBusStop(null)} aria-label="버스정류장 정보 닫기">닫기</button>
-                </div>
-                <dl>
-                  <dt>정류장번호</dt><dd>{selectedBusDetails.number}</dd>
-                  <dt>경유 버스</dt><dd>{selectedBusDetails.routes}</dd>
-                  <dt>번호·종류</dt><dd>{selectedBusDetails.routeLabels.join(", ") || "노선 정보 미제공"}</dd>
-                  <dt>사업지와 거리</dt><dd>{selectedBusDetails.distance}</dd>
-                </dl>
-                <p>서울시 공식 파일{selectedBusDetails.sourceDate ? ` · ${selectedBusDetails.sourceDate} 기준` : ""} · 실시간 운행정보 아님</p>
-              </section>
-            ) : null}
-          </div>
-          <p className="map-status" role="status">{mapStatus}</p>
-        </div>
-      </section>
+      <SurveyMapPanel {...{ mapCollapsed, mapContainerRef, mapExpandButtonRef, mapExpanded, mapRuntimeRef, mapStatus, selectedBusDetails, setMapCollapsed, setMapExpanded, setSelectedBusStop, setShowBikeStationsOnMap, setShowBusRouteLabels, setShowBusStopsOnMap, showBikeStationsOnMap, showBusRouteLabels, showBusStopsOnMap }} />
 
-      <section className="step-nav-panel" aria-label="조사 단계 목차">
-        <div className="step-nav-header">
-          <p className="eyebrow">Step Index</p>
-          <h2>목차</h2>
-        </div>
-        <div className="step-nav">
-          {STEP_NAV_ITEMS.map((item) => (
-            <button
-              key={item.step}
-              type="button"
-              className={activeStep === item.step ? "active" : ""}
-              aria-pressed={activeStep === item.step}
-              onClick={() => setActiveStep(item.step)}
-            >
-              <span>{`Step.${item.step}`}</span>
-              <strong>{item.label}</strong>
-            </button>
-          ))}
-        </div>
-        <p className="investigation-progress" role="status">
-          지도·가로망: {mapLoading ? "조사 중" : "대기 / 완료"} · 통계: {verification?.status === "LOADING" ? "조회 중" : verification?.status === "SUCCESS" ? "완료" : verification?.status === "PARTIAL" ? "일부 누락" : "대기 / 확인 필요"} · 주변사업: {developmentResult.loading ? "조사 중" : developmentResult.complete ? "완료" : "대기 / 확인 필요"} · 대중교통: {publicTransportResult.loading || publicTransportResult.busDetailLoading || publicTransportResult.subwayDetailLoading ? "조회 중" : publicTransportResult.searched ? "결과 확인" : "대기"}
-        </p>
-      </section>
+      <StepNavigation items={STEP_NAV_ITEMS} activeStep={activeStep} setActiveStep={setActiveStep}
+        states={investigationStates({ mapPhase, verification, development: developmentResult, transport: publicTransportResult, accident: accidentPhase, pointCount: topisCandidates.length + gyeonggiCandidates.length })}>
+        <DraftStatus status={draftStatus} restore={drafts => {
+          requestGateRef.current.cancel();
+          setAutoRequest(null);
+          setMapPhase('idle');
+          hydratedRef.current = true;
+          setAccidentSeed(drafts['tia-accident-survey-v1'] || { form: {}, results: [], snapshot: null });
+          setForm(mergeLoadedState(drafts[STORAGE_KEY]));
+          setAccidentReset(value => value + 1);
+          setStatusText('백업을 복원했습니다. 지도는 조사 시작으로 다시 표시할 수 있습니다.');
+        }} />
+      </StepNavigation>
 
       <section className={`panel step-section ${shouldShowStep(1) ? "" : "is-hidden"}`}>
         <div className="panel-header">
@@ -2327,699 +1893,19 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       </section>
 
-      <section className={`panel step-section ${shouldShowStep(2) ? "" : "is-hidden"}`}>
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Step 2</p>
-            <h2>가까운 사전조사지점</h2>
-          </div>
-        </div>
+      <SurveyPointsStep {...{ detectSurveyRegion, buildPriorityResult, buildPriorityNote, runAll: !!autoRequest, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus }} />
 
-        {detectSurveyRegion(form.basics.siteAddress) === "seoul" ? (
-          <div className="survey-recommendation-block">
-            <div className="output-header">
-              <h3>서울 TOPIS 최근접 3지점</h3>
-            </div>
-            <p className="priority-note">{topisStatus || "서울 TOPIS 지점 좌표를 준비하는 중입니다."}</p>
-            <div className="survey-recommendations">
-              {topisCandidates.map((candidate, index) => (
-                <article key={candidate.code} className="survey-recommendation-card">
-                  <div className="survey-recommendation-top">
-                    <span className="status-badge">{candidate.code}</span>
-                    <p className="eyebrow survey-rank">{`${index + 1}순위 · ${candidate.category}`}</p>
-                  </div>
-                  <h3>{candidate.name}</h3>
-                  <p>{candidate.address}</p>
-                  <p className="candidate-distance">사업지 기준 {formatDistance(candidate.distanceKm)}</p>
-                  <div className="survey-links">
-                    <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily" target="_blank" rel="noreferrer">출처 보기</a>
-                    <a href="https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolReport" target="_blank" rel="noreferrer">조사자료 PDF</a>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        ) : null}
+      <LanduseStep {...{ rankClass, DEFAULT_STATISTICS_YEAR, STATISTICS_YEAR_OPTIONS, addRow, createZoningRow, exportStep3Excel, form, formatNumber, formatOptionalNumber, formatPercent, formatSquareKilometers, landuseReportRows, landuseSlices, landuseStats, pieBackground, refreshLocalStatisticsOnly, removeRow, setForm, shouldShowStep, updateLanduseArea, updateListItem, updateStatisticsYear, verification, zoningReportRows, zoningSlices, zoningStats }} />
 
-        {detectSurveyRegion(form.basics.siteAddress) === "gyeonggi" ? (
-          <div className="survey-recommendation-block">
-            <div className="output-header">
-              <h3>경기 GITS 최근접 3지점</h3>
-            </div>
-            <p className="priority-note">{gyeonggiStatus || "경기 GITS 지점번호 후보를 준비하고 있습니다."}</p>
-            <div className="survey-recommendations">
-              {gyeonggiCandidates.map((candidate, index) => (
-                <article key={`${candidate.routeCode}-${candidate.pointCode}`} className="survey-recommendation-card">
-                  <div className="survey-recommendation-top">
-                    <span className="status-badge">{candidate.pointCode}</span>
-                    <p className="eyebrow survey-rank">{`${index + 1}순위 · ${candidate.categoryLabel}`}</p>
-                  </div>
-                  <h3>{candidate.routeName}</h3>
-                  <p>{candidate.jurisdiction} / {candidate.sectionName}</p>
-                  <p className="candidate-distance">
-                    {Number.isFinite(candidate.distanceKm)
-                      ? `사업지 기준 ${formatDistance(candidate.distanceKm)}`
-                      : "거리 계산 전 단계 후보"}
-                  </p>
-                  <p className="candidate-note">
-                    {Number.isFinite(candidate.distanceKm)
-                      ? "거리 계산은 구간 양끝(IC/JCT) 기준의 근사값입니다."
-                      : "지점번호는 공식 GITS 자료 기준이며, 현재는 거리 계산 없이 후보로 먼저 표시합니다."}
-                  </p>
-                  <div className="survey-links">
-                    <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do" target="_blank" rel="noreferrer">출처 보기</a>
-                    <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/regularAverageTrafficVolumeByWeekday.do" target="_blank" rel="noreferrer">2순위 자료</a>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        ) : null}
+      <DevelopmentStep {...{ DEVELOPMENT_PROJECT_TYPES, DEVELOPMENT_STATUS_FILTERS, copyDevelopmentDraft, copyDevelopmentTable, developmentAdmin, developmentGeocodeText, developmentResult, developmentScaleText, developmentSearch, displayedDevelopmentResults, downloadDevelopmentCsv, form, formatDevelopmentDistance, formatNumber, getScopeDimensions, searchDevelopmentPlans, shouldShowStep, updateDevelopmentSearch }} />
 
-        <div className="survey-recommendations">
-          {surveyRecommendations.map((recommendation) => (
-            <article key={recommendation.key} className="survey-recommendation-card">
-              <div className="survey-recommendation-top">
-                <span className="status-badge">{recommendation.source}</span>
-                <p className="eyebrow">공식 추천 출처</p>
-              </div>
-              <h3>{recommendation.title}</h3>
-              <p>{recommendation.description}</p>
-              <div className="survey-links">
-                <a href={recommendation.sourceLink} target="_blank" rel="noreferrer">출처 보기</a>
-                <a href={recommendation.downloadLink} target="_blank" rel="noreferrer">다운로드/조회</a>
-              </div>
-            </article>
-          ))}
-        </div>
+      <PublicTransportStep {...{ BUS_ROUTE_COLUMNS, SubwayResults, busRefreshStatusText, busRouteTableRows, busStops, copyPublicTransportTables, downloadPublicTransportCsv, form, formatFacilityDistance, formatNumber, formatOptionalNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }} />
 
-        <div className="priority-card">
-          <div>
-            <p className="priority-label">최종 판정</p>
-            <p className="priority-result">{buildPriorityResult(selectedSurveyPoint, autoSurveyPoints)}</p>
-          </div>
-          <p className="priority-note">{buildPriorityNote(selectedSurveyPoint, autoSurveyPoints)}</p>
-        </div>
+      <BikeStep {...{ bikeStations, copyPublicTransportTables, downloadPublicTransportCsv, form, formatFacilityDistance, formatNumber, formatOptionalNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }} />
 
-        <TrafficPeakAnalysis key={form.basics.siteAddress} address={form.basics.siteAddress}
-          region={detectSurveyRegion(form.basics.siteAddress)} candidates={topisCandidates} active={shouldShowStep(2)} />
+      <PlansStep {...{ addRow, createConstructionPlanRow, createTrafficPlanRow, form, removeRow, shouldShowStep, updateListItem }} />
 
-      </section>
-
-      <section className={`panel step-section ${shouldShowStep(3) ? "" : "is-hidden"}`}>
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Step 3</p>
-            <h2>토지이용 현황 및 계획</h2>
-          </div>
-          <div className="panel-header-actions">
-            <button type="button" className="secondary" onClick={refreshLocalStatisticsOnly}>
-              KOSIS 자료 추출
-            </button>
-            <button type="button" className="secondary" onClick={exportStep3Excel}>
-              엑셀 출력
-            </button>
-          </div>
-        </div>
-
-        <div className="form-grid compact-grid">
-          <label>
-            <span>기준연도</span>
-            <select value={form.statisticsYear || DEFAULT_STATISTICS_YEAR} onChange={(event) => updateStatisticsYear(event.target.value)}>
-              {STATISTICS_YEAR_OPTIONS.map((year) => <option key={year} value={year}>{year}년</option>)}
-            </select>
-          </label>
-          <label>
-            <span>토지이용 출처</span>
-            <input value={form.landuseSource} onChange={(event) => setForm((current) => ({ ...current, landuseSource: event.target.value }))} placeholder="KOSIS 국토교통부, 행정구역별·지목별 국토이용현황_시군구" />
-          </label>
-          <label>
-            <span>용도지역 출처</span>
-            <input value={form.zoningSource} onChange={(event) => setForm((current) => ({ ...current, zoningSource: event.target.value }))} placeholder="KOSIS 도시계획현황, 용도지역(시군구)" />
-          </label>
-        </div>
-
-        <div className={`verification-card ${verification?.status || "idle"}`}>
-          <div>
-            <p className="eyebrow">KOSIS Extraction</p>
-            <h3>KOSIS 수록기간 자동 추출</h3>
-          </div>
-          <p>{verification?.message || "조사 시작 후 주소지 행정구역과 선택한 수록기간으로 KOSIS 지목별 국토이용현황 및 용도지역 시군구 통계표를 조회합니다."}</p>
-          {verification?.source ? <p className="verification-source">원자료: {verification.source}</p> : null}
-          {verification?.sourceLink ? <p className="verification-source">KOSIS 링크: {verification.sourceLink}</p> : null}
-          {verification?.period ? <p className="verification-source">수록기간: {verification.period}</p> : null}
-        </div>
-
-        <div className="subpanel-grid landuse-layout">
-          <section className="subpanel">
-            <div className="subpanel-header">
-              <h3>지목별 토지이용현황</h3>
-              <p className="subpanel-source">출처: {landuseReportRows[0]?.source || "미입력"}</p>
-            </div>
-            <div className="table-wrap">
-              <table className="data-table report-table horizontal-report-table">
-                <thead>
-                  <tr>
-                    <th>항목</th>
-                    {landuseReportRows.map((row) => (
-                      <th key={`landuse-head-${row.key}`} className={row.isTotal ? "total-row" : rankClass(landuseStats.rankMap.get(row.key))}>{row.label}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th>면적_m2</th>
-                    {landuseReportRows.map((row) => (
-                      <td key={`landuse-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(landuseStats.rankMap.get(row.key))}>
-                        {row.isTotal ? formatOptionalNumber(row.area) : (
-                          <input className="table-input" type="number" min="0" step="any" value={form.landuseAreas[row.key] ?? ""} onChange={(event) => updateLanduseArea(row.key, event.target.value)} placeholder="면적 입력" />
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <th>면적_km2</th>
-                    {landuseReportRows.map((row) => <td key={`landuse-km2-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatSquareKilometers(row.area)}</td>)}
-                  </tr>
-                  <tr>
-                    <th>구성비_%</th>
-                    {landuseReportRows.map((row) => <td key={`landuse-ratio-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatPercent(row.ratio)}</td>)}
-                  </tr>
-                  <tr>
-                    <th>원자료항목</th>
-                    {landuseReportRows.map((row) => <td key={`landuse-raw-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.rawItem}</td>)}
-                  </tr>
-                  <tr>
-                    <th>조사년도</th>
-                    {landuseReportRows.map((row) => <td key={`landuse-year-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.year}</td>)}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="subpanel">
-            <div className="subpanel-header">
-              <h3>용도지역 현황</h3>
-              <div className="subpanel-header-actions">
-                <p className="subpanel-source">출처: {zoningReportRows[0]?.source || "미입력"}</p>
-                <button type="button" className="secondary" onClick={() => addRow("zoningRows", createZoningRow)}>용도지역 추가</button>
-              </div>
-            </div>
-            <div className="table-wrap">
-              <table className="data-table report-table horizontal-report-table">
-                <thead>
-                  <tr>
-                    <th>항목</th>
-                    {zoningReportRows.map((row, index) => (
-                      <th key={`zoning-head-${row.key}`} className={row.isTotal ? "total-row" : rankClass(zoningStats.rankMap.get(index))}>
-                        {row.isTotal ? row.label : (
-                          <input className="table-input" value={form.zoningRows[index]?.name || ""} onChange={(event) => updateListItem("zoningRows", index, { name: event.target.value })} placeholder="예: 주거지역" />
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <th>면적_m2</th>
-                    {zoningReportRows.map((row, index) => (
-                      <td key={`zoning-area-${row.key}`} className={row.isTotal ? "total-row" : rankClass(zoningStats.rankMap.get(index))}>
-                        {row.isTotal ? formatOptionalNumber(row.area) : <input className="table-input" type="number" min="0" step="any" value={form.zoningRows[index]?.area ?? ""} onChange={(event) => updateListItem("zoningRows", index, { area: event.target.value })} placeholder="면적 입력" />}
-                      </td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <th>면적_km2</th>
-                    {zoningReportRows.map((row) => <td key={`zoning-km2-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatSquareKilometers(row.area)}</td>)}
-                  </tr>
-                  <tr>
-                    <th>구성비_%</th>
-                    {zoningReportRows.map((row) => <td key={`zoning-ratio-${row.key}`} className={row.isTotal ? "total-row" : ""}>{formatPercent(row.ratio)}</td>)}
-                  </tr>
-                  <tr>
-                    <th>원자료항목</th>
-                    {zoningReportRows.map((row) => <td key={`zoning-raw-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.rawItem}</td>)}
-                  </tr>
-                  <tr>
-                    <th>조사년도</th>
-                    {zoningReportRows.map((row) => <td key={`zoning-year-${row.key}`} className={row.isTotal ? "total-row" : ""}>{row.year}</td>)}
-                  </tr>
-                  <tr>
-                    <th>관리</th>
-                    {zoningReportRows.map((row, index) => <td key={`zoning-actions-${row.key}`} className="actions">{row.isTotal ? "" : <button type="button" className="mini-button" onClick={() => removeRow("zoningRows", index, createZoningRow)}>삭제</button>}</td>)}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-
-        <div className="chart-grid">
-          {(!landuseStats.consistent || !zoningStats.consistent) && <p className="data-warning">세부 면적의 합이 원자료 합계를 초과합니다. 해당 표의 구성비와 그래프를 보류했으니 원자료를 확인해 주세요.</p>}
-          {(!landuseStats.complete || !zoningStats.complete) && <p className="data-warning">누락된 면적은 0으로 계산하지 않습니다. 원자료 합계가 있으면 확인된 항목의 구성비만 계산하며, 그래프의 회색 부분은 미확인 면적입니다. 합계가 없으면 구성비와 그래프를 보류합니다.</p>}
-          <section className="chart-card">
-            <div className="chart-header">
-              <h3>지목별 토지이용 원형 그래프</h3>
-              <p className="chart-caption">{landuseStats.total > 0 ? `총면적 ${formatNumber(landuseStats.total)}㎡` : "총면적 미입력"}</p>
-            </div>
-            <div className="chart-layout">
-              <div className="pie-chart" style={{ background: pieBackground(landuseSlices) }} />
-              <div className="legend">
-                {landuseSlices.length ? landuseSlices.map((slice) => (
-                  <div key={slice.label} className="legend-item">
-                    <span className="legend-swatch" style={{ background: slice.color }} />
-                    <span>{slice.label}</span>
-                  </div>
-                )) : <p className="chart-caption">{!landuseStats.consistent ? "면적 합계가 일치하지 않아 그래프를 보류했습니다." : landuseStats.total === null && landuseStats.knownTotal > 0 ? "합계 면적을 확인하지 못해 그래프를 보류했습니다." : "입력된 지목별 면적이 없습니다."}</p>}
-              </div>
-            </div>
-          </section>
-
-          <section className="chart-card">
-            <div className="chart-header">
-              <h3>용도지역 원형 그래프</h3>
-              <p className="chart-caption">{zoningStats.total > 0 ? `총면적 ${formatNumber(zoningStats.total)}㎡` : "총면적 미입력"}</p>
-            </div>
-            <div className="chart-layout">
-              <div className="pie-chart" style={{ background: pieBackground(zoningSlices) }} />
-              <div className="legend">
-                {zoningSlices.length ? zoningSlices.map((slice) => (
-                  <div key={`${slice.label}-${slice.key}`} className="legend-item">
-                    <span className="legend-swatch" style={{ background: slice.color }} />
-                    <span>{slice.label}</span>
-                  </div>
-                )) : <p className="chart-caption">{!zoningStats.consistent ? "면적 합계가 일치하지 않아 그래프를 보류했습니다." : zoningStats.total === null && zoningStats.knownTotal > 0 ? "합계 면적을 확인하지 못해 그래프를 보류했습니다." : "입력된 용도지역 면적이 없습니다."}</p>}
-              </div>
-            </div>
-          </section>
-        </div>
-
-      </section>
-
-      <section className={`panel step-section ${shouldShowStep(4) ? "" : "is-hidden"}`}>
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Step 4</p>
-            <h2>주변지역 개발계획</h2>
-          </div>
-          <div className="panel-header-actions">
-            <button type="button" className="secondary" onClick={searchDevelopmentPlans} disabled={developmentResult.loading}>
-              {developmentResult.loading ? "검색 중" : "주변사업 검색"}
-            </button>
-            <button type="button" className="secondary" onClick={copyDevelopmentTable} disabled={!displayedDevelopmentResults.length || !developmentResult.complete}>표 복사</button>
-            <button type="button" className="secondary" onClick={downloadDevelopmentCsv} disabled={!displayedDevelopmentResults.length || !developmentResult.complete}>CSV 다운로드</button>
-            <button type="button" className="secondary" onClick={copyDevelopmentDraft} disabled={!developmentResult.complete || Boolean(developmentResult.warnings)}>2장 문장 복사</button>
-          </div>
-        </div>
-
-        <div className="scope-linked-note">
-          <strong>검색 기준</strong>
-          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 사각형 조사범위를 사용합니다. 행정구역은 {developmentAdmin.sido || "-"} / {developmentAdmin.sigungu || "-"}로 자동 적용합니다.</span>
-        </div>
-
-        <div className="form-grid compact-grid development-form">
-          <label>
-            <span>검색시작연도</span>
-            <input type="number" value={developmentSearch.startYear} onChange={(event) => updateDevelopmentSearch({ startYear: event.target.value })} placeholder="2021" />
-          </label>
-          <label>
-            <span>검색종료연도</span>
-            <input type="number" value={developmentSearch.endYear} onChange={(event) => updateDevelopmentSearch({ endYear: event.target.value })} placeholder="2026" />
-          </label>
-          <label>
-            <span>사업유형</span>
-            <select value={developmentSearch.projectType} onChange={(event) => updateDevelopmentSearch({ projectType: event.target.value })}>
-              {DEVELOPMENT_PROJECT_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
-            </select>
-          </label>
-          <label>
-            <span>반영여부 필터</span>
-            <select value={developmentSearch.statusFilter} onChange={(event) => updateDevelopmentSearch({ statusFilter: event.target.value })}>
-              {DEVELOPMENT_STATUS_FILTERS.map((status) => <option key={status} value={status}>{status}</option>)}
-            </select>
-          </label>
-          <label className="checkbox-label">
-            <input type="checkbox" checked={Boolean(developmentSearch.includeFailed)} onChange={(event) => updateDevelopmentSearch({ includeFailed: event.target.checked })} />
-            <span>위치 미확인 사업 포함 보기</span>
-          </label>
-        </div>
-
-        <div className="verification-card">
-          <div>
-            <p className="eyebrow">TIA API Search</p>
-            <h3>교통영향평가 후보사업 자동 검색</h3>
-          </div>
-          <p>
-            {developmentResult.error
-        ? developmentResult.error
-        : developmentResult.loading ? `${developmentResult.progress || "후보 조회 중"}. 조사가 끝나기 전까지 잠정 결과입니다.`
-        : developmentResult.searched
-                ? `${developmentResult.dataMode === "DB_CACHE" ? "누적 DB 자료" : "실시간 공공 API"}를 기준으로 사업지 좌표와 후보사업 좌표를 계산했습니다. 반영여부는 자동판정이므로 보고서 작성 전 원자료 확인이 필요합니다.`
-                : "사업지 주소 입력 후 주변사업 검색을 누르면 누적 DB 자료를 우선 조회하고, DB 자료가 없으면 교통영향평가 공공 API를 실시간 조회합니다."}
-          </p>
-          {developmentResult.warnings && <p className="data-warning">일부 출처 조회 실패: {developmentResult.warnings}. 현재 결과만으로 주변사업 부재를 판단할 수 없습니다.</p>}
-          {developmentResult.progress && <p>{developmentResult.progress} / {developmentResult.complete ? "수집 후보 처리 완료" : "미완료"}</p>}
-          <p className="verification-source">좌표변환 실패 사업과 원자료 미수록 사업은 범위 내 여부를 확인할 수 없습니다. 0건이어도 사업이 없다고 단정하지 마세요.</p>
-          <p className="verification-source">
-            원자료: {developmentResult.dataMode === "DB_CACHE" ? "누적 DB(TIA businessSearch 수집자료)" : "국토교통부 교통영향평가_사업정보 API + 교통영향평가정보지원시스템 API"}
-            {" / "}DB 연결: {developmentResult.dbConfigured ? "연결됨" : "미연결"}
-            {" / "}좌표변환: 카카오 Local API
-          </p>
-        </div>
-
-        {developmentResult.summary ? (
-          <div className="development-summary-grid">
-            <div><strong>{formatNumber(developmentResult.summary.totalRawCount)}</strong><span>원자료</span></div>
-            <div><strong>{formatNumber(developmentResult.summary.geocodedCount)}</strong><span>좌표변환</span></div>
-            <div><strong>{formatNumber(developmentResult.summary.withinRadiusCount)}</strong><span>사각형 범위 내</span></div>
-            <div><strong>{formatNumber(developmentResult.summary.reflectCount)}</strong><span>반영</span></div>
-            <div><strong>{formatNumber(developmentResult.summary.reviewCount)}</strong><span>반영검토</span></div>
-            <div><strong>{formatNumber(developmentResult.summary.referenceCount)}</strong><span>참고</span></div>
-            <div><strong>{formatNumber(developmentResult.summary.excludedCount)}</strong><span>제외후보</span></div>
-          </div>
-        ) : null}
-
-        <section className="subpanel">
-          <div className="subpanel-header">
-            <h3>주변 교통영향평가 사업 후보</h3>
-            <p className="subpanel-source">기본 정렬: 거리순 / 위치 미확인 사업은 하단 표시</p>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table development-table">
-              <thead>
-                <tr>
-                  <th>번호</th>
-                  <th>사업명</th>
-                  <th>위치</th>
-                  <th>좌표 확인</th>
-                  <th>확인 주소</th>
-                  <th>사업구분</th>
-                  <th>용도/시설</th>
-                  <th>규모</th>
-                  <th>사업기간</th>
-                  <th>심의결과</th>
-                  <th>사업지와 거리</th>
-                  <th>반영여부</th>
-                  <th>반영사유</th>
-                  <th>출처</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedDevelopmentResults.length ? displayedDevelopmentResults.map((result, index) => (
-                  <tr key={`${result.id}-${index}`}>
-                    <td>{index + 1}</td>
-                    <td>{result.projectName || "-"}</td>
-                    <td>{result.location || "-"}</td>
-                    <td>
-                      <span>{result.geocodeStatus === "success" ? "상세 주소 일치" : "위치 미확인"}</span>
-                      <details>
-                        <summary>조회 과정·사유</summary>
-                        <div className="geocode-details">{developmentGeocodeText(result)}</div>
-                      </details>
-                    </td>
-                    <td>{result.matchedAddress || "-"}</td>
-                    <td>{result.projectType || "-"}</td>
-                    <td>{result.facilityType || "-"}</td>
-                    <td>{developmentScaleText(result)}</td>
-                    <td>{result.projectPeriod || "-"}</td>
-                    <td>{result.reviewResult || "-"}</td>
-                    <td>{formatDevelopmentDistance(result)}</td>
-                    <td><span className={`status-pill ${result.reflectionStatus || ""}`}>{result.reflectionStatus || "-"}</span></td>
-                    <td>{result.reflectionReason || "-"}</td>
-                    <td>{result.source || "TIA_API"}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={14} className="empty-cell">
-                      {developmentResult.searched ? "표시할 주변지역 개발계획 후보가 없습니다." : "검색 전입니다. 입력값을 확인한 뒤 주변사업 검색을 눌러 주세요."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="subpanel notice-search-panel">
-          <div className="subpanel-header">
-            <h3>지자체 고시공고 보조 확인</h3>
-            <p className="subpanel-source">자동 키워드 검색 링크 / 공식 고시공고 및 첨부파일은 수동확인 필요</p>
-          </div>
-          <div className="notice-link-grid">
-            {(developmentResult.noticeSearches || []).length ? developmentResult.noticeSearches.map((item) => (
-              <a key={item.keyword} className="notice-link-card" href={item.url} target="_blank" rel="noreferrer">
-                <strong>{item.keyword}</strong>
-                <span>{item.title}</span>
-                <em>{item.confidence}</em>
-              </a>
-            )) : (
-              <p className="empty-cell">주변사업 검색 후 행정구역 기반 고시공고 검색 링크가 표시됩니다.</p>
-            )}
-          </div>
-        </section>
-      </section>
-
-      <section className={`panel step-section ${shouldShowStep(5) ? "" : "is-hidden"}`}>
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Step 5</p>
-            <h2>버스·지하철 현황</h2>
-          </div>
-          <div className="panel-header-actions">
-            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading || publicTransportResult.busDetailLoading || publicTransportResult.subwayDetailLoading}>
-              {publicTransportResult.loading || publicTransportResult.busDetailLoading || publicTransportResult.subwayDetailLoading ? "조회 중" : "교통시설 조회"}
-            </button>
-            <button type="button" className="secondary" onClick={() => copyPublicTransportTables("bus")} disabled={!busStops.length && !publicTransportResult.subwayStations?.length}>표 복사</button>
-            <button type="button" className="secondary" onClick={() => downloadPublicTransportCsv("bus")} disabled={!busStops.length && !publicTransportResult.subwayStations?.length}>CSV 다운로드</button>
-          </div>
-        </div>
-
-        <div className="scope-linked-note">
-          <strong>조사 기준</strong>
-          <span>상단 주소지와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 조사 범위를 사용합니다. 서울·경기 버스정류장과 지하철역을 조회합니다.</span>
-        </div>
-
-        <div className="verification-card">
-          <div>
-            <p className="eyebrow">Public Transport Facilities</p>
-            <h3>범위 내 버스정류장 자동 정리</h3>
-          </div>
-          <p>
-            {publicTransportResult.loading ? "교통시설 조회 중입니다." : publicTransportResult.busError
-              ? publicTransportResult.busError
-              : publicTransportResult.searched
-                ? publicTransportResult.busSummary ? `조사 범위 안의 버스정류장 ${formatNumber(publicTransportResult.busSummary.returnedCount)}개를 정리했습니다.` : publicTransportResult.error || "버스 조회 결과를 확인하지 못했습니다."
-                : "교통시설 조회를 누르면 버스정류장·경유노선·지하철역을 표로 정리합니다."}
-          </p>
-          <p className="verification-source">
-            원자료: {publicTransportResult.busSource || "서울시 버스정류소 위치정보 · 버스노선별 정류소정보"}
-            {publicTransportResult.busSourceDate ? ` / 버스 자료 기준일: ${publicTransportResult.busSourceDate} (실시간 자료 아님)` : ""}
-            {publicTransportResult.busFetchedAt ? ` / 버스 조회 시각: ${publicTransportResult.busFetchedAt} (UTC)` : ""}
-          </p>
-          {publicTransportResult.busSourceDate ? <p className="verification-source">{publicTransportResult.transportRegion === "gyeonggi" ? `GBIS 원자료 버전 기준 · ${publicTransportResult.busCacheInfo?.storage === "DATABASE" ? "DB 저장 자료 재사용 · 매월 5일 04시 이후 첫 조회에 갱신" : "메모리 임시 저장 · 서버 재시작 시 재조회 가능"} · 조회 시점은 자료 갱신일과 다릅니다.` : busRefreshStatusText(publicTransportResult.busRefresh)}</p> : null}
-          {publicTransportResult.busCacheInfo?.stale && <p role="alert">버스 기반정보 갱신 실패로 이전 정상 저장 자료를 표시합니다. 최신 운행 여부는 공식 자료를 확인해 주세요.</p>}
-          {[...new Set((publicTransportResult.busStops || []).flatMap((stop) => (stop.routes || []).flatMap((route) => [route.cacheWarning, route.supplementError]).filter(Boolean)))].map((warning) => <p className="hint" role="alert" key={warning}>{warning}</p>)}
-          {publicTransportResult.busDetailTotal > 0 ? (
-            <p className="verification-source" role="status">노선 상세 API: {publicTransportResult.busDetailLoading ? "조회 중" : publicTransportResult.busDetailError ? "조회 중단" : "조회 시도 완료"} ({publicTransportResult.busDetailCompleted}/{publicTransportResult.busDetailTotal}개 노선). 미제공 항목은 수동 확인이 필요합니다.</p>
-          ) : null}
-          {publicTransportResult.busDetailError ? <p className="verification-source" role="alert">{publicTransportResult.busDetailError} 기본 정류장·경유노선 목록은 유지합니다.</p> : null}
-          {publicTransportResult.busSummary?.partial ? (
-            <p className="verification-source">버스 정보 일부 조회 실패: 경유노선 {publicTransportResult.busSummary.failedStationRoutes || 0}개 정류장, 노선 상세 {publicTransportResult.busSummary.failedRouteDetails || 0}건, 정류장 첫·막차 {publicTransportResult.busSummary.failedStationTimes || 0}건. 조회된 결과는 유지하며 누락 항목은 수동 확인이 필요합니다.</p>
-          ) : null}
-          {publicTransportResult.busSummary?.truncated ? (
-            <p className="verification-source">범위 안 정류장 {publicTransportResult.busSummary.withinScopeCount}개 중 거리순 {publicTransportResult.busSummary.returnedCount}개를 표시합니다.</p>
-          ) : null}
-        </div>
-
-        <section className="subpanel">
-          <div className="subpanel-header">
-            <h3>버스정류장</h3>
-            <p className="subpanel-source">{publicTransportResult.transportRegion === "gyeonggi" ? "경기버스정보 기반정보" : "서울시 공식 파일"} {publicTransportResult.busSourceDate ? `(${publicTransportResult.busSourceDate} 기준)` : "기준"} / 조사 범위 내 정류장 · 직선거리순</p>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table public-transport-table bus-stop-table">
-              <thead>
-                <tr>
-                  <th>정류장번호</th>
-                  <th>정류장명</th>
-                  <th>위치(위도, 경도)</th>
-                  <th>거리</th>
-                  <th>정차노선수</th>
-                </tr>
-              </thead>
-              <tbody>
-                {busStops.length ? busStops.map((station) => (
-                  <tr key={station.id || `${station.arsId}-${station.stationName}`}>
-                    <td>{station.arsId || station.stationId || "-"}</td>
-                    <td>{station.stationName || "-"}</td>
-                    <td>{station.location || station.stationName || "-"}</td>
-                    <td>{formatFacilityDistance(station)}</td>
-                    <td>{station.routeError || formatOptionalNumber(station.routes?.length || 0)}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={5} className="empty-cell">
-                      {publicTransportResult.loading ? "조회 중입니다." : publicTransportResult.searched ? (publicTransportResult.busError || (!publicTransportResult.busSummary && publicTransportResult.error) || "조사 범위 안에서 표시할 버스정류장이 없습니다.") : "조회 전입니다. 서울·경기 주소지를 입력한 뒤 교통시설 조회를 눌러 주세요."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section className="subpanel">
-          <div className="subpanel-header">
-            <h3>정류장별 경유 버스노선</h3>
-            <p className="subpanel-source">첫차·막차는 정류장 기준이며 기점 시간으로 대체하지 않습니다. 서울 토요일·공휴일 배차는 T-DATA(분기 갱신), 경기 요일별 배차는 GBIS로 보완합니다. 서울 평일·일요일 구분 및 미제공 값은 수동 확인이 필요합니다. 조회 시각은 자료 기준일과 다릅니다.</p>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table bus-route-table">
-              <thead>
-                <tr>
-                  {BUS_ROUTE_COLUMNS.map((column) => <th key={column}>{column}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {busStops.length ? busRouteTableRows(busStops).slice(1).map((row, index) => (
-                  <tr key={index}>
-                    {row.map((value, column) => <td key={column}>{value}</td>)}
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={BUS_ROUTE_COLUMNS.length} className="empty-cell">
-                      {publicTransportResult.searched ? "조회된 버스정류장 노선 정보가 없습니다." : "조회 전입니다."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <SubwayResults result={publicTransportResult} />
-      </section>
-
-      <section className={`panel step-section ${shouldShowStep(6) ? "" : "is-hidden"}`}>
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Step 6</p>
-            <h2>따릉이 현황</h2>
-          </div>
-          <div className="panel-header-actions">
-            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading}>{publicTransportResult.loading ? "조회 중" : "따릉이 조회"}</button>
-            <button type="button" className="secondary" onClick={() => copyPublicTransportTables("bike")} disabled={!bikeStations.length}>표 복사</button>
-            <button type="button" className="secondary" onClick={() => downloadPublicTransportCsv("bike")} disabled={!bikeStations.length}>CSV 다운로드</button>
-          </div>
-        </div>
-        <div className="scope-linked-note">
-          <strong>조사 기준</strong>
-          <span>상단 주소와 가로 {formatNumber(getScopeDimensions(form.basics).width)}m × 세로 {formatNumber(getScopeDimensions(form.basics).height)}m 범위 안의 서울 따릉이 대여소를 조회합니다. 지도 표시 여부는 지도 상단에서 선택합니다.</span>
-        </div>
-        <div className="verification-card">
-          <p>{publicTransportResult.loading ? "교통시설 조회 중입니다." : publicTransportResult.error || (publicTransportResult.searched ? `따릉이 대여소 ${formatNumber(bikeStations.length)}개를 확인했습니다.` : "조사 시작 또는 따릉이 조회를 눌러 주세요.")}</p>
-          <p className="verification-source">원자료: {publicTransportResult.source || "서울특별시_공공자전거 대여소 정보(25.12월 기준)"}</p>
-        </div>
-        <section className="subpanel">
-          <div className="subpanel-header">
-            <h3>따릉이 대여소</h3>
-            <p className="subpanel-source">서울특별시 공공자전거 대여소 마스터 기준 / 거리순</p>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table public-transport-table">
-              <thead><tr><th>대여소번호</th><th>대여소명</th><th>주소 또는 위치</th><th>거치대수</th><th>거리</th></tr></thead>
-              <tbody>
-                {bikeStations.length ? bikeStations.map((station) => (
-                  <tr key={station.id || `${station.stationNumber}-${station.stationName}`}>
-                    <td>{station.stationNumber || station.id || "-"}</td>
-                    <td>{station.stationName || "-"}</td>
-                    <td>{station.location || "-"}</td>
-                    <td>{formatOptionalNumber(station.rackCount)}</td>
-                    <td>{formatFacilityDistance(station)}</td>
-                  </tr>
-                )) : <tr><td colSpan={5} className="empty-cell">{publicTransportResult.loading ? "조회 중입니다." : publicTransportResult.error || (publicTransportResult.searched ? "조사 범위 안에서 표시할 따릉이 대여소가 없습니다." : "서울 주소지를 입력한 뒤 따릉이 조회를 눌러 주세요.")}</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-
-      <section className={`panel step-section ${shouldShowStep(7) ? "" : "is-hidden"}`}>
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Step 7</p>
-            <h2>교통관련 계획</h2>
-          </div>
-        </div>
-
-        <div className="subpanel-grid">
-          <section className="subpanel">
-            <div className="subpanel-header">
-              <h3>교통계획</h3>
-              <button type="button" className="secondary" onClick={() => addRow("trafficPlans", createTrafficPlanRow)}>계획 추가</button>
-            </div>
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>계획명</th>
-                    <th>연계 도시계획</th>
-                    <th>내용</th>
-                    <th>출처</th>
-                    <th>관리</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {form.trafficPlans.map((row, index) => (
-                    <tr key={`traffic-${index}`}>
-                      <td><input className="table-input" value={row.title} onChange={(event) => updateListItem("trafficPlans", index, { title: event.target.value })} placeholder="예: 시내부 간선도로망 계획" /></td>
-                      <td><input className="table-input" value={row.relatedPlan} onChange={(event) => updateListItem("trafficPlans", index, { relatedPlan: event.target.value })} placeholder="예: 2030 도시기본계획" /></td>
-                      <td><textarea className="table-textarea" value={row.description} onChange={(event) => updateListItem("trafficPlans", index, { description: event.target.value })} placeholder="예: 교차로 개량 및 도로 확장 계획" /></td>
-                      <td><input className="table-input" value={row.source} onChange={(event) => updateListItem("trafficPlans", index, { source: event.target.value })} placeholder="예: 시청 교통정책과" /></td>
-                      <td className="actions"><button type="button" className="mini-button" onClick={() => removeRow("trafficPlans", index, createTrafficPlanRow)}>삭제</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="subpanel">
-            <div className="subpanel-header">
-              <h3>공사 중인 시설계획</h3>
-              <button type="button" className="secondary" onClick={() => addRow("constructionPlans", createConstructionPlanRow)}>시설계획 추가</button>
-            </div>
-            <div className="table-wrap">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>시설명</th>
-                    <th>위치/구간</th>
-                    <th>진행상태</th>
-                    <th>출처</th>
-                    <th>관리</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {form.constructionPlans.map((row, index) => (
-                    <tr key={`construction-${index}`}>
-                      <td><input className="table-input" value={row.title} onChange={(event) => updateListItem("constructionPlans", index, { title: event.target.value })} placeholder="예: 경수대로 확장공사" /></td>
-                      <td><input className="table-input" value={row.location} onChange={(event) => updateListItem("constructionPlans", index, { location: event.target.value })} placeholder="예: 수원시청~인계사거리" /></td>
-                      <td><input className="table-input" value={row.status} onChange={(event) => updateListItem("constructionPlans", index, { status: event.target.value })} placeholder="예: 공사중" /></td>
-                      <td><input className="table-input" value={row.source} onChange={(event) => updateListItem("constructionPlans", index, { source: event.target.value })} placeholder="예: 도로과 보도자료" /></td>
-                      <td className="actions"><button type="button" className="mini-button" onClick={() => removeRow("constructionPlans", index, createConstructionPlanRow)}>삭제</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-
-      </section>
-
-      <TrafficAccidentStep key={accidentReset} siteLocation={siteLocation} visible={shouldShowStep(8)} />
+      <TrafficAccidentStep key={accidentReset} siteLocation={siteLocation} visible={shouldShowStep(8)} autoRequest={autoRequest} onPhase={setAccidentPhase} seed={accidentSeed} />
 
       <section className="panel status-panel">
         <div>

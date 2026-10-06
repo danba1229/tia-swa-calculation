@@ -5,9 +5,10 @@
   "description": "Next.js deployment-ready TIA research builder.",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run lint && npm test && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint app components lib tests",
+    "test": "node --test --test-isolation=none tests/*.test.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
@@ -20,5 +21,10 @@
     "react": "latest",
     "react-dom": "latest",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.5.0"
   }
 }

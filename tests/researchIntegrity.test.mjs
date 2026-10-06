@@ -6,6 +6,8 @@ import { createHash } from "node:crypto";
 import { nullableArea, residualArea, areaStats, createRequestGate, validSurveyCenter } from "../lib/researchIntegrity.js";
 import { isInsideScope, summarizeProjects } from "../lib/tiaScope.js";
 import { geocodeProject } from "../lib/projectGeocode.js";
+import { kosisAreaM2 } from '../lib/kosisArea.js';
+import { mergeStoredAndLive } from '../lib/tiaCoverage.js';
 
 test("missing area is not zero and incomplete/negative residual is not invented", () => {
   for (const value of [null, undefined, "", " ", "-", NaN, -1]) assert.equal(nullableArea(value), null);
@@ -28,11 +30,11 @@ test("partial report retains source total without normalizing known rows to 100 
 
 const statsSource = readFileSync(new URL("../app/api/local-statistics/route.js", import.meta.url), "utf8")
   .replace(/^import .*;\r?$/gm, "").replace(/^export /gm, "");
-const statsContext = vm.createContext({ residualArea });
+const statsContext = vm.createContext({ residualArea, kosisAreaM2 });
 vm.runInContext(statsSource, statsContext);
 
 test("actual KOSIS mapping preserves missing land categories and does not inflate other", () => {
-  const result = vm.runInContext('makeLanduseAreas([{C3_NM:"계",DT:"1000"},{C3_NM:"전",DT:"100"},{C3_NM:"답",DT:"-"}])', statsContext);
+  const result = vm.runInContext('makeLanduseAreas([{C3_NM:"계",UNIT_NM:"㎡",DT:"1000"},{C3_NM:"전",UNIT_NM:"㎡",DT:"100"},{C3_NM:"답",UNIT_NM:"㎡",DT:"-"}])', statsContext);
   assert.equal(result.areas.전, "100");
   assert.equal(result.areas.답, "");
   assert.equal(result.areas.기타, "");
@@ -40,7 +42,7 @@ test("actual KOSIS mapping preserves missing land categories and does not inflat
 });
 
 test("missing nonurban table never becomes a zero total or disappears from zoning rows", () => {
-  const result = vm.runInContext('makeZoningRows([{C2_NM:"도시지역",DT:"1000"},{C2_NM:"주거지역",DT:"100"}], [])', statsContext);
+  const result = vm.runInContext('makeZoningRows([{C2_NM:"도시지역",UNIT_NM:"㎡",DT:"1000"},{C2_NM:"주거지역",UNIT_NM:"㎡",DT:"100"}], [])', statsContext);
   assert.equal(result.total, null);
   assert.equal(result.rows.find((r) => r.name === "관리지역").area, "");
   assert.equal(result.rows.find((r) => r.name === "기타").area, "");
@@ -48,11 +50,11 @@ test("missing nonurban table never becomes a zero total or disappears from zonin
 
 test("KOSIS decimal areas are not rounded before residuals and ratios are calculated", () => {
   const result = vm.runInContext(`makeLanduseAreas([
-    {C3_NM:"계",DT:"46965620.8"},
-    {C3_NM:"전",DT:"2171229.6"},{C3_NM:"답",DT:"1543487.2"},
-    {C3_NM:"임야",DT:"17814902.9"},{C3_NM:"대",DT:"13132851.8"},
-    {C3_NM:"도로",DT:"6310354.2"},{C3_NM:"하천",DT:"2491084.1"},
-    {C3_NM:"학교",DT:"910064.8"},{C3_NM:"공원",DT:"1057796.1"}
+    {C3_NM:"계",UNIT_NM:"㎡",DT:"46965620.8"},
+    {C3_NM:"전",UNIT_NM:"㎡",DT:"2171229.6"},{C3_NM:"답",UNIT_NM:"㎡",DT:"1543487.2"},
+    {C3_NM:"임야",UNIT_NM:"㎡",DT:"17814902.9"},{C3_NM:"대",UNIT_NM:"㎡",DT:"13132851.8"},
+    {C3_NM:"도로",UNIT_NM:"㎡",DT:"6310354.2"},{C3_NM:"하천",UNIT_NM:"㎡",DT:"2491084.1"},
+    {C3_NM:"학교",UNIT_NM:"㎡",DT:"910064.8"},{C3_NM:"공원",UNIT_NM:"㎡",DT:"1057796.1"}
   ])`, statsContext);
   assert.equal(result.areas.전, "2171229.6");
   assert.equal(result.areas.기타, "1533850.1");
@@ -136,7 +138,7 @@ const routeSource = readFileSync(new URL("../app/api/tia/search/route.js", impor
 
 function tiaHandler(projects, lookup = async (address) => ({ success: true, latitude: 37.5, longitude: 127, matchedAddress: address })) {
   const context = vm.createContext({
-    createHash, isInsideScope, summarizeProjects, console,
+    createHash, isInsideScope, summarizeProjects, console, mergeStoredAndLive,
     NextResponse: { json: (data, options) => new Response(JSON.stringify(data), options) },
     geocodeAddress: async (address) => ({ success: true, latitude: 37.5, longitude: 127, matchedAddress: address }),
     geocodeProject,
@@ -262,8 +264,9 @@ test("main investigation starts independent tasks without waiting for map SDK", 
     searchDevelopmentPlans: () => calls.push("development"),
     searchPublicTransportFacilities: () => calls.push("transport"),
     renderScopeMap: () => calls.push("map"),
+    setAutoRequest: () => calls.push('accident'),
   });
-  assert.deepEqual(calls, ["stats", "development", "transport", "map"]);
+  assert.deepEqual(calls, ["stats", "development", "transport", "map", "accident"]);
 });
 
 test("actual statistics callback does not apply an old response after input cancellation", async () => {

@@ -21,9 +21,9 @@ export async function GET(request) {
     const period = defaultSyncPeriod();
     const startDate = searchParams.get("startDate") || period.startDate;
     const endDate = searchParams.get("endDate") || period.endDate;
-    const maxPages = Number(searchParams.get("maxPages")) || 250;
+    const maxPages = Math.min(1000, Math.max(1, Number(searchParams.get("maxPages")) || 250));
     const summary = await syncTiaBusinessPeriod({ startDate, endDate, maxPages });
-    return NextResponse.json({ success: true, summary });
+    return NextResponse.json({ success: summary.complete, summary }, { status: summary.complete ? 200 : 503 });
   } catch (error) {
     console.error("[tia-sync]", error);
     return NextResponse.json(

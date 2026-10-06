@@ -180,7 +180,8 @@ test("actual details endpoint validates scope/IDs before any upstream call", asy
 
 test("actual component callback preserves base results even if the detail loader unexpectedly throws", async () => {
   const component = readFileSync(new URL("../components/TiaResearchBuilder.jsx", import.meta.url), "utf8");
-  const source = component.slice(component.indexOf("  async function searchPublicTransportFacilities("), component.indexOf("  function formatFacilityDistance("));
+  const module = readFileSync(new URL('../lib/client/createTransportSearch.js', import.meta.url), 'utf8');
+  const source = module.slice(module.indexOf('async function searchPublicTransportFacilities'), module.lastIndexOf(';'));
   let state = { basics: { siteAddress: "서울특별시 서초구" }, publicTransportResult: {} };
   const context = vm.createContext({
     form: state, requestGateRef: { current: createRequestGate() }, safe: value=>value || "", toNumber: Number,

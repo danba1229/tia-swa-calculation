@@ -5,20 +5,32 @@ import { ACCIDENT_TYPES, COLLISION_TYPES, surveyQuality, TAAS_URL, validateAccid
 import { buildAccidentReport } from '../lib/accidentReport';
 import { buildReportWorkbook } from '../lib/accidentReportExcel';
 import AccidentReportTables from './AccidentReportTables';
+import { readDraft } from '../lib/draftStorage';
+import useDraftPersistence from './useDraftPersistence';
+import DraftStatus from './DraftStatus';
 
 const STORAGE_KEY = 'tia-accident-survey-v1';
 const countLabels = { accidents: '사고건수', casualties: '사상자 집계(집계방식 참조)', deaths: '사망', serious: '중상', minor: '경상', reported: '부상신고' };
 const initial = { radius: '500', year: String(new Date().getFullYear() - 1), years: '3', intersections: [] };
 const endpoint = { radius: '/api/accidents/radius', official: '/api/accidents/official' };
-async function requestJson(url, body, signal) {
+async function requestJson(url, body, signal, attempt = 0) {
   const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
+  const delay = Number(response.headers.get('Retry-After'));
+  if (response.status === 429 && delay > 0 && delay <= 15 && attempt < 24) {
+    await new Promise((resolve, reject) => {
+      const onAbort = () => { clearTimeout(timer); reject(new DOMException('취소', 'AbortError')); };
+      const timer = setTimeout(() => { signal?.removeEventListener('abort', onAbort); resolve(); }, delay * 1000);
+      if (signal?.aborted) onAbort(); else signal?.addEventListener('abort', onAbort, { once: true });
+    });
+    return requestJson(url, body, signal, attempt + 1);
+  }
   let data;
   try { data = await response.json(); } catch { throw new Error('서버 응답을 받지 못했습니다. 다시 조회해 주세요.'); }
   if (!response.ok || !data.success) throw new Error(data.message || '조회 실패');
   return data;
 }
 
-export default function TrafficAccidentStep({ siteLocation, visible }) {
+export default function TrafficAccidentStep({ siteLocation, visible, autoRequest, onPhase, seed }) {
   const [settings, setForm] = useState(initial), [results, setResults] = useState([]), [snapshot, setSnapshot] = useState(null);
   const form = { ...settings, address: siteLocation.address, lat: siteLocation.lat, lng: siteLocation.lng };
   const siteKey = JSON.stringify([form.address, form.lat, form.lng]);
@@ -27,11 +39,14 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
   const [busy, setBusy] = useState(false), [status, setStatus] = useState(''), [ready, setReady] = useState(false);
   const controller = useRef(null), run = useRef(0);
   useEffect(() => {
-    try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); if (saved?.form) { const { radius, year, years, intersections } = { ...initial, ...saved.form }; setForm({ radius, year, years, intersections }); setResults(saved.results || []); setSnapshot(saved.snapshot || null); } } catch { /* Unavailable storage does not prevent investigation. */ }
-    setReady(true);
-    return () => { run.current++; controller.current?.abort(); };
+    let cancelled = false;
+    (seed ? Promise.resolve(seed) : readDraft(STORAGE_KEY)).then(saved => {
+      if (!cancelled && saved?.form) { const { radius, year, years, intersections } = { ...initial, ...saved.form }; setForm({ radius, year, years, intersections }); setResults(saved.results || []); setSnapshot(saved.snapshot || null); }
+      if (!cancelled) setReady(true);
+    }).catch(() => { if (!cancelled) setStatus('저장된 사고조사를 읽지 못해 자동 저장을 중지했습니다. 상단 백업 복원 또는 전체 초기화를 사용해 주세요.'); });
+    return () => { cancelled = true; run.current++; controller.current?.abort(); };
   }, []);
-  useEffect(() => { if (ready) try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ form: settings, results, snapshot })); } catch { /* Results remain downloadable. */ } }, [settings, results, snapshot, ready]);
+  const draftStatus = useDraftPersistence(STORAGE_KEY, { form: settings, results, snapshot }, ready);
   useEffect(() => {
     run.current++;
     controller.current?.abort();
@@ -39,6 +54,19 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
     setStatus('');
   }, [siteKey]);
   const stale = snapshot && JSON.stringify(form) !== JSON.stringify(snapshot);
+  const errors = results.some(r => r.state === 'error' || Object.values(r.data?.sections || {}).some(s => s.status === 'error'));
+  const incomplete = results.length < Number(settings.years) * (1 + Object.keys(ACCIDENT_TYPES).length) + settings.intersections.length * 5;
+  const qualityWarning = buildAccidentReport(results, snapshot).some(table => table.validationWarnings?.length);
+  const invoke = useRef(null), handled = useRef(0);
+  invoke.current = () => investigate();
+  useEffect(() => {
+    if (!autoRequest || handled.current === autoRequest.id || autoRequest.address !== siteLocation.address || !ready || siteLocation.status !== 'ready') return;
+    handled.current = autoRequest.id;
+    invoke.current();
+  }, [autoRequest, siteLocation.address, siteLocation.status, ready]);
+  useEffect(() => {
+    onPhase?.(busy ? 'loading' : stale ? 'stale' : !results.length ? 'idle' : errors || incomplete || qualityWarning ? 'partial' : 'complete');
+  }, [busy, stale, results.length, errors, incomplete, qualityWarning, onPhase]);
   const reportTables = buildAccidentReport(results, snapshot);
   const update = (key, value) => setForm(f => ({ ...f, [key]: value }));
   const intersectionUpdate = (index, key, value) => setForm(f => ({ ...f, intersections: f.intersections.map((row, i) => i === index ? { ...row, [key]: value } : row) }));
@@ -55,7 +83,7 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
       setStatus(`주소 확인: ${data.matchedAddress}`);
     } catch (e) { if (run.current === id) setStatus(e.message); } finally { if (run.current === id) setBusy(false); }
   }
-  async function investigate() {
+  async function investigate(retryOnly = false) {
     let jobs;
     try {
       if (siteLocation.status !== 'ready') throw new Error('상단 주소지의 좌표 확인이 완료된 뒤 조사해 주세요.');
@@ -75,9 +103,15 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
       }
     } catch (e) { setStatus(e.message); return; }
     const id = ++run.current;
+    controller.current?.abort();
     controller.current = new AbortController();
-    const collected = [];
-    setBusy(true); setResults([]); setSnapshot(JSON.parse(JSON.stringify(form)));
+    const successful = retryOnly === true && !stale ? results.filter(r => r.state === 'success' && !Object.values(r.data?.sections || {}).some(s => s.status === 'error')) : [];
+    const jobKey = job => JSON.stringify([job.kind, job.intersection, job.query]);
+    const completed = new Set(successful.map(jobKey));
+    const collected = [...successful];
+    const totalJobs = jobs.length;
+    jobs = jobs.filter(job => !completed.has(jobKey(job)));
+    setBusy(true); setResults(collected); setSnapshot(JSON.parse(JSON.stringify(form)));
     try {
       for (let i = 0; i < jobs.length; i++) {
         if (run.current !== id || currentSite.current !== siteKey) break;
@@ -94,7 +128,7 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
         const warnings = collected.filter(r => surveyQuality(r.data).warnings.length).length;
         const notes = collected.filter(r => surveyQuality(r.data).notes.length).length;
         const collisionWarnings = buildAccidentReport(collected, form).flatMap(table => table.validationWarnings || []).length;
-        setStatus(`조사 종료 · ${collected.length}/${jobs.length}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}${warnings ? ` · ${warnings}개 결과의 원문 합계 확인이 필요합니다.` : ''}${notes ? ` · ${notes}개 결과에 집계·표기 안내가 있습니다.` : ''}${collisionWarnings ? ` · ${collisionWarnings}개 사고유형에 확인이 필요합니다.` : ''}`);
+        setStatus(`조사 종료 · ${collected.length}/${totalJobs}개 처리${errors ? ` · ${errors}개 조회에 확인할 오류가 있습니다.` : ''}${warnings ? ` · ${warnings}개 결과의 원문 합계 확인이 필요합니다.` : ''}${notes ? ` · ${notes}개 결과에 집계·표기 안내가 있습니다.` : ''}${collisionWarnings ? ` · ${collisionWarnings}개 사고유형에 확인이 필요합니다.` : ''}`);
       }
     } finally { if (run.current === id) setBusy(false); }
   }
@@ -134,6 +168,7 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
     } catch { setStatus('엑셀 파일을 만들지 못했습니다. 다시 다운로드해 주세요.'); }
   }
   return <section id="step-8" className="panel step-section accident-survey" hidden={!visible}>
+    <DraftStatus status={draftStatus} />
     <div className="section-heading"><div><p className="eyebrow">Step.8</p><h2>교통사고 자동 조사</h2></div></div>
     <p>상단에 입력한 주소지와 자동 계산된 좌표를 사용합니다. 반경·연도를 정하면 TAAS에서 사업지 주변, 보행자, 자전거, 교차로별 사고를 조사합니다.</p>
     <div className="accident-site-summary">
@@ -148,7 +183,8 @@ export default function TrafficAccidentStep({ siteLocation, visible }) {
         <button type="button" className="secondary-button" disabled={form.intersections.length >= 10} onClick={() => update('intersections', [...form.intersections, { name: '', address: '', lat: '', lng: '', radius: '100' }])}>교차로 추가</button>
       </details>
       <p className="muted">좌표와 조사 조건은 조회를 위해 TAAS·카카오에 전송됩니다. TAAS 자료 제공 연도 내에서 조사하며, 외부 서비스 상태에 따라 수 분 걸릴 수 있습니다.</p>
-      <button type="button" className="primary-button" disabled={siteLocation.status !== 'ready'} onClick={investigate}>자동 조사 시작</button>
+      <button type="button" className="primary-button" disabled={siteLocation.status !== 'ready'} onClick={() => investigate()}>자동 조사 시작</button>
+      {(errors || (results.length > 0 && incomplete)) && !stale && <button type="button" className="secondary-button" onClick={() => investigate(true)}>실패·미완료 항목 재시도</button>}
     </fieldset>
     <div className="accident-actions">{busy && <button type="button" className="secondary-button" onClick={stop}>조사 중단</button>}<button type="button" className="secondary-button" disabled={!results.length || busy || !!stale} onClick={download}>결과 엑셀 다운로드</button></div>
     <p role="status" aria-live="polite">{status}</p>

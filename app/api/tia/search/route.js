@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { geocodeAddress, lookupKakaoAddress } from "../../../../lib/kakao";
 import { geocodeProject } from "../../../../lib/projectGeocode";
 import { fetchTiaProjects } from "../../../../lib/tiaApi";
-import { isTiaDatabaseConfigured, searchStoredTiaProjects } from "../../../../lib/tiaDatabase";
+import { isTiaDatabaseConfigured, searchStoredTiaProjects, hasCompleteTiaCoverage } from "../../../../lib/tiaDatabase";
+import { mergeStoredAndLive } from "../../../../lib/tiaCoverage";
 import { buildLocalNoticeSearches } from "../../../../lib/localNoticeSearch";
 import { haversineDistanceMeters } from "../../../../lib/distance";
 import { judgeReflection } from "../../../../lib/judgeReflection";
@@ -51,34 +52,36 @@ export async function POST(request) {
     const dbConfigured = isTiaDatabaseConfigured();
     let storedProjects = [];
     let dbWarning = "";
+    let coverageComplete = false;
     if (dbConfigured) {
       try {
         storedProjects = await searchStoredTiaProjects(searchCriteria);
+        coverageComplete = await hasCompleteTiaCoverage(searchCriteria);
       } catch (error) {
         dbWarning = error.message || "DB 조회 실패";
         console.warn("[tia/search] DB fallback:", error);
       }
     }
-    const cacheKey = JSON.stringify(searchCriteria);
+    const cacheKey = JSON.stringify([searchCriteria, coverageComplete]);
     const cached = snapshots.get(cacheKey);
-    const fallbackResponse = storedProjects.length ? null : cached && cached.expiresAt > Date.now()
-      ? cached.response : await fetchTiaProjects(searchCriteria);
+    let fallbackResponse;
+    try {
+      fallbackResponse = cached && cached.expiresAt > Date.now() ? cached.response
+        : await fetchTiaProjects(searchCriteria, { excludeSources: coverageComplete ? ['TIA_SYSTEM_API'] : [] });
+    } catch {
+      if (!storedProjects.length) throw new Error('주변사업 원자료를 조회하지 못했습니다. 잠시 후 다시 조회해 주세요.');
+      fallbackResponse = { rawCount: 0, projects: [], requestUrls: [], errors: ['실시간 보완조회 실패: 저장된 일부 후보만 표시합니다.'], sources: [], sourceCounts: {}, sourceDiagnostics: [] };
+    }
     if (fallbackResponse && cached?.response !== fallbackResponse) {
       if (snapshots.size >= 20) snapshots.delete(snapshots.keys().next().value);
       snapshots.set(cacheKey, { response: fallbackResponse, expiresAt: Date.now() + 600000 });
     }
-    const tiaResponse = storedProjects.length
-      ? {
-        rawCount: storedProjects.length,
-        projects: storedProjects,
-        requestUrls: [],
-        errors: dbWarning ? [dbWarning] : [],
-        sources: ["TIA_DB"],
-        sourceCounts: { TIA_DB: storedProjects.length },
-        sourceDiagnostics: [],
-      }
-      : fallbackResponse;
-    const dataMode = storedProjects.length ? "DB_CACHE" : "LIVE_API";
+    const merged = mergeStoredAndLive(storedProjects, fallbackResponse.projects);
+    const tiaResponse = { ...fallbackResponse, projects: merged, rawCount: merged.length,
+      errors: [...fallbackResponse.errors, ...(dbWarning ? ['DB 자료 확인 실패'] : [])],
+      sources: [...(storedProjects.length ? ['TIA_DB'] : []), ...fallbackResponse.sources],
+      sourceCounts: { ...fallbackResponse.sourceCounts, TIA_DB: storedProjects.length } };
+    const dataMode = storedProjects.length ? "DB_AND_LIVE" : "LIVE_API";
     const noticeSearches = buildLocalNoticeSearches(searchCriteria);
     const sourceWarnings = [...(tiaResponse.errors || [])];
     if (tiaResponse.sourceDiagnostics?.some((source) => source.pageInfo?.complete === false)) {
@@ -157,6 +160,7 @@ export async function POST(request) {
       results: sortedResults,
       dataMode,
       dbConfigured,
+      coverageComplete,
       noticeSearches,
       debug: {
         requestUrls: tiaResponse.requestUrls,

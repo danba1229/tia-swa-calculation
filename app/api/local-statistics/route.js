@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { residualArea } from "../../../lib/researchIntegrity";
+import { kosisAreaM2, verifyKosisRows } from "../../../lib/kosisArea";
 
 export const runtime = "nodejs";
 
@@ -336,11 +337,11 @@ function categoryCode(row) {
 
 function areaFromRows(rows, expectedCode, expectedNames = []) {
   const byCode = rows.find((row) => categoryCode(row) === expectedCode);
-  if (byCode) return toNumber(byCode.DT);
+  if (byCode) return kosisAreaM2(byCode);
 
   const names = expectedNames.map(normalizeName);
   const byName = rows.find((row) => names.includes(normalizeName(categoryName(row))));
-  return toNumber(byName?.DT);
+  return kosisAreaM2(byName);
 }
 
 function makeLanduseAreas(rows) {
@@ -388,7 +389,9 @@ async function chooseDataRowsByCandidates(table, year, candidates, objectParamsF
   const attempts = [];
   for (const candidate of candidates) {
     const objectParams = objectParamsFactory(candidate.code);
-    const rows = await fetchDataRows(table, year, objectParams);
+    const rows = verifyKosisRows(await fetchDataRows(table, year, objectParams), {
+      year, regionCode: candidate.code, regionField: table.regionObjKey === 'objL2' ? 'C2' : 'C1',
+    });
     attempts.push({
       code: candidate.code,
       name: rowName(candidate.row),
@@ -534,10 +537,15 @@ export async function POST(request) {
       return NextResponse.json({ error: "주소에서 지자체 단위를 찾지 못했습니다." }, { status: 400 });
     }
 
-    const landuse = await extractLanduse(target, year);
+    const landuse = await extractLanduse(target, year).catch(error => ({ status: 'FAILED', error: error.message }));
     await wait(250);
-    const zoning = await extractZoning(target, year);
+    const zoning = await extractZoning(target, year).catch(error => ({ status: 'FAILED', error: error.message }));
     const extraction = makeExtractionSummary({ target, year, landuse, zoning });
+    const errors = [landuse.error, zoning.error].filter(Boolean);
+    if (errors.length) {
+      extraction.status = [landuse.status, zoning.status].some(s => ['SUCCESS', 'PARTIAL'].includes(s)) ? 'PARTIAL' : 'FAILED';
+      extraction.message = errors.join(' / ');
+    }
 
     return NextResponse.json({
       address,
@@ -589,6 +597,7 @@ export async function POST(request) {
           attempts: landuse.attempts,
           mapped_areas: landuse.areas,
           total_m2: landuse.total,
+          conversion_log: landuse.rows?.map(row => ({ category: categoryName(row), year: row.PRD_DE, ...row.conversion })),
         },
         zoning: {
           status: zoning.status,
@@ -603,6 +612,7 @@ export async function POST(request) {
           non_urban_attempts: zoning.nonUrbanAttempts,
           mapped_rows: zoning.rows,
           total_m2: zoning.total,
+          conversion_log: Object.values(zoning.rawRows || {}).flat().map(row => ({ category: categoryName(row), year: row.PRD_DE, ...row.conversion })),
         },
       },
     });
