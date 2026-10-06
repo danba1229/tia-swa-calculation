@@ -26,8 +26,9 @@ test('collision counts preserve scope, failures, railway remainder and Excel num
   assert.ok(!failed.notes.some(n => n.includes('검산 완료')));
   const mismatch = buildAccidentReport([...input.filter(r => r.query.type !== 'railway'), collision('railway', 0)], { ...snapshot, years: '1' }).find(t => t.id === 'nearby');
   assert.ok(mismatch.notes.some(n => n.includes('합계 확인 필요')));
-  assert.equal(mismatch.validationWarnings.length, 1);
-  assert.equal(nearby.validationWarnings.length, 0);
+  assert.equal(mismatch.validationWarnings.filter(n => n.includes('합계 확인 필요')).length, 1);
+  assert.equal(nearby.validationWarnings.filter(n => n.includes('이전 묶음 조회')).length, 4);
+  assert.equal(nearby.validationWarnings.filter(n => n.includes('합계 확인 필요')).length, 0);
 });
 
 test('old saved label warnings are reclassified in report notes without overwriting evidence', () => {

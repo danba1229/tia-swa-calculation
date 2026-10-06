@@ -1,9 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import proj4 from 'proj4';
-import { validateAccidentQuery, parseRadiusResult, decodeKoroadKey, radiusQualityWarnings, radiusQuality, collisionFilterValues } from '../lib/accidentSurvey.js';
+import { validateAccidentQuery, parseRadiusResult, decodeKoroadKey, radiusQualityWarnings, radiusQuality, collisionFilterValues, sumCollisionResults, surveyQuality, COLLISION_COLLECTION_METHOD } from '../lib/accidentSurvey.js';
 import { findStatisticsRegion, getKoroadRows } from '../lib/koroad.js';
 const query = { lat: 37.5, lng: 127, radius: 500, year: 2025, type: 'all' };
+test('individual collision queries recover rollover and reject incomplete or duplicate sums', () => {
+  const codes = ['310', '321', '322', '340', '399'];
+  const rows = codes.map(code => ({ code, counts: { accidents: code === '340' ? 1 : code === '399' ? 5 : 0, casualties: 0, deaths: 0, serious: 0, minor: 0, reported: 0 } }));
+  assert.equal(sumCollisionResults(codes, rows).accidents, 6);
+  assert.equal(73 + 26 + sumCollisionResults(codes, rows).accidents, 105);
+  assert.throws(() => sumCollisionResults(codes, rows.slice(1)), /누락/);
+  assert.throws(() => sumCollisionResults(codes, [...rows.slice(0, 4), rows[0]]), /중복/);
+  assert.throws(() => sumCollisionResults(codes, rows.map((r, i) => i ? r : { ...r, counts: { ...r.counts, accidents: null } })), /누락/);
+  assert.throws(() => sumCollisionResults([], []));
+  assert.throws(() => sumCollisionResults(['x', 'x'], [rows[0], rows[0]]));
+  assert.equal(sumCollisionResults(['310'], [rows[0]]).accidents, 0);
+});
+test('individual source discrepancies remain visible even if aggregate differences cancel', () => {
+  const rows = [1, -1].map((offset, i) => ({ code: String(i), counts: { accidents: 2, casualties: 2 + offset, deaths: 0, serious: 2, minor: 0, reported: 0 } }));
+  const data = { collectionMethod: COLLISION_COLLECTION_METHOD, counts: sumCollisionResults(['0', '1'], rows), subtypeResults: rows };
+  assert.equal(radiusQuality(data.counts).warnings.length, 0);
+  assert.equal(surveyQuality(data).warnings.length, 2);
+  assert.match(surveyQuality(data).notes[0], /계산 합계/);
+});
 test('distinguish TAAS injury-only label from genuine mismatch without changing source values', () => {
   const counts = { casualties: 158, deaths: 2, serious: 31, minor: 116, reported: 11 };
   const result = radiusQuality(counts);
