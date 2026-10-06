@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
 import { collectTiaBusinessPeriod } from '../lib/tiaBusinessSync.js';
 import { assessStoredCoverage, mergeStoredAndLive } from '../lib/tiaCoverage.js';
 import { judgeReflection } from '../lib/judgeReflection.js';
@@ -7,6 +8,14 @@ import { kosisAreaM2, verifyKosisRows } from '../lib/kosisArea.js';
 import { guardedAccidentSurvey } from '../lib/accidentGuard.js';
 import { readDraft, writeDraft, validateDraftBackup } from '../lib/draftStorage.js';
 import { investigationStates } from '../lib/surveyStatus.js';
+
+test('ExcelJS extended formatting supports the patched UUID dependency', () => {
+  const require = createRequire(import.meta.url);
+  const CfRule = require('exceljs/lib/xlsx/xform/sheet/cf-ext/cf-rule-ext-xform.js');
+  const model = { type: 'iconSet', iconSet: '3Stars' };
+  new CfRule().prepare(model);
+  assert.match(model.x14Id, /^\{[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}\}$/);
+});
 
 test('review completion is not construction completion', () => {
   for (const reviewResult of ['심의완료', '교통영향평가 심의완료']) assert.equal(judgeReflection({ reviewResult }, 100, 1000).reflectionStatus, '반영검토');
