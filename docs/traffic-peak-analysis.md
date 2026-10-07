@@ -7,6 +7,8 @@
 - The source API supplies no verified coordinates. Missing locations stay unplotted; no project centroid or GITS location is substituted. Reference positions do not affect station matching, ranking, distance or measured traffic.
 - Changing address, station or month clears the previous reference selection. Pending stale lookups cannot replace the current selection. Positions are session-only and require confirmation again after reload.
 - Map recreation and visibility changes rebuild the layer; expanding/collapsing preserves bounds including the selected points. A map checkbox and fit-to-points button control this layer independently of bus/bicycle layers.
+- Overlapping labels are offset in screen space within the map viewport. Map pins retain their original coordinates; zoom/pan updates the label layout and cleanup removes the map listener.
+- Production browser verification: Suwon City Hall, 800 x 800 m scope, three GITS markers and reference 4302-03 (user-confirmed Annyoung IC place result). Toggle off removed all four, toggle on restored all four. This verifies rendering and interaction, not survey-location accuracy. Automated suite: 216 tests plus lint and production build passed.
 
 ## Scope
 

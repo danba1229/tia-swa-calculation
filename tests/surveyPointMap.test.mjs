@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { validPointPosition, surveyMapPoints, referenceSearchQueries, referenceLocationChoices, createSurveyPointLayer } from "../lib/surveyPointMap.js";
+import { validPointPosition, surveyMapPoints, referenceSearchQueries, referenceLocationChoices, createSurveyPointLayer, arrangeSurveyLabels } from "../lib/surveyPointMap.js";
 
 const candidate = { pointCode: "0309-04", routeCode: "309", routeName: "지방도 309호선", sectionName: "사사 - 경기도청", lat: 37.28, lng: 127.02, sourceYear: "2024" };
 const reference = { code: "4302-03", name: "일반국도 43호선 · 경기 화성 봉담읍 · 안녕IC분기" };
@@ -38,8 +38,8 @@ test("map layer safe text, click details, and repeated cleanup do not duplicate 
   const maps = { LatLng: class { constructor(lat, lng) { Object.assign(this, { lat, lng }); } }, CustomOverlay: class {
     constructor(options) { Object.assign(this, options); overlays.push(this); }
     setMap(map) { this.map = map; }
-  } };
-  const ownerDocument = { createElement: () => ({ attributes: {}, listeners: {}, setAttribute(k, v) { this.attributes[k] = v; }, addEventListener(k, v) { this.listeners[k] = v; }, removeEventListener(k) { delete this.listeners[k]; } }) };
+  }, Marker: class { constructor(options) { Object.assign(this, options); } setMap(map) { this.map = map; } }, event: { addListener() {}, removeListener() {} } };
+  const ownerDocument = { createElement: () => ({ style: {}, getBoundingClientRect: () => ({ left: 0, right: 140, top: 100, bottom: 134, height: 34 }), attributes: {}, listeners: {}, setAttribute(k, v) { this.attributes[k] = v; }, addEventListener(k, v) { this.listeners[k] = v; }, removeEventListener(k) { delete this.listeners[k]; } }) };
   let selected;
   const point = surveyMapPoints("gyeonggi", [], [{ ...candidate, pointCode: "<img>" }])[0];
   const layer = createSurveyPointLayer({ maps, map: {}, points: [point], onSelect: (p) => { selected = p; }, ownerDocument });
@@ -51,6 +51,16 @@ test("map layer safe text, click details, and repeated cleanup do not duplicate 
   layer.destroy(); layer.destroy();
   assert.equal(overlays[0].map, null);
   assert.deepEqual(button.listeners, {});
+});
+
+test("overlapping label offsets are deterministic and reset after map zoom", () => {
+  const buttons = [0, 0, 20].map(y => ({ style: {}, getBoundingClientRect: () => ({ left: 0, right: 140, top: 100 + y, bottom: 134 + y, height: 34 }) }));
+  arrangeSurveyLabels(buttons);
+  assert.deepEqual(buttons.map(b => b.style.transform), ["", "translateY(-42px)", "translateY(42px)"]);
+  arrangeSurveyLabels(buttons);
+  assert.equal(buttons[1].style.transform, "translateY(-42px)");
+  arrangeSurveyLabels(buttons, { top: 90, bottom: 400 });
+  assert.deepEqual(buttons.map(b => b.style.transform), ["", "translateY(42px)", "translateY(84px)"]);
 });
 
 test("map recreation, visibility and reference identity trigger layer resync", () => {
