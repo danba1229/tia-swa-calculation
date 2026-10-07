@@ -3,9 +3,14 @@
 node_modules/
 .env*
 .preview-secrets.json
+.production-secrets.json
+.production-test-context.dpapi
 .preview-test-results/
+.preview-test-results/**
 **/__pycache__/
 **/*.pyc
 calculator_core/common_data/raw/HangJeongDong_ver20210101.geojson
 calculator_core/common_data/
 cloud_artifacts/
+data/road-network/raw/
+data/road-network/raw/**

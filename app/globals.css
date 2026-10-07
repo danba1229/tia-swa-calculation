@@ -545,6 +545,17 @@ button.mini-button {
   white-space: nowrap;
 }
 
+.survey-point-overlay { color: #1a5685; font-size: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.survey-point-overlay:focus-visible { outline: 3px solid #234e72; outline-offset: 3px; }
+.survey-reference-point { background: #fff0df; border-color: #bd6427; color: #874013; }
+.survey-map-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; padding: 8px 0; }
+.survey-map-tools small { flex-basis: 100%; color: #655c52; }
+.reference-map-location { margin: 8px 0; padding: 10px 12px; border: 1px solid #dcc5ae; border-radius: 12px; background: #fff8ef; font-size: 12px; }
+.reference-map-location summary { cursor: pointer; font-weight: 700; }
+.reference-map-location p { margin: 8px 0; }
+.reference-map-choice { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid #eadccd; }
+.reference-map-choice small { display: block; }
+
 .bike-station-dot {
   position: relative;
   width: 12px;

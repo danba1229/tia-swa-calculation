@@ -19,7 +19,7 @@ test('GBIS weekday weekend and holiday intervals remain distinct, no origin time
  assert.equal(route.originFirstBusTime,'04:50');
  assert.deepEqual([route.weekdayInterval,route.saturdayInterval,route.sundayInterval,route.holidayInterval],['18~22분','23~30분','25~31분','26~32분']);
  const row=createBusRouteTableRows([{stationName:'test',routes:[route]}])[1];
- assert.deepEqual(row.slice(8),['18~22분','23~30분','25~31분','26~32분']);
+ assert.deepEqual(row.slice(11),['18~22분','23~30분','25~31분','26~32분']);
  assert.equal(mapGbisRoute({routeId:1,routeName:1,peekAlloc:0,nPeekAlloc:0}).weekdayInterval,'');
 });
 test('T-DATA exact ID and active status are required, duplicate IDs are ambiguous', () => {
@@ -29,7 +29,7 @@ test('T-DATA exact ID and active status are required, duplicate IDs are ambiguou
  assert.equal(matchTdataRoute([{...row,useAt:'0'}],'121900013'),null);
  assert.equal(matchTdataRoute([row],row.routeId).holidayInterval,'17분');
  const data=createBusRouteTableRows([{stationName:'a',routes:[{weekdayInterval:'10분',saturdayInterval:'12분'}]}])[1];
- assert.match(data[8],/수동/);assert.match(data[9],/수동/);
+ assert.match(data[11],/수동/);assert.match(data[12],/수동/);
 });
 test('subway matching requires both station name and line; ambiguous names are not substituted', () => {
  const rows=[{subwayStationName:'수원시청(경기도문화의전당)',subwayRouteName:'수인분당',subwayStationId:'MTRKRK1K243'}, {subwayStationName:'수원',subwayRouteName:'1호선'}];

@@ -8,9 +8,10 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
             <h2>버스·지하철 현황</h2>
           </div>
           <div className="panel-header-actions">
-            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading || publicTransportResult.busDetailLoading || publicTransportResult.subwayDetailLoading}>
+            <button type="button" className="secondary" onClick={searchPublicTransportFacilities} disabled={publicTransportResult.loading || publicTransportResult.busRouteLoading || publicTransportResult.busDetailLoading || publicTransportResult.subwayDetailLoading}>
               {publicTransportResult.loading || publicTransportResult.busDetailLoading || publicTransportResult.subwayDetailLoading ? "조회 중" : "교통시설 조회"}
             </button>
+            <button type="button" className="secondary" onClick={() => searchPublicTransportFacilities({ retryMissing: true })} disabled={!publicTransportResult.scope || publicTransportResult.loading || publicTransportResult.busRouteLoading || publicTransportResult.busDetailLoading || publicTransportResult.subwayDetailLoading}>누락 항목 재시도</button>
             <button type="button" className="secondary" onClick={() => copyPublicTransportTables("bus")} disabled={!busStops.length && !publicTransportResult.subwayStations?.length}>표 복사</button>
             <button type="button" className="secondary" onClick={() => downloadPublicTransportCsv("bus")} disabled={!busStops.length && !publicTransportResult.subwayStations?.length}>CSV 다운로드</button>
           </div>
@@ -45,8 +46,11 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
             <p className="verification-source" role="status">노선 상세 API: {publicTransportResult.busDetailLoading ? "조회 중" : publicTransportResult.busDetailError ? "조회 중단" : "조회 시도 완료"} ({publicTransportResult.busDetailCompleted}/{publicTransportResult.busDetailTotal}개 노선). 미제공 항목은 수동 확인이 필요합니다.</p>
           ) : null}
           {publicTransportResult.busDetailError ? <p className="verification-source" role="alert">{publicTransportResult.busDetailError} 기본 정류장·경유노선 목록은 유지합니다.</p> : null}
+          {publicTransportResult.busRouteTotal > 0 && <p role="status">경유노선 보완: {publicTransportResult.busRouteCompleted || 0}/{publicTransportResult.busRouteTotal}개 정류장 조회 시도 · {publicTransportResult.busRouteLoading ? "이어서 조회 중" : "조회 종료"}</p>}
+          {publicTransportResult.busRouteError && <p role="alert">{publicTransportResult.busRouteError}</p>}
+          <p className="hint">누락 항목 재시도는 성공 자료를 유지합니다. 첫차·막차는 노선 기점과 종점 기준입니다. API 미제공 값은 수동 확인이 필요합니다. API 재조회 대기 중이면 최대 5분 뒤 다시 시도하세요.</p>
           {publicTransportResult.busSummary?.partial ? (
-            <p className="verification-source">버스 정보 일부 조회 실패: 경유노선 {publicTransportResult.busSummary.failedStationRoutes || 0}개 정류장, 노선 상세 {publicTransportResult.busSummary.failedRouteDetails || 0}건, 정류장 첫·막차 {publicTransportResult.busSummary.failedStationTimes || 0}건. 조회된 결과는 유지하며 누락 항목은 수동 확인이 필요합니다.</p>
+            <p className="verification-source">버스 정보 일부 조회 실패: 경유노선 {publicTransportResult.busSummary.failedStationRoutes || 0}개 정류장, 노선 상세 {publicTransportResult.busSummary.failedRouteDetails || 0}건, 기종점 첫·막차 {publicTransportResult.busSummary.failedStationTimes || 0}건. 조회된 결과는 유지하며 누락 항목은 수동 확인이 필요합니다.</p>
           ) : null}
           {publicTransportResult.busSummary?.truncated ? (
             <p className="verification-source">범위 안 정류장 {publicTransportResult.busSummary.withinScopeCount}개 중 거리순 {publicTransportResult.busSummary.returnedCount}개를 표시합니다.</p>
@@ -93,7 +97,7 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
         <section className="subpanel">
           <div className="subpanel-header">
             <h3>정류장별 경유 버스노선</h3>
-            <p className="subpanel-source">첫차·막차는 정류장 기준이며 기점 시간으로 대체하지 않습니다. 서울 토요일·공휴일 배차는 T-DATA(분기 갱신), 경기 요일별 배차는 GBIS로 보완합니다. 서울 평일·일요일 구분 및 미제공 값은 수동 확인이 필요합니다. 조회 시각은 자료 기준일과 다릅니다.</p>
+            <p className="subpanel-source">첫차·막차는 노선 기점·종점 기준이며 중간 정류장 도착시간이 아닙니다. 경기 시간은 평일 기준, 서울 종점은 명칭이 유일하게 일치하는 종점 정류소 운행시간입니다. 서울 토요일·공휴일 배차는 T-DATA, 경기 평일·토요일·일요일·공휴일 배차는 GBIS 자료입니다. 서울 일반 배차는 평일로 간주하지 않으며 미제공 값은 수동 확인이 필요합니다. 조회 시각은 자료 기준일과 다릅니다.</p>
           </div>
           <div className="table-wrap">
             <table className="data-table bus-route-table">

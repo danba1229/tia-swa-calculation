@@ -22,7 +22,9 @@ import { createTransportSearch } from "../lib/client/createTransportSearch";
 import { createStatisticsClient } from "../lib/client/createStatisticsClient";
 import { createStatisticsExport } from "../lib/client/createStatisticsExport";
 import { investigationStates } from "../lib/surveyStatus";
+import { roadProvenance, roadRetrievedDate, roadDateSummary, roadEndpointSummary, roadWidthSummary } from "../lib/roadProvenance";
 import SurveyMapPanel from "./steps/SurveyMapPanel";
+import { surveyMapPoints, createSurveyPointLayer, referenceSearchQueries, referenceLocationChoices } from "../lib/surveyPointMap";
 import SurveyPointsStep from "./steps/SurveyPointsStep";
 import LanduseStep from "./steps/LanduseStep";
 import DevelopmentStep from "./steps/DevelopmentStep";
@@ -101,7 +103,7 @@ function createBlankLanduseAreas() {
 }
 
 function createRoadRow(overrides = {}) {
-  return { roadClass: "고속도로", name: "", startAddress: "", endAddress: "", source: "", ...overrides };
+  return { roadClass: "고속도로", name: "", startAddress: "", endAddress: "", source: "", ...roadProvenance(overrides) };
 }
 
 function createSurveyRow(overrides = {}) {
@@ -178,6 +180,10 @@ function createBlankPublicTransportResult(overrides = {}) {
     busFetchedAt: "",
     busSourceDate: "",
     busRefresh: null,
+    busRouteLoading: false,
+    busRouteCompleted: 0,
+    busRouteTotal: 0,
+    busRouteError: "",
     busDetailLoading: false,
     busDetailCompleted: 0,
     busDetailTotal: 0,
@@ -566,6 +572,7 @@ function mergeLoadedState(parsed) {
     developmentResult: { ...base.developmentResult, ...(parsed.developmentResult || {}), loading: false },
     publicTransportResult: { ...base.publicTransportResult, ...(parsed.publicTransportResult || {}), loading: false,
       busDetailLoading: false,
+      busRouteLoading: false,
       subwayDetailLoading: false,
       subwayStations: (parsed.publicTransportResult?.subwayStations || []).map((station) => station.status === "PENDING"
         ? { ...station, status: "MANUAL_REQUIRED", error: "이전 시간표 조회 중단 · 다시 조회해 주세요." } : station),
@@ -620,6 +627,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [gyeonggiStatus, setGyeonggiStatus] = useState("");
   const [showBikeStationsOnMap, setShowBikeStationsOnMap] = useState(true);
   const [showBusStopsOnMap, setShowBusStopsOnMap] = useState(true);
+  const [showSurveyPointsOnMap, setShowSurveyPointsOnMap] = useState(true);
+  const [peakMapPoint, setPeakMapPoint] = useState(null);
+  const [referenceSearch, setReferenceSearch] = useState(null);
+  const [referencePosition, setReferencePosition] = useState(null);
+  const [selectedSurveyMapPoint, setSelectedSurveyMapPoint] = useState(null);
   const [selectedBusStop, setSelectedBusStop] = useState(null);
   const [mapRevision, setMapRevision] = useState(0);
   const [accidentReset, setAccidentReset] = useState(0);
@@ -638,7 +650,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     busStopLayer: null,
     busScope: null,
   });
-  useEffect(() => () => clearBusStopOverlays(mapRuntimeRef), []);
+  useEffect(() => () => { clearBusStopOverlays(mapRuntimeRef); clearSurveyCandidateOverlays(mapRuntimeRef); }, []);
 
   useEffect(() => {
     const restoreFocus = mapExpanded || wasMapExpandedRef.current;
@@ -646,7 +658,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     const frame = window.requestAnimationFrame(() => {
       const runtime = mapRuntimeRef.current;
       runtime.map?.relayout();
-      if (runtime.map && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
+      if (runtime.map && runtime.scopeBounds) runtime.map.setBounds(runtime.surveyBounds || runtime.scopeBounds, 48, 48, 48, 48);
       if (restoreFocus) mapExpandButtonRef.current?.focus({ preventScroll: true });
     });
     if (!mapExpanded) return () => window.cancelAnimationFrame(frame);
@@ -975,6 +987,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             const hasLocation = Number.isFinite(point.lat) && Number.isFinite(point.lng);
             return {
               ...point,
+              sourceYear: String(payload.year || ""),
               recommendationMode: payload.mode || "none",
               distanceKm: hasLocation ? distanceBetweenKm(originLat, originLng, point.lat, point.lng) : null,
               sortIndex: index,
@@ -1019,7 +1032,34 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     };
   }, [form.basics.siteAddress, form.basics.centerLat, form.basics.centerLng, kakaoJsKey, roadNameSignature]);
 
+  const peakMapKey = peakMapPoint?.address === form.basics.siteAddress && detectSurveyRegion(form.basics.siteAddress) === "gyeonggi"
+    ? JSON.stringify([peakMapPoint.address, peakMapPoint.point.code, peakMapPoint.point.name, peakMapPoint.month]) : "";
   useEffect(() => {
+    setReferencePosition(null);
+    setReferenceSearch(null);
+    if (!peakMapKey || !kakaoJsKey) return;
+    let cancelled = false;
+    const [, code, name] = JSON.parse(peakMapKey);
+    const point = { code, name };
+    setReferenceSearch({ key: peakMapKey, status: "loading", choices: [] });
+    (async () => {
+      await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
+      const places = [];
+      for (const query of referenceSearchQueries(point)) {
+        if (cancelled) return;
+        const rows = await new Promise((resolve) => new window.kakao.maps.services.Places().keywordSearch(query,
+          (data, status) => resolve(status === window.kakao.maps.services.Status.OK ? data : []), { size: 5 }));
+        places.push(...rows);
+      }
+      if (!cancelled) setReferenceSearch({ key: peakMapKey, status: "ready", choices: referenceLocationChoices(point, places) });
+    })().catch(() => { if (!cancelled) setReferenceSearch({ key: peakMapKey, status: "failed", choices: [] }); });
+    return () => { cancelled = true; };
+  }, [peakMapKey, kakaoJsKey]);
+  const mappedReference = referencePosition?.key === peakMapKey && peakMapKey
+    ? { ...peakMapPoint.point, ...referencePosition, sourceYear: peakMapPoint.month } : null;
+  const surveyPoints = surveyMapPoints(detectSurveyRegion(form.basics.siteAddress), topisCandidates, gyeonggiCandidates, mappedReference);
+  useEffect(() => {
+    setSelectedSurveyMapPoint(null);
     syncSurveyCandidateOverlays({
       mapRuntimeRef,
       address: form.basics.siteAddress,
@@ -1029,6 +1069,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       centerLng: form.basics.centerLng,
       rectWidth: form.basics.rectWidth,
       rectHeight: form.basics.rectHeight,
+      reference: mappedReference,
+      visible: showSurveyPointsOnMap,
+      onSelect: setSelectedSurveyMapPoint,
     });
   }, [
     topisCandidates,
@@ -1038,6 +1081,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     form.basics.centerLng,
     form.basics.rectWidth,
     form.basics.rectHeight,
+    mapRevision,
+    showSurveyPointsOnMap,
+    referencePosition,
+    peakMapKey,
   ]);
 
   function updateBasics(field, value) {
@@ -1391,6 +1438,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ...busRouteTableRows(busStops),
       [], ["지하철역 · 운행일/행선지별 시간표"], ["자료출처", publicTransportResult.subwaySource || "국토교통부 TAGO"],
       ...createSubwayRows(publicTransportResult.subwayStations || []),
+      [], ["대중교통 누락·재조회 확인사항"],
+      ["안내", "실패·미제공은 운행 없음이 아닙니다. 재조회 실패 시 이전 값은 유지하며 아래 경고를 함께 확인하세요."],
+      ...busStops.flatMap(stop => (stop.routes || []).filter(route => route.detailError || route.endpointTimeError || route.cacheWarning || route.supplementError)
+        .map(route => ["버스", stop.stationName, route.routeName, [route.detailError, route.endpointTimeError, route.cacheWarning, route.supplementError].filter(Boolean).join(" / ")])),
+      ...(publicTransportResult.subwayStations || []).filter(station => station.error || station.status !== "SUCCESS")
+        .map(station => ["지하철", station.stationName, station.codeStatus || "", station.status, station.error || "일부 항목 미조회"]),
     ];
   }
 
@@ -1618,16 +1671,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       });
       mapRuntimeRef.current.infoWindow.open(mapRuntimeRef.current.map, mapRuntimeRef.current.marker);
       mapRuntimeRef.current.map.setBounds(bounds, 48, 48, 48, 48);
-      syncSurveyCandidateOverlays({
-        mapRuntimeRef,
-        address,
-        topisCandidates,
-        gyeonggiCandidates,
-        centerLat: lat,
-        centerLng: lng,
-        rectWidth: width,
-        rectHeight: height,
-      });
 
       setMapStatus("조사 영역에 걸친 도로를 자동 조사하는 중입니다.");
       const roadScopeResult = await collectRoadRowsInScope({
@@ -1831,7 +1874,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
       </section>
 
-      <SurveyMapPanel {...{ mapCollapsed, mapContainerRef, mapExpandButtonRef, mapExpanded, mapRuntimeRef, mapStatus, selectedBusDetails, setMapCollapsed, setMapExpanded, setSelectedBusStop, setShowBikeStationsOnMap, setShowBusRouteLabels, setShowBusStopsOnMap, showBikeStationsOnMap, showBusRouteLabels, showBusStopsOnMap }} />
+      <SurveyMapPanel {...{ mapCollapsed, mapContainerRef, mapExpandButtonRef, mapExpanded, mapRuntimeRef, mapStatus, selectedBusDetails, setMapCollapsed, setMapExpanded, setSelectedBusStop, setShowBikeStationsOnMap, setShowBusRouteLabels, setShowBusStopsOnMap, showBikeStationsOnMap, showBusRouteLabels, showBusStopsOnMap,
+        showSurveyPointsOnMap, setShowSurveyPointsOnMap, surveyPoints, selectedSurveyMapPoint, setSelectedSurveyMapPoint }}
+        referencePoint={peakMapKey ? peakMapPoint : null} referenceSearch={referenceSearch?.key === peakMapKey ? referenceSearch : null}
+        referencePosition={mappedReference} onConfirmReference={(position) => { setReferencePosition({ ...position, key: peakMapKey }); setShowSurveyPointsOnMap(true); }} />
 
       <StepNavigation items={STEP_NAV_ITEMS} activeStep={activeStep} setActiveStep={setActiveStep}
         states={investigationStates({ mapPhase, verification, development: developmentResult, transport: publicTransportResult, accident: accidentPhase, pointCount: topisCandidates.length + gyeonggiCandidates.length })}>
@@ -1860,15 +1906,24 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           {ROAD_CLASSES.map((roadClass) => <span key={roadClass} className="tag">{roadClass}</span>)}
         </div>
 
+        <p className="road-date-note">자료 기준일은 원자료가 나타내는 시점이며 조회일과 다릅니다. 카카오 도로명 조회는 원자료 기준일을 제공하지 않아 미확인으로 표시합니다. 도로 현황은 변경될 수 있으므로 보고서 반영 전 확인이 필요합니다.</p>
+        <p className="road-date-note">기점·종점은 조사 범위나 개별 링크의 끝이 아닌 도로 전체 기준입니다. 공식 도로명 기종점 자료 연결 전까지 자동 입력하지 않습니다. 입력값은 자동검증되지 않으며 기종점 출처·기준일을 별도로 기록해 주세요. 전체폭(보도 포함)과 차도폭은 조사 범위 안의 구간을 수동 조사합니다.</p>
+
         <div className="table-wrap">
           <table className="data-table">
             <thead>
               <tr>
                 <th>도로 구분</th>
                 <th>도로명</th>
-                <th>기점 주소</th>
-                <th>종점 주소</th>
-                <th>출처</th>
+                <th>기점 주소(도로 전체)</th>
+                <th>종점 주소(도로 전체)</th>
+                <th>기종점 근거</th>
+                <th>전체폭(보도 포함, m)</th>
+                <th>차도폭(m)</th>
+                <th>폭원 근거</th>
+                <th>도로명 출처</th>
+                <th>도로명 자료 기준일</th>
+                <th>도로명 조회일</th>
                 <th>관리</th>
               </tr>
             </thead>
@@ -1883,7 +1938,23 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
                   <td><input className="table-input" value={row.name} onChange={(event) => updateListItem("roads", index, { name: event.target.value })} placeholder="예: 경수대로" /></td>
                   <td><input className="table-input" value={row.startAddress} onChange={(event) => updateListItem("roads", index, { startAddress: event.target.value })} placeholder={MANUAL_RESEARCH_PLACEHOLDER} /></td>
                   <td><input className="table-input" value={row.endAddress} onChange={(event) => updateListItem("roads", index, { endAddress: event.target.value })} placeholder={MANUAL_RESEARCH_PLACEHOLDER} /></td>
+                  <td>
+                    <input className="table-input" aria-label={`${row.name || "도로"} 기종점 출처`} value={row.endpointSource || ""} onChange={(event) => updateListItem("roads", index, { endpointSource: event.target.value })} placeholder="공식 자료명 / URL" />
+                    <input className="table-input" aria-label={`${row.name || "도로"} 기종점 자료 기준일`} value={row.endpointReferenceDate || ""} onChange={(event) => updateListItem("roads", index, { endpointReferenceDate: event.target.value })} placeholder="기준일 미확인" />
+                    <small>수동 입력 / 자동검증 미수행</small>
+                  </td>
+                  <td><input className="table-input" aria-label={`${row.name || "도로"} 전체폭`} value={row.totalWidth ?? ""} onChange={(event) => updateListItem("roads", index, { totalWidth: event.target.value })} placeholder={MANUAL_RESEARCH_PLACEHOLDER} title="조사 범위 내 구간의 보도를 포함한 전체 도로폭. 구간별로 다르면 범위를 기록하세요." /></td>
+                  <td><input className="table-input" aria-label={`${row.name || "도로"} 차도폭`} value={row.carriagewayWidth ?? ""} onChange={(event) => updateListItem("roads", index, { carriagewayWidth: event.target.value })} placeholder={MANUAL_RESEARCH_PLACEHOLDER} title="조사 범위 내 구간의 차도폭. 구간별로 다르면 범위를 기록하세요." /></td>
+                  <td>
+                    <input className="table-input" aria-label={`${row.name || "도로"} 폭원 출처`} value={row.widthSource || ""} onChange={(event) => updateListItem("roads", index, { widthSource: event.target.value })} placeholder="자료명 / 조사 구간" />
+                    <input className="table-input" aria-label={`${row.name || "도로"} 폭원 자료 기준일`} value={row.widthReferenceDate || ""} onChange={(event) => updateListItem("roads", index, { widthReferenceDate: event.target.value })} placeholder="기준일 미확인" />
+                  </td>
                   <td><input className="table-input" value={row.source} onChange={(event) => updateListItem("roads", index, { source: event.target.value })} placeholder="예: 도로 현황도" /></td>
+                  <td>
+                    <input className="table-input" aria-label={`${row.name || "도로"} 자료 기준일`} value={row.sourceReferenceDate || ""} onChange={(event) => updateListItem("roads", index, { sourceReferenceDate: event.target.value })} placeholder="미확인" title="원자료에 명시된 연도·연월·날짜만 입력하세요. 다운로드일이나 조회일을 입력하지 마세요." />
+                    {!row.sourceReferenceDate && <small>자료 기준일 미확인</small>}
+                  </td>
+                  <td>{roadRetrievedDate(row.retrievedAt)}</td>
                   <td className="actions"><button type="button" className="mini-button" onClick={() => removeRow("roads", index, () => createRoadRow({ roadClass: "로" }))}>삭제</button></td>
                 </tr>
               ))}
@@ -1893,7 +1964,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       </section>
 
-      <SurveyPointsStep {...{ detectSurveyRegion, buildPriorityResult, buildPriorityNote, runAll: !!autoRequest, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus }} />
+      <SurveyPointsStep {...{ detectSurveyRegion, buildPriorityResult, buildPriorityNote, runAll: !!autoRequest, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus }} onPeakPointChange={setPeakMapPoint} />
 
       <LanduseStep {...{ rankClass, DEFAULT_STATISTICS_YEAR, STATISTICS_YEAR_OPTIONS, addRow, createZoningRow, exportStep3Excel, form, formatNumber, formatOptionalNumber, formatPercent, formatSquareKilometers, landuseReportRows, landuseSlices, landuseStats, pieBackground, refreshLocalStatisticsOnly, removeRow, setForm, shouldShowStep, updateLanduseArea, updateListItem, updateStatisticsYear, verification, zoningReportRows, zoningSlices, zoningStats }} />
 
@@ -1974,7 +2045,7 @@ function buildRoadSummary(form) {
   } else {
     filledRoads.forEach((row, index) => {
       const source = safe(row.source) ? ` / 출처: ${row.source}` : "";
-      lines.push(`${index + 1}. [${row.roadClass}] ${safe(row.name) || "도로명 미입력"} / 기점: ${safe(row.startAddress) || "기점 주소 미입력"} / 종점: ${safe(row.endAddress) || "종점 주소 미입력"}${source}`);
+      lines.push(`${index + 1}. [${row.roadClass}] ${safe(row.name) || "도로명 미입력"}${source} / 도로명 ${roadDateSummary(row)} / ${roadEndpointSummary(row)} / ${roadWidthSummary(row)}`);
     });
   }
 
@@ -2309,7 +2380,7 @@ function coordToAddress(geocoder, lng, lat) {
   });
 }
 
-function buildRoadRowsFromBuckets(roadBuckets) {
+function buildRoadRowsFromBuckets(roadBuckets, retrievedAt) {
   return Array.from(roadBuckets.values())
     .map((bucket) => {
       const sortedSamples = bucket.samples
@@ -2322,6 +2393,8 @@ function buildRoadRowsFromBuckets(roadBuckets) {
         startAddress: "",
         endAddress: "",
         source: "카카오 좌표-주소 변환 자동조사",
+        sourceReferenceDate: "",
+        retrievedAt,
       });
     })
     .sort((a, b) => {
@@ -2378,7 +2451,7 @@ async function collectRoadRowsInScope({ lat, lng, width, height, signal }) {
   }
 
   return {
-    rows: buildRoadRowsFromBuckets(roadBuckets),
+    rows: buildRoadRowsFromBuckets(roadBuckets, new Date().toISOString()),
   };
 }
 
@@ -2403,41 +2476,10 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
-function buildSurveyMapCandidates(address, topisCandidates, gyeonggiCandidates) {
-  const region = detectSurveyRegion(address);
-
-  if (region === "seoul") {
-    return topisCandidates
-      .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng))
-      .slice(0, 3)
-      .map((candidate, index) => ({
-        key: candidate.code || `seoul-${index}`,
-        code: candidate.code || `서울-${index + 1}`,
-        title: candidate.name || "서울 TOPIS 지점",
-        subtitle: candidate.address || "",
-        lat: candidate.lat,
-        lng: candidate.lng,
-      }));
-  }
-
-  if (region === "gyeonggi") {
-    return gyeonggiCandidates
-      .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng))
-      .slice(0, 3)
-      .map((candidate, index) => ({
-        key: candidate.pointCode || `gyeonggi-${index}`,
-        code: candidate.pointCode || `경기-${index + 1}`,
-        title: candidate.sectionName || candidate.routeName || "경기도 GITS 지점",
-        subtitle: candidate.routeName ? `${candidate.routeName}${candidate.sectionName ? ` / ${candidate.sectionName}` : ""}` : "",
-        lat: candidate.lat,
-        lng: candidate.lng,
-      }));
-  }
-
-  return [];
-}
-
 function clearSurveyCandidateOverlays(mapRuntimeRef) {
+  mapRuntimeRef.current.surveyPointLayer?.destroy();
+  mapRuntimeRef.current.surveyPointLayer = null;
+  mapRuntimeRef.current.surveyBounds = null;
   for (const marker of mapRuntimeRef.current.surveyMarkers || []) {
     marker.setMap(null);
   }
@@ -2457,6 +2499,9 @@ function syncSurveyCandidateOverlays({
   centerLng,
   rectWidth,
   rectHeight,
+  reference = null,
+  visible = true,
+  onSelect = () => {},
 }) {
   if (!mapRuntimeRef.current.map || !window.kakao?.maps) return;
 
@@ -2466,9 +2511,9 @@ function syncSurveyCandidateOverlays({
   const lng = Number(centerLng);
   const { width, height } = getScopeDimensions({ rectWidth, rectHeight });
 
-  if (!validSurveyCenter(centerLat, centerLng) || width <= 0 || height <= 0) return;
+  if (!visible || !mapRuntimeRef.current.scopeBounds || !validSurveyCenter(centerLat, centerLng) || width <= 0 || height <= 0) return;
 
-  const candidates = buildSurveyMapCandidates(address, topisCandidates, gyeonggiCandidates);
+  const candidates = surveyMapPoints(detectSurveyRegion(address), topisCandidates, gyeonggiCandidates, reference);
   if (!candidates.length) return;
 
   const kakao = window.kakao;
@@ -2482,27 +2527,9 @@ function syncSurveyCandidateOverlays({
     const position = new kakao.maps.LatLng(candidate.lat, candidate.lng);
     displayBounds.extend(position);
 
-    const marker = new kakao.maps.Marker({
-      position,
-      map: mapRuntimeRef.current.map,
-      title: `${candidate.code} ${candidate.title}`.trim(),
-    });
-
-    const overlay = new kakao.maps.CustomOverlay({
-      position,
-      yAnchor: 1.8,
-      content: `
-        <div class="survey-point-overlay" title="${escapeHtml(`${candidate.code} ${candidate.title}`.trim())}">
-          <span class="survey-point-code">${escapeHtml(candidate.code)}</span>
-        </div>
-      `,
-    });
-
-    overlay.setMap(mapRuntimeRef.current.map);
-    mapRuntimeRef.current.surveyMarkers.push(marker);
-    mapRuntimeRef.current.surveyOverlays.push(overlay);
   });
-
+  mapRuntimeRef.current.surveyPointLayer = createSurveyPointLayer({ maps: kakao.maps, map: mapRuntimeRef.current.map, points: candidates, onSelect });
+  mapRuntimeRef.current.surveyBounds = displayBounds;
   mapRuntimeRef.current.map.setBounds(displayBounds, 48, 48, 48, 48);
 }
 

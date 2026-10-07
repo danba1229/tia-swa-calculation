@@ -9,6 +9,7 @@ import { createPersistentTransportCache } from "../lib/transportCache.js";
 import { applyBusDetailUpdates, loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader.js";
 import { createBusRouteTableRows } from "../lib/seoulBusTable.js";
 import { createRequestGate } from "../lib/researchIntegrity.js";
+import { transportScopeKey, needsGyeonggiRouteDetail, needsRetryBusDetail, busGapSummary } from "../lib/client/transportEnrichment.js";
 
 const stations = [
   { stationId: "121000213", arsId: "22289", stationName: "A", routes: [
@@ -42,9 +43,9 @@ test("detail merge preserves all stops/routes, matches NODE_ID and leaves day-sp
   assert.match(result[1].routes[0].stationFirstBusTime, /미제공/);
   assert.match(result[1].routes[0].stationTimeError, /해당 정류장/);
   const rows = createBusRouteTableRows(result);
-  assert.equal(rows[1][7], "12분");
-  rows[1].slice(8).forEach(value=>assert.match(value, /수동 확인/));
-  assert.equal(rows[1].length, 12);
+  assert.equal(rows[1][10], "12분");
+  rows[1].slice(11).forEach(value=>assert.match(value, /수동 확인/));
+  assert.equal(rows[1].length, 15);
 });
 
 test("ambiguous repeat visits and conflicting station IDs never pick an arbitrary time", () => {
@@ -92,7 +93,7 @@ test("systemic failure halts requests and marks pending rows without deleting da
   assert.equal(last.stations.length, 2);
   assert.equal(last.stations[0].routes[1].detailStatus, "NOT_QUERIED");
   assert.match(last.stations[0].routes[0].detailError, /HTTPS 시간 초과/);
-  assert.equal(createBusRouteTableRows(last.stations)[1].length, 12);
+  assert.equal(createBusRouteTableRows(last.stations)[1].length, 15);
   assert.equal(last.stations[0].routes[0].routeName, "400");
 });
 
@@ -189,6 +190,7 @@ test("actual component callback preserves base results even if the detail loader
     createBlankPublicTransportResult: overrides=>({ busStops: [], ...overrides }),
     resolveScopeCenter: async ()=>scope.center, computeRectangleBounds: ()=>scope.bounds, formatNumber: String,
     markPendingBusDetails, loadBusDetails: async ()=>{ throw new Error("unexpected failure"); },
+    transportScopeKey, needsGyeonggiRouteDetail, needsRetryBusDetail, busGapSummary, loadSubwayDetails: async () => {},
     fetch: async url=>({ ok: true, json: async ()=>url.endsWith("seoul-bus")
       ? { success: true, busStops: stations, summary: { returnedCount: 2 } }
       : { success: true, stations: [{ id: "bike" }], summary: { withinScopeCount: 1 } } }),

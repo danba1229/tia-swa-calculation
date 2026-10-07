@@ -1,6 +1,7 @@
 "use client";
 
-export default function SurveyMapPanel({ mapCollapsed, mapContainerRef, mapExpandButtonRef, mapExpanded, mapRuntimeRef, mapStatus, selectedBusDetails, setMapCollapsed, setMapExpanded, setSelectedBusStop, setShowBikeStationsOnMap, setShowBusRouteLabels, setShowBusStopsOnMap, showBikeStationsOnMap, showBusRouteLabels, showBusStopsOnMap }) {
+export default function SurveyMapPanel({ mapCollapsed, mapContainerRef, mapExpandButtonRef, mapExpanded, mapRuntimeRef, mapStatus, selectedBusDetails, setMapCollapsed, setMapExpanded, setSelectedBusStop, setShowBikeStationsOnMap, setShowBusRouteLabels, setShowBusStopsOnMap, showBikeStationsOnMap, showBusRouteLabels, showBusStopsOnMap,
+  showSurveyPointsOnMap, setShowSurveyPointsOnMap, surveyPoints = [], selectedSurveyMapPoint, setSelectedSurveyMapPoint, referencePoint, referenceSearch, referencePosition, onConfirmReference }) {
   return (<section className="panel project-panel">
         <div className="map-card project-map-card">
           <div className="map-header">
@@ -9,7 +10,7 @@ export default function SurveyMapPanel({ mapCollapsed, mapContainerRef, mapExpan
               window.setTimeout(() => {
                 const runtime = mapRuntimeRef.current;
                 runtime.map?.relayout();
-                if (runtime.map && runtime.rectangle && runtime.scopeBounds) runtime.map.setBounds(runtime.scopeBounds, 48, 48, 48, 48);
+                if (runtime.map && runtime.rectangle && runtime.scopeBounds) runtime.map.setBounds(runtime.surveyBounds || runtime.scopeBounds, 48, 48, 48, 48);
               }, 100);
             }}>{mapCollapsed ? "지도 펼치기" : "지도 접기 / 표 넓게 보기"}</button>
             <button ref={mapExpandButtonRef} type="button" className="secondary map-expand-button" aria-expanded={mapExpanded} aria-controls="scope-map" onClick={() => {
@@ -30,6 +31,26 @@ export default function SurveyMapPanel({ mapCollapsed, mapContainerRef, mapExpan
             </label>
             <h3>카카오 지도</h3>
           </div>
+          <div className="survey-map-tools">
+            <label className="checkbox-label"><input type="checkbox" checked={showSurveyPointsOnMap} onChange={(event) => setShowSurveyPointsOnMap(event.target.checked)} />사전조사·참고지점 표시</label>
+            <button type="button" className="ghost" disabled={!showSurveyPointsOnMap || !surveyPoints.length} onClick={() => {
+              const runtime = mapRuntimeRef.current;
+              if (runtime.map && runtime.surveyBounds) runtime.map.setBounds(runtime.surveyBounds, 64, 64, 64, 64);
+            }}>지점 포함 화면 맞추기</button>
+            <small>파랑: 추천지점 · 주황: 첨두분석 참고지점 · 위치 확인 {surveyPoints.length}개{showSurveyPointsOnMap ? "" : " (표시 꺼짐)"}</small>
+          </div>
+          {referencePoint && <details className="reference-map-location" open={!referencePosition}>
+            <summary>참고지점 {referencePoint.point.code} 위치 확인{referencePosition ? " · 근사위치 표시 중" : " · 확인 후 표시"}</summary>
+            <p>{referencePoint.point.name} · {referencePoint.month} 수록자료</p>
+            <p>공식 측정 좌표가 없습니다. 아래는 지역·시설명으로 찾은 위치 후보이며 측정지점과 다를 수 있습니다. 원자료와 대조한 뒤 선택하세요. 추천 순위·교통량 분석값에는 영향을 주지 않습니다.</p>
+            {referenceSearch?.status === "loading" ? <p role="status">지역·시설명 위치 후보 검색 중...</p> : null}
+            {referenceSearch?.status === "failed" ? <p role="status">위치 검색에 실패했습니다. 임의 좌표로 표시하지 않습니다.</p> : null}
+            {referenceSearch?.status === "ready" && !referenceSearch.choices.length ? <p role="status">같은 시·군에서 위치 후보를 확인하지 못했습니다. 지도 미표시 · 원자료 위치 확인 필요</p> : null}
+            {referenceSearch?.choices.map((choice) => <div key={choice.id} className="reference-map-choice">
+              <span>{choice.matchedName}<small>{choice.matchedAddress}</small></span>
+              <button type="button" className="ghost" aria-pressed={referencePosition?.id === choice.id} onClick={() => onConfirmReference(choice)}>이 위치를 참고위치로 표시</button>
+            </div>)}
+          </details>}
           {mapExpanded ? (
             <div className="expanded-map-tools">
               <label className="checkbox-label">
@@ -44,6 +65,12 @@ export default function SurveyMapPanel({ mapCollapsed, mapContainerRef, mapExpan
             </div>
           ) : null}
           <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
+          {showSurveyPointsOnMap && selectedSurveyMapPoint && <section className="bus-stop-detail" aria-label="선택한 사전조사지점 정보">
+            <div className="bus-stop-detail-heading"><h4>{selectedSurveyMapPoint.kind === "reference" ? "첨두분석 참고지점" : `${selectedSurveyMapPoint.rank}순위 추천지점`} · {selectedSurveyMapPoint.code}</h4>
+              <button type="button" className="ghost" onClick={() => setSelectedSurveyMapPoint(null)}>닫기</button></div>
+            <p>{selectedSurveyMapPoint.title}</p><p>{selectedSurveyMapPoint.note}</p>
+            <p>자료연도/월: {selectedSurveyMapPoint.sourceYear || "미확인"}</p>
+          </section>}
           <div id="selected-bus-stop-info" aria-live="polite">
             {selectedBusDetails ? (
               <section className="bus-stop-detail" aria-label="선택한 버스정류장 정보">

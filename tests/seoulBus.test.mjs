@@ -188,7 +188,7 @@ test("missing key fails without sending any request", async () => {
 
 test("UI/CSV have identical row widths and never reuse old inferred weekday times", () => {
   const rows = createBusRouteTableRows([{ stationName: "legacy", routes: [{ routeName: "123", firstBusTime: "05:00", weekdayInterval: "12분" }] }, { stationName: "failed", routeError: "조회 실패" }]);
-  assert.equal(BUS_ROUTE_COLUMNS.length, 12);
+  assert.equal(BUS_ROUTE_COLUMNS.length, 15);
   assert.ok(rows.every((row) => row.length === BUS_ROUTE_COLUMNS.length));
   assert.match(rows[1][3], /미제공/);
   assert.match(rows[1][10], /미제공/);
@@ -196,17 +196,17 @@ test("UI/CSV have identical row widths and never reuse old inferred weekday time
   assert.ok(!BUS_ROUTE_COLUMNS.includes("조회 상태"));
 });
 
-test("table uses stop times only and never substitutes origin times or exposes status", () => {
+test("table uses endpoint times only and never substitutes intermediate stop times or exposes status", () => {
   const rows = createBusRouteTableRows([{ stationName: "A", routes: [
     { stationFirstBusTime: "05:10", stationLastBusTime: "25:10", originFirstBusTime: "04:00", originLastBusTime: "23:00", detailError: "internal error" },
     { originFirstBusTime: "04:00", originLastBusTime: "23:00" },
   ] }]);
-  assert.deepEqual(rows[1].slice(3, 5), ["05:10", "25:10"]);
-  rows[2].slice(3, 5).forEach(value => assert.match(value, /미제공/));
-  assert.ok(!JSON.stringify(rows).includes("04:00"));
-  assert.ok(!JSON.stringify(rows).includes("23:00"));
+  assert.deepEqual(rows[1].slice(4, 6), ["04:00", "23:00"]);
+  rows[2].slice(7, 9).forEach(value => assert.match(value, /미제공/));
+  assert.ok(!JSON.stringify(rows).includes("05:10"));
+  assert.ok(!JSON.stringify(rows).includes("25:10"));
   assert.ok(!JSON.stringify(rows).includes("internal error"));
-  assert.ok(!rows[0].some(column => /기점 첫차|기점 막차|조회 상태/.test(column)));
+  assert.ok(!rows[0].some(column => /정류장 첫차|정류장 막차|조회 상태/.test(column)));
 });
 
 test("API route rejects blank coordinates, zero limits and missing dimensions without fetch", async () => {
@@ -314,8 +314,8 @@ test("actual component CSV/clipboard serializers retain row shape and escape spe
   assert.equal(csv([['A,"B"', "한글\n표", "00123"]]), '"A,""B""","한글\n표",00123');
   assert.equal(clipboard([["A\tB", "한글\n표", "00123"]]), "A B\t한글 표\t00123");
   const rows = createBusRouteTableRows([{ stationName: "A", routes: [route] }]);
-  assert.equal(clipboard(rows).split("\n")[0].split("\t").length, 12);
-  assert.ok(csv(rows).includes("정류장 첫차"));
+  assert.equal(clipboard(rows).split("\n")[0].split("\t").length, 15);
+  assert.ok(csv(rows).includes("기점 첫차"));
   assert.ok(csv(rows).includes("배차시간(토요일)"));
 });
 

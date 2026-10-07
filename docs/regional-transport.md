@@ -8,9 +8,10 @@ are tested against the rectangle again on the server. Distances are straight-lin
 
 - `GYEONGGI_BUS_BASE_API_KEY`: GBIS base-file versions and download locations.
 - `GYEONGGI_BUS_ROUTE_API_KEY`: route detail and day-specific intervals.
-- `GYEONGGI_BUS_STATION_API_KEY`: supplement stops without base-file route links
-  (up to eight missing stops per request, with an explicit warning for remaining
-  gaps). Rectangle search uses the complete station base file, not one 500m query.
+- `GYEONGGI_BUS_STATION_API_KEY`: supplement stops without base-file route links.
+  The client continues through missing stops in batches of two; there is no
+  eight-stop total ceiling. Rectangle search uses the complete station base file,
+  not one 500m query.
 - `TAGO_SUBWAY_API_KEY`: subway station identifiers and station timetables.
 - `SEOUL_TDATA_API_KEY`: T-DATA active-route Saturday and holiday intervals.
 - Existing `KAKAO_REST_API_KEY`: subway coordinates (server only).
@@ -60,7 +61,62 @@ existing Kakao JavaScript key; REST/data keys are not client-visible.
 - Bus and subway failures do not delete the other successful results.
 - CSV/clipboard export includes both bus and subway tables; STEP 6 remains bikes.
 
+## Missing-data enrichment (2026-10-07, local changes)
+
+- The top-level survey still starts transport automatically. Step 5 also has a
+  `누락 항목 재시도` button that preserves successful results and bikes. A saved
+  address/width/height signature must match; older backups without scope metadata
+  require a normal facility search first.
+- `/api/gyeonggi-bus` returns the base snapshot without station-API enrichment.
+  `/api/gyeonggi-bus/station-routes` validates up to two requested station IDs
+  against that server-side in-scope snapshot before calling GBIS. Each successful
+  batch is shown immediately. Connection/schema failure stops the queue instead
+  of fanning out retries. A later manual retry starts with remaining missing stops.
+- Missing GBIS routes have PENDING, SUCCESS, NO_DATA or FAILED lookup states.
+  NO_DATA means the API did not supply routes, not a certified zero-service stop.
+  Supplemental route details are also validated against server-side station
+  membership; client-provided route IDs alone do not authorize upstream requests.
+- `/api/subway/resolve` retries code lookup for deferred/failed stations only.
+  Names and line identifiers must match uniquely; NOT_FOUND and AMBIGUOUS remain
+  manual. The server accepts a scoped Kakao place ID, not arbitrary station names.
+- `/api/subway/details` accepts up to two service slots (`01:U` through `03:D`)
+  and verifies place/station membership. Slot-level cache keys preserve successful
+  weekdays/directions. The client retries incomplete slots rather than all six.
+  Slots distinguish SUCCESS, PARTIAL, NO_DATA and FAILED. Existing successful
+  schedule rows survive unsuccessful refreshes with an explicit retained warning.
+- Repeated network failure stops further automatic requests. Existing shared
+  cache cooldowns remain in effect (failed/partial results can wait five minutes).
+  A retry button does not bypass rate limits or flush valid monthly caches.
+- Bus first/last stop times survive retry failures. Origin departure times are
+  never substituted. Gyeonggi stop-level first/last remains unsupported by the
+  connected operations. Export includes missing-data/retained-result warnings.
+- Address/scope changes and new requests invalidate old callbacks. Navigation
+  status includes route-enrichment progress and missing rows, not just API success.
+
+Verification: 2026-10-07 local lint, 202 tests and production build passed. Added
+12 deterministic tests covering more than eight stops, bounded batches, resume,
+identity matching, missing slots, malformed responses, source-value retention and
+cancellation. This is mock/unit integration evidence, not live provider evidence.
+The local server started on 127.0.0.1:3217, but both browser access and a host HTTP
+probe timed out (sandbox probe also reported a socket-access restriction).
+Browser rendering, real provider responses and operational DB behavior remain
+unverified for this change. No commit or production deployment was performed.
+
 ## Verification
+
+### Endpoint timetable display (2026-10-07)
+
+The shared screen/CSV table now shows route origin and terminal first/last times,
+not intermediate-stop times. GBIS uses upFirstTime/upLastTime and
+downFirstTime/downLastTime (weekday). Seoul uses route-origin times and the
+beginTm/lastTm of a uniquely name-matched terminal stop. Repeated or unmatched
+terminal names remain manual; the final route row is never assumed to be a terminal.
+The Seoul timetable cache was versioned to retain station names for this match.
+GBIS weekday/Saturday/Sunday/holiday intervals remain distinct. Seoul T-DATA
+general, Saturday and holiday intervals are shown without inventing weekday or
+Sunday classifications. An absent value is never replaced with zero.
+Legacy stop-time fields remain internal for saved-data compatibility; endpoint
+completeness, rather than stop-time availability, controls the new detail status.
 
 ```
 node --test --test-isolation=none tests/*.test.mjs

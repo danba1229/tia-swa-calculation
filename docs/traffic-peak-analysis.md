@@ -1,5 +1,13 @@
 # Monthly traffic collection and weekly peak analysis
 
+## Survey map linkage (2026-10-07)
+
+- The shared Kakao map shows up to three recommended GITS points with rank, station code and an approximate-position label. These are section-name geocoding results, not official measuring coordinates.
+- A selected Gyeonggi hourly analysis station is independent of the GITS recommendation. Its source municipality and landmark are searched using the existing Kakao SDK. Only same-municipality results are offered; a user must confirm a result before an orange reference marker is displayed.
+- The source API supplies no verified coordinates. Missing locations stay unplotted; no project centroid or GITS location is substituted. Reference positions do not affect station matching, ranking, distance or measured traffic.
+- Changing address, station or month clears the previous reference selection. Pending stale lookups cannot replace the current selection. Positions are session-only and require confirmation again after reload.
+- Map recreation and visibility changes rebuild the layer; expanding/collapsing preserves bounds including the selected points. A map checkbox and fit-to-points button control this layer independently of bus/bicycle layers.
+
 ## Scope
 
 Seoul TOPIS monthly point/date/direction/hour workbooks and Gyeonggi Data Dream
@@ -29,9 +37,19 @@ intersection turning counts or determine statutory survey days automatically.
   24-hour snapshot. Refresh after expiry is demand-driven, NOT a newly added
   scheduled job. DB lease prevents multiple server instances collecting at once;
   a 2-minute cooldown follows failure. A stale snapshot is explicitly labelled.
-- Gyeonggi points must be selected manually from the actual published catalog.
-  The existing GITS occasional-survey candidates are not assumed equivalent,
-  and unverified coordinates/distances are not shown as nearest-point evidence.
+- Each GITS recommendation has a peak-analysis connection link. Automatic
+  connection requires the exact station code, route name, jurisdiction and
+  source year to match the selected observation month. Codes are not padded,
+  truncated or matched fuzzily. Missing/ambiguous metadata blocks connection.
+- If no match exists, the UI says there is no linked hourly source. The user
+  must explicitly enable separate-reference mode and select an actual catalog
+  point. Route/region/code text search is available, but it is not proximity
+  ranking. Unverified coordinates/distances are never nearest-point evidence.
+- Reference results and CSV identify both the original GITS candidate and
+  actual analyzed station, observation month, connection status and source
+  hash. Reference traffic is not substituted for the GITS station measurement.
+- Changing the address or candidate resets the reference choice and results.
+  Source/month/station/context changes cannot show a previous result as current.
 - Only actual observation months are offered. Portal metadata update dates do
   not become observation years. Live collection on 2026-10-05 returned 42,304
   rows, all for 2024; 14,283 code-0 rows excluded, 28,021 code-1/2 rows used.
@@ -98,3 +116,20 @@ No LLM or NotebookLM is involved in numeric extraction or calculation.
 `node --test tests/trafficPeak.test.mjs` covers dates, cross-year/month boundaries,
 duplicates, null vs zero, missing directions, ties, holidays and workbook schema.
 Live workbook checks and hosted workflow/production checks are separate evidence.
+
+### Gyeonggi connection verification (2026-10-07)
+
+- The public production catalog contained 53 unique hourly station codes over
+  2024-01 through 2024-12. None exactly matched the 582 stored GITS codes.
+  This is source coverage, not evidence that the GITS stations have zero traffic.
+- Local UI using the production public read API: candidate 0309-04 showed
+  NO_DATA and did not start analysis until separate-reference mode was chosen.
+- Reference 4302-03, week 2024-12-02 through 2024-12-08, both directions:
+  168 valid hours, peak day 2024-12-06 at 70,595 vehicles/day, weekly peak
+  17:00-18:00 that day at 4,966 vehicles/hour. These are the reference point's
+  observations, not Suwon candidate 0309-04's traffic.
+- Actual CSV download preserved the two different codes and reference warning.
+  Switching the candidate to 00132-1 cleared the table and disabled CSV export.
+- `tests/trafficPointLink.test.mjs` covers exact metadata matching, ambiguous
+  codes, missing data, provenance and selection identity. Full suite: 210 tests.
+- This connection change has been verified locally, not deployed in this task.

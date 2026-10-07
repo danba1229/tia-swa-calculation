@@ -29,3 +29,6 @@ sdk_wheels/
 .preview-test-results/
 __pycache__/
 *.pyc
+
+# Preserve downloaded road sources locally; only their manifest is versioned.
+data/road-network/raw/

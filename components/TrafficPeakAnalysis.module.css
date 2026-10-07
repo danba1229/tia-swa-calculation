@@ -17,6 +17,10 @@
 .outside { opacity: .42; }
 .options { display: grid; align-content: start; gap: 12px; min-width: 0; }
 .options a { font-size: 12px; text-decoration: underline; color: #175b7a; }
+.connection { margin: 14px 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #f7f3ed; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.connection h4 { margin: 0 0 8px; font-size: 14px; }
+.connection button[aria-pressed="true"] { outline: 2px solid #175b7a; outline-offset: 2px; }
+.options input { width: 100%; min-width: 0; box-sizing: border-box; padding: 9px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); }
 .message, .warning { padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.7; background: #f5efdc; color: #6d4c0e; }
 .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
 .summary > span { display: grid; gap: 7px; align-content: start; background: #f4f0e9; border-radius: 10px; padding: 12px; }

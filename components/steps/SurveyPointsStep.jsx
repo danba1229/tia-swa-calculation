@@ -1,6 +1,12 @@
 "use client";
 
-export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResult, buildPriorityNote, runAll, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus }) {
+import { useState } from "react";
+
+export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResult, buildPriorityNote, runAll, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus, onPeakPointChange }) {
+  const [peakChoice, setPeakChoice] = useState(null);
+  const region = detectSurveyRegion(form.basics.siteAddress);
+  const peakCandidate = gyeonggiCandidates.find((candidate) => peakChoice?.address === form.basics.siteAddress
+    && peakChoice.code === candidate.pointCode && peakChoice.route === candidate.routeCode) || gyeonggiCandidates[0];
   return (<section className={`panel step-section ${shouldShowStep(2) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
@@ -63,6 +69,9 @@ export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResu
                   <div className="survey-links">
                     <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/occasionalTrafficVolume.do" target="_blank" rel="noreferrer">출처 보기</a>
                     <a href="https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/regularAverageTrafficVolumeByWeekday.do" target="_blank" rel="noreferrer">2순위 자료</a>
+                    <a href="#weekly-traffic-analysis" onClick={() => setPeakChoice({ address: form.basics.siteAddress, code: candidate.pointCode, route: candidate.routeCode })}>
+                      {peakCandidate === candidate ? "선택 지점 첨두분석 연결 확인" : "이 지점 첨두분석 연결 확인"}
+                    </a>
                   </div>
                 </article>
               ))}
@@ -95,8 +104,9 @@ export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResu
           <p className="priority-note">{buildPriorityNote(selectedSurveyPoint, autoSurveyPoints)}</p>
         </div>
 
-        <TrafficPeakAnalysis key={form.basics.siteAddress} address={form.basics.siteAddress}
-          region={detectSurveyRegion(form.basics.siteAddress)} candidates={topisCandidates} active={shouldShowStep(2) || runAll} />
+        <TrafficPeakAnalysis key={`${form.basics.siteAddress}:${region === "gyeonggi" ? `${peakCandidate?.routeCode || ""}:${peakCandidate?.pointCode || ""}` : ""}`} address={form.basics.siteAddress}
+          region={region} candidates={region === "gyeonggi" ? gyeonggiCandidates : topisCandidates}
+          selectedCandidate={region === "gyeonggi" ? peakCandidate : null} active={shouldShowStep(2) || runAll} onMapPointChange={onPeakPointChange} />
 
       </section>);
 }

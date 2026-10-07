@@ -9,6 +9,9 @@ export default function SubwayResults({ result }) {
     {stations.some((s) => s.cacheInfo?.storage === "MEMORY") && <p className="hint">현재 시간표는 메모리 임시 저장 상태입니다. DB 연결이 없거나 실패하면 서버 재시작 시 다시 조회될 수 있습니다.</p>}
     {result.subwayTruncated && <p role="alert">위치 검색 제공 한도(45건)에 도달했습니다. 조사 범위를 줄여 다시 확인해 주세요.</p>}
     {stations.filter((s) => s.error).map((s) => <p className="hint" key={s.id}>{s.stationName}: {s.error}</p>)}
+    {result.subwayDetailLoading && <p role="status">역 코드 및 운행일·방향별 시간표를 이어서 조회 중입니다.</p>}
+    <p className="hint">코드 조회 실패는 재시도하고, 코드 없음·복수 일치는 임의 연결하지 않습니다. 시간표는 평일·토요일·일요일/공휴일의 상·하행을 나누어 조회하며 성공한 항목은 재시도에서 제외합니다.</p>
+    {stations.filter(s => s.scheduleSlots?.length).map(s => <p className="hint" key={`slots-${s.id}`}>{s.stationName}: 운행일·방향 {s.scheduleSlots.filter(slot => slot.status === "SUCCESS").length}/6개 정상 조회 · 미제공/실패/미조회는 운행 없음으로 확정하지 않습니다.</p>)}
     {stations.filter((s) => s.cacheInfo?.stale).map((s) => <p role="alert" key={`cache-${s.id}`}>{s.stationName}: 시간표 갱신 실패로 이전 저장 자료를 표시합니다.</p>)}
     <div className="table-wrap"><table className="data-table bus-route-table"><thead><tr>{SUBWAY_COLUMNS.map((c) => <th key={c}>{c}</th>)}</tr></thead>
       <tbody>{stations.length ? createSubwayRows(stations).slice(1).map((row, i) => <tr key={i}>{row.map((value, j) => <td key={j}>{value}</td>)}</tr>)
