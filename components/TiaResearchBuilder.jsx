@@ -1839,11 +1839,25 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   return (
-    <main className={`app-shell${embedded ? " embedded-shell" : ""}${mapCollapsed ? " map-collapsed" : ""}${mapExpanded ? " map-expanded" : ""}`}>
+    <main className={`app-shell research-workspace${embedded ? " embedded-shell" : ""}${mapCollapsed ? " map-collapsed" : ""}${mapExpanded ? " map-expanded" : ""}`}>
+      <a className="workspace-skip" href="#workspace-results">조사 결과로 건너뛰기</a>
+      <StepNavigation items={STEP_NAV_ITEMS} activeStep={activeStep} setActiveStep={setActiveStep}
+        states={investigationStates({ mapPhase, verification, development: developmentResult, transport: publicTransportResult, accident: accidentPhase, pointCount: topisCandidates.length + gyeonggiCandidates.length })}>
+        <DraftStatus status={draftStatus} restore={drafts => {
+          requestGateRef.current.cancel();
+          setAutoRequest(null);
+          setMapPhase('idle');
+          hydratedRef.current = true;
+          setAccidentSeed(drafts['tia-accident-survey-v1'] || { form: {}, results: [], snapshot: null });
+          setForm(mergeLoadedState(drafts[STORAGE_KEY]));
+          setAccidentReset(value => value + 1);
+          setStatusText('백업을 복원했습니다. 지도는 조사 시작으로 다시 표시할 수 있습니다.');
+        }} />
+      </StepNavigation>
+      <div className="workspace-main">
       <section className="hero-card">
         <div className="hero-main">
-          <p className="eyebrow">TIA Research Builder</p>
-          <h1>교통영향평가 초안 작성 도구</h1>
+          <div className="workspace-project-label"><span className="workspace-live-dot" aria-hidden="true" />사업지 및 조사 범위<span>직사각형 조사</span></div>
           <div className="hero-form">
             <label className="full">
               <span>주소지</span>
@@ -1867,7 +1881,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           </div>
         </div>
         <div className="hero-actions">
-          <button type="button" onClick={startInvestigation}>조사 시작</button>
+          <button type="button" className="workspace-start" onClick={startInvestigation}><span aria-hidden="true">▷</span> 조사 시작</button>
           <div className="hero-action-stack">
             <button type="button" className="secondary" onClick={fillSeoulSampleData}>서울 샘플</button>
             <button type="button" className="secondary" onClick={fillGyeonggiSampleData}>경기도 샘플</button>
@@ -1876,25 +1890,24 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
       </section>
 
+      <header className="workspace-heading">
+        <div>
+          <p className="workspace-breadcrumb">조사 워크스페이스 <span aria-hidden="true">/</span> {activeStep === 0 ? "전체 보기" : `STEP ${String(activeStep).padStart(2, "0")}`}</p>
+          <h1>{activeStep === 0 ? "전체 조사 현황" : STEP_NAV_ITEMS.find(item => item.step === activeStep)?.label}</h1>
+          <p className="workspace-description">{mapCollapsed ? "표와 상세 자료를 넓게 검토하세요." : "사업지 주변 위치와 조사 자료를 함께 확인하세요."}</p>
+        </div>
+        <div className="workspace-views" role="group" aria-label="작업 화면 보기">
+          <button type="button" aria-pressed={!mapCollapsed && !mapExpanded} onClick={() => { setMapExpanded(false); setMapCollapsed(false); }}>분할 보기</button>
+          <button type="button" aria-pressed={mapExpanded} onClick={() => { setMapCollapsed(false); setMapExpanded(true); }}>지도 보기</button>
+          <button type="button" aria-pressed={mapCollapsed && !mapExpanded} onClick={() => { setMapExpanded(false); setMapCollapsed(true); }}>표 넓게 보기</button>
+        </div>
+      </header>
+      <div className="workspace-content">
       <SurveyMapPanel {...{ mapCollapsed, mapContainerRef, mapExpandButtonRef, mapExpanded, mapRuntimeRef, mapStatus, selectedBusDetails, setMapCollapsed, setMapExpanded, setSelectedBusStop, setShowBikeStationsOnMap, setShowBusRouteLabels, setShowBusStopsOnMap, showBikeStationsOnMap, showBusRouteLabels, showBusStopsOnMap,
         showSurveyPointsOnMap, setShowSurveyPointsOnMap, surveyPoints, selectedSurveyMapPoint, setSelectedSurveyMapPoint }}
         referencePoint={peakMapKey ? peakMapPoint : null} referenceSearch={referenceSearch?.key === peakMapKey ? referenceSearch : null}
         referencePosition={mappedReference} onConfirmReference={(position) => { setReferencePosition({ ...position, key: peakMapKey }); setShowSurveyPointsOnMap(true); }} />
-
-      <StepNavigation items={STEP_NAV_ITEMS} activeStep={activeStep} setActiveStep={setActiveStep}
-        states={investigationStates({ mapPhase, verification, development: developmentResult, transport: publicTransportResult, accident: accidentPhase, pointCount: topisCandidates.length + gyeonggiCandidates.length })}>
-        <DraftStatus status={draftStatus} restore={drafts => {
-          requestGateRef.current.cancel();
-          setAutoRequest(null);
-          setMapPhase('idle');
-          hydratedRef.current = true;
-          setAccidentSeed(drafts['tia-accident-survey-v1'] || { form: {}, results: [], snapshot: null });
-          setForm(mergeLoadedState(drafts[STORAGE_KEY]));
-          setAccidentReset(value => value + 1);
-          setStatusText('백업을 복원했습니다. 지도는 조사 시작으로 다시 표시할 수 있습니다.');
-        }} />
-      </StepNavigation>
-
+      <div id="workspace-results" className="workspace-results" tabIndex={-1}>
       <section className={`panel step-section ${shouldShowStep(1) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
@@ -1912,7 +1925,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <p className="road-date-note">기점·종점은 조사 범위나 개별 링크의 끝이 아닌 도로 전체 기준입니다. 공식 도로명 기종점 자료 연결 전까지 자동 입력하지 않습니다. 입력값은 자동검증되지 않으며 기종점 출처·기준일을 별도로 기록해 주세요. 전체폭(보도 포함)과 차도폭은 조사 범위 안의 구간을 수동 조사합니다.</p>
 
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table road-table">
             <thead>
               <tr>
                 <th>도로 구분</th>
@@ -1985,8 +1998,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           <p className="eyebrow">Status</p>
           <h2>작업 상태</h2>
         </div>
-        <p className="status-text">{statusText}</p>
+        <p className="status-text" role="status">{statusText}</p>
       </section>
+      </div>
+      </div>
+      </div>
     </main>
   );
 }
