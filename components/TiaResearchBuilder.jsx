@@ -1427,6 +1427,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     if (kind === "bike") return [
       ["따릉이 대여소"],
       ["자료출처", publicTransportResult.source],
+      ["자료 기준월", publicTransportResult.bikeDataVersion?.baseMonth || "", "원본 파일명", publicTransportResult.bikeDataVersion?.filename || ""],
+      ["원본 SHA-256", publicTransportResult.bikeDataVersion?.sha256 || "", "마지막 확인일", publicTransportResult.bikeRefresh?.checkedAt || ""],
       ...publicBikeTableRows(bikeStations),
     ];
     return [

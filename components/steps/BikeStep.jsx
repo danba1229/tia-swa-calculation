@@ -1,4 +1,5 @@
 "use client";
+import { bikeRefreshStatusText } from "../../lib/bikeRefreshStatus.js";
 
 export default function BikeStep({ bikeStations, copyPublicTransportTables, downloadPublicTransportCsv, form, formatFacilityDistance, formatNumber, formatOptionalNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }) {
   return (<section className={`panel step-section ${shouldShowStep(6) ? "" : "is-hidden"}`}>
@@ -20,6 +21,8 @@ export default function BikeStep({ bikeStations, copyPublicTransportTables, down
         <div className="verification-card">
           <p>{publicTransportResult.loading ? "교통시설 조회 중입니다." : publicTransportResult.error || (publicTransportResult.searched ? `따릉이 대여소 ${formatNumber(bikeStations.length)}개를 확인했습니다.` : "조사 시작 또는 따릉이 조회를 눌러 주세요.")}</p>
           <p className="verification-source">원자료: {publicTransportResult.source || "서울특별시_공공자전거 대여소 정보(25.12월 기준)"}</p>
+          <p className="verification-source">{bikeRefreshStatusText(publicTransportResult.bikeRefresh)}</p>
+          {publicTransportResult.bikeDataVersion && <p className="verification-source">자료 기준월: {publicTransportResult.bikeDataVersion.baseMonth} · 원본: {publicTransportResult.bikeDataVersion.filename}</p>}
         </div>
         <section className="subpanel">
           <div className="subpanel-header">

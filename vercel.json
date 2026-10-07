@@ -25,6 +25,10 @@
   },
   "crons": [
     {
+      "path": "/api/cron/seoul-bike-sync",
+      "schedule": "0 1 1 * *"
+    },
+    {
       "path": "/api/cron/seoul-bus-sync",
       "schedule": "0 19 4 * *"
     },
