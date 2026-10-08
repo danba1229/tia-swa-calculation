@@ -1885,7 +1885,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div>
           <p className="workspace-breadcrumb">조사 워크스페이스 <span aria-hidden="true">/</span> {activeStep === 0 ? "전체 보기" : `STEP ${String(activeStep).padStart(2, "0")}`}</p>
           <h1>{activeStep === 0 ? "전체 조사 현황" : STEP_NAV_ITEMS.find(item => item.step === activeStep)?.label}</h1>
-          <p className="workspace-description">{activeStep === 9 ? "입력한 가로·세로 범위의 표지판을 공식 관리번호로 확인하세요." : mapCollapsed ? "표와 상세 자료를 넓게 검토하세요." : "사업지 주변 위치와 조사 자료를 함께 확인하세요."}</p>
+          <p className="workspace-description">{activeStep === 9 ? "입력한 가로·세로 범위의 표지판을 경찰청 일람표와 대조하세요." : mapCollapsed ? "표와 상세 자료를 넓게 검토하세요." : "사업지 주변 위치와 조사 자료를 함께 확인하세요."}</p>
         </div>
         <div className="workspace-views" role="group" aria-label="작업 화면 보기">
           <button type="button" aria-pressed={!mapCollapsed && !mapExpanded} onClick={() => { setMapExpanded(false); setMapCollapsed(false); }}>분할 보기</button>
