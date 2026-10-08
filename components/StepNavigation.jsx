@@ -6,7 +6,7 @@ export default function StepNavigation({ items, activeStep, setActiveStep, state
       <span className="brand-symbol" aria-hidden="true">T</span>
       <span><strong>TIA Support</strong><small>교통영향평가 조사 도구</small></span>
     </div>
-    <div className="step-nav-header"><h2>조사 항목</h2><span>01 — 08</span></div>
+    <div className="step-nav-header"><h2>조사 항목</h2><span>01 — {String(Math.max(...items.map(item => item.step))).padStart(2, '0')}</span></div>
     <nav className="step-nav" aria-label="조사 항목">{items.map(item => <button key={item.step} type="button"
       className={activeStep === item.step ? 'active' : ''} aria-pressed={activeStep === item.step} onClick={() => setActiveStep(item.step)}>
       <span className="step-number" aria-hidden="true">{item.step ? String(item.step).padStart(2, '0') : '◎'}</span><strong>{item.label}</strong>
@@ -14,7 +14,7 @@ export default function StepNavigation({ items, activeStep, setActiveStep, state
     </button>)}</nav>
     <div className="workspace-nav-footer">
       {children}
-      <details className="workspace-help"><summary>조사 진행 안내</summary><p className="investigation-progress">상단 조사 시작으로 자동 조사 항목을 함께 실행합니다. 교통관련 계획은 수동 확인이며, 사고조사는 별도 반경·연도 조건을 사용합니다.</p></details>
+      <details className="workspace-help"><summary>조사 진행 안내</summary><p className="investigation-progress">상단 조사 시작으로 자동 조사 항목을 함께 실행합니다. 교통관련 계획은 수동 확인이며, 사고조사는 별도 반경·연도 조건을 사용합니다. 표지판은 STEP 9에서만 조회·표시합니다.</p></details>
     </div>
   </aside>;
 }

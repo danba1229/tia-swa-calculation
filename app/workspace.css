@@ -298,3 +298,50 @@ body:has(.research-workspace) { background: #f5f7fb; }
   .research-workspace > .step-nav-panel, .research-workspace .hero-card, .research-workspace .workspace-heading, .research-workspace .project-panel { display: none; }
   .research-workspace .workspace-results { container-type: normal; }
 }
+
+/* STEP 9 keeps its own map; the shared workspace map and layers stay mounted. */
+.research-workspace.signs-workspace .workspace-content { grid-template-columns: minmax(0, 1fr); }
+.research-workspace.signs-workspace .workspace-content > .project-panel,
+.research-workspace.signs-workspace .workspace-views,
+.research-workspace.signs-workspace .status-panel { display: none; }
+.research-workspace .traffic-signs { padding: 0; overflow: hidden; }
+.signs-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; }
+.signs-heading h2 { font-size: 22px; }
+.signs-heading p:not(.eyebrow) { color: #526780; font-size: 13px; margin-top: 7px; }
+.signs-region { flex-shrink: 0; border: 1px solid #cbdcec; background: #f4f8fd; color: #426587; padding: 6px 10px; border-radius: 6px; font-size: 12px; }
+.signs-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 24px 14px; flex-wrap: wrap; }
+.signs-filters { display: flex; gap: 7px; flex-wrap: wrap; }
+.research-workspace .signs-filters button { background: #f4f7fb; color: #536880; padding: 8px 12px; border: 1px solid #dbe4ef; font-size: 13px; }
+.research-workspace .signs-filters button[aria-pressed="true"] { color: #1748b5; background: #edf3ff; border-color: #acc8f8; }
+.signs-filters span { margin-left: 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.signs-status { background: #f8fafd; border-block: 1px solid #e1e8f0; padding: 10px 24px; font-size: 13px; color: #3d526d; }
+.signs-map-frame { position: relative; height: clamp(540px, 64vh, 820px); background: #edf2f7; isolation: isolate; }
+.signs-map { position: absolute; inset: 0; }
+.signs-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.signs-dot, .signs-callout { pointer-events: auto; cursor: pointer; }
+.signs-callout text { font-size: 12px; font-family: Arial, sans-serif; font-variant-numeric: tabular-nums; }
+.signs-callout:hover rect { fill: #fff3dc; stroke: #e76524; }
+.signs-site-label { font-size: 13px; font-weight: 800; fill: #9b262b; stroke: white; stroke-width: 4px; paint-order: stroke; }
+.signs-map-message { position: absolute; z-index: 3; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 30px; background: #f0f4f8; color: #526780; }
+.signs-map-message strong { font-size: 18px; color: #2b435f; }
+.signs-map-message p { margin: 12px 0; }
+.signs-map-legend { position: absolute; z-index: 3; left: 16px; bottom: 36px; display: flex; gap: 14px; flex-wrap: wrap; max-width: calc(100% - 50px); padding: 10px 13px; border: 1px solid #d2ddec; border-radius: 7px; background: #fffffff2; color: #40546a; font-size: 12px; pointer-events: none; box-shadow: 0 2px 6px #24436312; }
+.signs-map-legend span { display: inline-flex; gap: 6px; align-items: center; }
+.signs-map-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.signs-safety { background: #2563eb; }.signs-road { background: #008574; }.signs-site { background: #c6383b; }
+.signs-hint { padding: 12px 24px; font-size: 12px; color: #596e87; border-top: 1px solid #e1e8f0; }
+.signs-detail { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 1.4fr); gap: 24px; padding: 10px 24px 22px; align-items: center; }
+.signs-detail label { display: grid; gap: 8px; font-size: 12px; color: #536880; min-width: 0; }
+.signs-detail select { width: 100%; min-width: 0; }
+.signs-detail strong { font-size: 14px; overflow-wrap: anywhere; }
+.signs-detail p { color: #536880; font-size: 12px; line-height: 1.8; }
+.signs-provenance { padding: 14px 24px; border-top: 1px solid #e1e8f0; font-size: 12px; line-height: 1.9; color: #596e87; }
+.signs-provenance summary { cursor: pointer; color: #314b6a; font-weight: 600; }
+@media (max-width: 700px) {
+  .signs-heading { padding: 18px 14px; align-items: flex-start; }
+  .signs-region { display: none; }
+  .signs-toolbar { padding: 0 14px 12px; }
+  .signs-status, .signs-hint, .signs-provenance { padding-inline: 14px; }
+  .signs-detail { grid-template-columns: minmax(0, 1fr); padding-inline: 14px; gap: 12px; }
+  .signs-map-frame { height: 580px; }
+}

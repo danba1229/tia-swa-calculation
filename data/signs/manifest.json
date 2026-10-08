@@ -1,0 +1,58 @@
+{
+  "version": "seoul-signs-20261008-v1",
+  "schema": [
+    "sourcePrefixedId",
+    "latitude",
+    "longitude",
+    "sourceIndexOrType",
+    "installedOn",
+    "specificationCode"
+  ],
+  "counts": {
+    "S": 220087,
+    "R": 12008
+  },
+  "excluded": {
+    "safety_coordinate_conflict": 720,
+    "safety_duplicate_or_missing_id": 20,
+    "road_outside_review_envelope": 4,
+    "road_duplicate_or_missing_id": 8
+  },
+  "sha256": "200bb4aa14b3ef678f5d54bbd7c5336a741e728a68c248cf175bd70acdfc20b8",
+  "reviewEnvelope": [
+    126.75,
+    37.4,
+    127.2,
+    37.72
+  ],
+  "sources": [
+    {
+      "key": "S",
+      "name": "서울시 안전표지 관련 정보",
+      "url": "https://data.seoul.go.kr/dataList/OA-15540/S/1/datasetView.do",
+      "file": "A064_P_안전표시_20260213.zip",
+      "fileVersion": "2026-02-13",
+      "facilityDate": null,
+      "rawSha256": "7b089d2908c5be647128bd63422a7872a7c77c9822a51cd5766be55e8ae08221",
+      "rawCount": 220827,
+      "license": "공공누리 1유형: 출처표시"
+    },
+    {
+      "key": "R",
+      "name": "서울시 도로표지 설치정보",
+      "url": "https://data.seoul.go.kr/dataList/OA-15017/S/1/datasetView.do",
+      "file": "서울특별시 도로표지 설치현황(20250417).csv",
+      "fileVersion": "2025-04-17",
+      "facilityDate": null,
+      "rawSha256": "05d58f4f581bce0a50fc7f0ed9e05532bbfea83897977f8e7657d1c9c2a8380f",
+      "rawCount": 12020,
+      "license": "공공누리 1유형: 출처표시"
+    }
+  ],
+  "notes": [
+    "서울시 공개 원본의 공간검색이며 최신 현장 시설 전체 목록이 아닙니다.",
+    "파일 버전과 시설 기준일은 다릅니다.",
+    "관리번호 중복, 좌표 불일치 5m 초과, 검토 영역 밖 자료는 제외했습니다. 검토 영역은 행정경계가 아닙니다.",
+    "표지인덱스·규격코드에서 실제 표지 내용을 추정하지 않습니다."
+  ]
+}
