@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { monthWeeks, WEEKDAYS } from "../lib/trafficPeak";
+import { monthWeeks, trafficDateLabel, WEEKDAYS } from "../lib/trafficPeak";
 import { gyeonggiPointLink, peakAnalysisIdentity, peakConnectionRows } from "../lib/trafficPointLink";
 import styles from "./TrafficPeakAnalysis.module.css";
 
@@ -145,6 +145,10 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
         <p className={styles.help}>{isGyeonggi ? "지점번호·노선·지역을 확인해 사업지와 관련된 상시조사지점을 선택하세요. 방향은 원자료의 1/2 코드와 명칭을 그대로 표시합니다." : "인근 후보는 거리 기준입니다. 사업지 접근도로와의 관련성을 확인한 후 분석 지점을 확정하세요."}</p>
         {metadata && <a href={`${endpoint}?source=${month}`}>선택 월 원자료 {isGyeonggi ? "JSON" : "엑셀"} 다운로드</a>}
         <a href={isGyeonggi ? "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=5YXX2DGXASTB4S54AEEP32699329&infSeq=1" : "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily"} target="_blank" rel="noreferrer">{isGyeonggi ? "경기데이터드림 공식 자료" : "TOPIS 공식 자료실"}</a>
+        {visible && <div className={styles.summary} aria-label="주간 교통량 분석 요약" aria-live="polite">
+          <span><small>분석 주간</small><strong>{trafficDateLabel(visible.weekStart)} ~ {trafficDateLabel(visible.weekEnd)}</strong></span>
+          <span><small>첨두일 · 일교통량 최대</small><strong>{visible.peakDays.length ? visible.peakDays.map(trafficDateLabel).join(", ") : visible.complete ? "최대일 구분 없음" : "선정 보류"}</strong><small>{visible.dailyMax !== null ? `${number(visible.dailyMax)}대/일` : "7일 완전자료 필요"}</small></span>
+        </div>}
       </div>
     </div>
     <div aria-live="polite">
@@ -154,11 +158,6 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
       {catalog && !catalog.months.length && <p className={styles.warning}>아직 수집된 월별 원자료가 없습니다. 수집이 완료된 뒤 조회해 주세요. 0으로 대체하지 않습니다.</p>}
       {visible && <>
         {isGyeonggi && <p className={styles.warning}>{reference ? "별도 참고지점 분석" : "동일 지점 분석"}: {point?.code} · {point?.name} / {month} 수록자료{reference ? " · GITS 추천지점의 측정값이 아닙니다." : ""}</p>}
-        <div className={styles.summary}>
-          <span><small>분석 주간</small><strong>{dateLabel(visible.weekStart)} ~ {dateLabel(visible.weekEnd)}</strong></span>
-          <span><small>첨두일 · 일교통량 최대</small><strong>{visible.peakDays.length ? visible.peakDays.map(dateLabel).join(", ") : visible.complete ? "최대일 구분 없음" : "선정 보류"}</strong><small>{visible.dailyMax !== null ? `${number(visible.dailyMax)}대/일` : "7일 완전자료 필요"}</small></span>
-          <span><small>주간 최대 1시간</small><strong>{visible.weeklyMax !== null ? `${number(visible.weeklyMax)}대/시` : "선정 보류"}</strong><small>유효 시간 {visible.validHours}/168</small></span>
-        </div>
         {visible.warning && <p className={styles.warning}>{visible.warning}</p>}
         {failedSync.length > 0 && <p className={styles.warning}>최근 원문 갱신에 실패한 기간이 있습니다. 기존 검증 자료로 분석했으며 최신성 확인이 필요합니다. {failedSync.map((s) => s.month).join(", ")}</p>}
         <div className={styles.legend}><span className={styles.peakDay}>첨두일</span><span className={styles.peakHour}>일별 첨두시간</span><span className={styles.weekPeak}>주간 최대시간</span><span>동률은 모두 표시 · 결측은 —</span></div>
@@ -173,7 +172,7 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
           })}</tr>)}</tbody>
           <tfoot><tr><th scope="row">일교통량</th>{visible.days.map((d) => <td key={d.date} className={visible.peakDays.includes(d.date) ? styles.peakDay : ""}>{number(d.total)}{visible.peakDays.includes(d.date) && <small>첨두일</small>}</td>)}</tr></tfoot>
         </table></div>
-        <p className={styles.help}>선택 주의 관측 최대값이며, 평가서의 최종 조사일·첨두시간을 자동 확정하는 값은 아닙니다. 양방향은 같은 날짜·시간의 두 방향 자료가 모두 있을 때만 합산합니다. 공휴일은 실제 달력 요일에 배치하며 원자료 표기가 있을 때 별도로 표시합니다.</p>
+        <p className={styles.help}>선택 주의 관측 최대값이며, 평가서의 최종 조사일·첨두시간을 자동 확정하는 값은 아닙니다. 양방향은 같은 날짜·시간의 두 방향 자료가 모두 있을 때만 합산합니다. 한 방향이라도 없으면 해당 시간은 —(결측)로 표시하고 0이나 한쪽 값으로 대체하지 않습니다. 결측이 있는 날은 일교통량·일별 첨두시간을 보류하며, 선택 주에 결측이 있으면 주간 첨두일·주간 최대시간도 보류합니다. 24시간이 모두 있는 다른 날의 일교통량·첨두시간은 유지합니다. 공휴일은 실제 달력 요일에 배치하며 원자료 표기가 있을 때 별도로 표시합니다.</p>
         {visible.sources.map((s) => <p key={s.month} className={styles.provenance}>원자료: {s.fileName} · 수집 {new Date(s.collectedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} · 최근 원문 확인 {new Date(s.checkedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</p>)}
       </>}
     </div>
