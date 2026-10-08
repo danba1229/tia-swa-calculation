@@ -1,6 +1,15 @@
 "use client";
 
-export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, busRefreshStatusText, busRouteTableRows, busStops, copyPublicTransportTables, downloadPublicTransportCsv, form, formatFacilityDistance, formatNumber, formatOptionalNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }) {
+import { BUS_STOP_COLUMNS, createBusStopTableRows } from "../../lib/seoulBusTable";
+import { transportMissingNote } from "../../lib/transportTableDisplay";
+
+export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, busRefreshStatusText, busRouteTableRows, busStops, copyPublicTransportTables, downloadPublicTransportCsv, form, formatFacilityDistance, formatNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }) {
+  const stopRows = createBusStopTableRows(busStops, formatFacilityDistance);
+  const routeRows = busRouteTableRows(busStops);
+  const stopNote = transportMissingNote(stopRows, busStops.map(stop => stop.routeError));
+  const routeNote = transportMissingNote(routeRows, busStops.flatMap(stop => [stop.routeError, ...(stop.routes || []).flatMap(route => [route.detailError, route.endpointTimeError, route.supplementError])]));
+  const pairedStops = [];
+  for (let index = 1; index < stopRows.length; index += 2) pairedStops.push([stopRows[index], stopRows[index + 1]]);
   return (<section className={`panel step-section ${shouldShowStep(5) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
@@ -60,31 +69,26 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
         <section className="subpanel">
           <div className="subpanel-header">
             <h3>버스정류장</h3>
-            <p className="subpanel-source">{publicTransportResult.transportRegion === "gyeonggi" ? "경기버스정보 기반정보" : "서울시 공식 파일"} {publicTransportResult.busSourceDate ? `(${publicTransportResult.busSourceDate} 기준)` : "기준"} / 조사 범위 내 정류장 · 직선거리순</p>
+            <p className="subpanel-source">{publicTransportResult.transportRegion === "gyeonggi" ? "경기버스정보 기반정보" : "서울시 공식 파일"} {publicTransportResult.busSourceDate ? `(${publicTransportResult.busSourceDate} 기준)` : "기준"} / 조사 범위 내 정류장 · 직선거리순 (왼쪽 → 오른쪽)
+              {stopNote && <span className="transport-missing-note">{stopNote}</span>}
+            </p>
           </div>
           <div className="table-wrap">
             <table className="data-table public-transport-table bus-stop-table">
               <thead>
                 <tr>
-                  <th>정류장번호</th>
-                  <th>정류장명</th>
-                  <th>위치(위도, 경도)</th>
-                  <th>거리</th>
-                  <th>정차노선수</th>
+                  {[...BUS_STOP_COLUMNS, ...BUS_STOP_COLUMNS].map((column, index) => <th key={index} scope="col">{column}</th>)}
                 </tr>
               </thead>
               <tbody>
-                {busStops.length ? busStops.map((station) => (
-                  <tr key={station.id || `${station.arsId}-${station.stationName}`}>
-                    <td>{station.arsId || station.stationId || "-"}</td>
-                    <td>{station.stationName || "-"}</td>
-                    <td>{station.location || station.stationName || "-"}</td>
-                    <td>{formatFacilityDistance(station)}</td>
-                    <td>{station.routeError || formatOptionalNumber(station.routes?.length || 0)}</td>
+                {busStops.length ? pairedStops.map(([left, right], index) => (
+                  <tr key={index}>
+                    {left.map((cell, column) => <td key={`left-${column}`}>{cell}</td>)}
+                    {right ? right.map((cell, column) => <td key={`right-${column}`}>{cell}</td>) : <td colSpan={3} aria-label="추가 정류장 없음" />}
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={5} className="empty-cell">
+                    <td colSpan={6} className="empty-cell">
                       {publicTransportResult.loading ? "조회 중입니다." : publicTransportResult.searched ? (publicTransportResult.busError || (!publicTransportResult.busSummary && publicTransportResult.error) || "조사 범위 안에서 표시할 버스정류장이 없습니다.") : "조회 전입니다. 서울·경기 주소지를 입력한 뒤 교통시설 조회를 눌러 주세요."}
                     </td>
                   </tr>
@@ -97,7 +101,9 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
         <section className="subpanel">
           <div className="subpanel-header">
             <h3>정류장별 경유 버스노선</h3>
-            <p className="subpanel-source">첫차·막차는 노선 기점·종점 기준이며 중간 정류장 도착시간이 아닙니다. 경기 시간은 평일 기준, 서울 종점은 명칭이 유일하게 일치하는 종점 정류소 운행시간입니다. 서울 토요일·공휴일 배차는 T-DATA, 경기 평일·토요일·일요일·공휴일 배차는 GBIS 자료입니다. 서울 일반 배차는 평일로 간주하지 않으며 미제공 값은 수동 확인이 필요합니다. 조회 시각은 자료 기준일과 다릅니다.</p>
+            <p className="subpanel-source">첫차·막차는 노선 기점·종점 기준이며 중간 정류장 도착시간이 아닙니다. 경기 시간은 평일 기준, 서울 종점은 명칭이 유일하게 일치하는 종점 정류소 운행시간입니다. 서울 토요일·공휴일 배차는 T-DATA, 경기 평일·토요일·일요일·공휴일 배차는 GBIS 자료입니다. 서울 일반 배차는 평일로 간주하지 않으며 미제공 값은 수동 확인이 필요합니다. 조회 시각은 자료 기준일과 다릅니다.
+              {routeNote && <span className="transport-missing-note">{routeNote}</span>}
+            </p>
           </div>
           <div className="table-wrap">
             <table className="data-table bus-route-table">
@@ -107,7 +113,7 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
                 </tr>
               </thead>
               <tbody>
-                {busStops.length ? busRouteTableRows(busStops).slice(1).map((row, index) => (
+                {busStops.length ? routeRows.slice(1).map((row, index) => (
                   <tr key={index}>
                     {row.map((value, column) => <td key={column}>{value}</td>)}
                   </tr>

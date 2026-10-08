@@ -44,7 +44,7 @@ test("detail merge preserves all stops/routes, matches NODE_ID and leaves day-sp
   assert.match(result[1].routes[0].stationTimeError, /해당 정류장/);
   const rows = createBusRouteTableRows(result);
   assert.equal(rows[1][10], "12분");
-  rows[1].slice(11).forEach(value=>assert.match(value, /수동 확인/));
+  rows[1].slice(11).forEach(value=>assert.equal(value, "수동확인필요"));
   assert.equal(rows[1].length, 15);
 });
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import seoulTopisPoints from "../app/seoul-topis-points.json";
-import { BUS_ROUTE_COLUMNS, createBusRouteTableRows } from "../lib/seoulBusTable";
+import { BUS_ROUTE_COLUMNS, createBusRouteTableRows, createBusStopTableRows } from "../lib/seoulBusTable";
 import { nullableArea, areaStats, createRequestGate, validSurveyCenter } from "../lib/researchIntegrity";
 import { summarizeProjects } from "../lib/tiaScope";
 import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../lib/busMapOverlays";
@@ -1408,16 +1408,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   function busStopTableRows(stations) {
-    return [
-      ["정류장번호", "정류장명", "위치", "거리", "정차노선수"],
-      ...stations.map((station) => [
-        station.arsId || station.stationId || "-",
-        station.stationName || "-",
-        station.location || station.stationName || "-",
-        formatFacilityDistance(station),
-        station.routeError || formatOptionalNumber(station.routes?.length || 0),
-      ]),
-    ];
+    return createBusStopTableRows(stations, formatFacilityDistance);
   }
 
   function busRouteTableRows(stations) {
@@ -1443,6 +1434,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ...createSubwayRows(publicTransportResult.subwayStations || []),
       [], ["대중교통 누락·재조회 확인사항"],
       ["안내", "실패·미제공은 운행 없음이 아닙니다. 재조회 실패 시 이전 값은 유지하며 아래 경고를 함께 확인하세요."],
+      ...busStops.filter(stop => stop.routeError).map(stop => ["버스정류장", stop.stationName, stop.arsId || stop.stationId || "", stop.routeError]),
       ...busStops.flatMap(stop => (stop.routes || []).filter(route => route.detailError || route.endpointTimeError || route.cacheWarning || route.supplementError)
         .map(route => ["버스", stop.stationName, route.routeName, [route.detailError, route.endpointTimeError, route.cacheWarning, route.supplementError].filter(Boolean).join(" / ")])),
       ...(publicTransportResult.subwayStations || []).filter(station => station.error || station.status !== "SUCCESS")

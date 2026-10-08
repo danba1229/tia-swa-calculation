@@ -150,7 +150,7 @@ test("station route failure is explicit rather than a fabricated count of zero",
     assert.equal(result.summary.failedStationRoutes, 2);
     assert.equal(result.summary.partial, true);
     assert.match(result.stations[0].routeError, /응답 오류/);
-    assert.ok(createBusRouteTableRows(result.stations)[1].slice(1).every(value => value === "-"));
+    assert.ok(createBusRouteTableRows(result.stations)[1].slice(1).every(value => value === "수동확인필요"));
   }, (url) => url.pathname.endsWith("/getRouteByStation") ? new Response(xml([], "4")) : undefined);
 });
 
@@ -190,9 +190,9 @@ test("UI/CSV have identical row widths and never reuse old inferred weekday time
   const rows = createBusRouteTableRows([{ stationName: "legacy", routes: [{ routeName: "123", firstBusTime: "05:00", weekdayInterval: "12분" }] }, { stationName: "failed", routeError: "조회 실패" }]);
   assert.equal(BUS_ROUTE_COLUMNS.length, 15);
   assert.ok(rows.every((row) => row.length === BUS_ROUTE_COLUMNS.length));
-  assert.match(rows[1][3], /미제공/);
-  assert.match(rows[1][10], /미제공/);
-  assert.ok(rows[2].slice(1).every(value => value === "-"));
+  assert.equal(rows[1][3], "수동확인필요");
+  assert.equal(rows[1][10], "수동확인필요");
+  assert.ok(rows[2].slice(1).every(value => value === "수동확인필요"));
   assert.ok(!BUS_ROUTE_COLUMNS.includes("조회 상태"));
 });
 
@@ -202,7 +202,7 @@ test("table uses endpoint times only and never substitutes intermediate stop tim
     { originFirstBusTime: "04:00", originLastBusTime: "23:00" },
   ] }]);
   assert.deepEqual(rows[1].slice(4, 6), ["04:00", "23:00"]);
-  rows[2].slice(7, 9).forEach(value => assert.match(value, /미제공/));
+  rows[2].slice(7, 9).forEach(value => assert.equal(value, "수동확인필요"));
   assert.ok(!JSON.stringify(rows).includes("05:10"));
   assert.ok(!JSON.stringify(rows).includes("25:10"));
   assert.ok(!JSON.stringify(rows).includes("internal error"));

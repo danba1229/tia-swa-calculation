@@ -45,7 +45,7 @@ test('subway first/last is computed per service day/destination, ignoring mismat
 });
 test('subway export has equal column counts and does not manufacture missing schedules', () => {
  const rows=createSubwayRows([{stationName:'역',distanceMeters:3,line:'1호선',schedules:[],status:'PARTIAL'}]);
- assert.equal(rows[0].length,11);assert.equal(rows[1].length,11);assert.equal(rows[1][7],'-');
+ assert.equal(rows[0].length,11);assert.equal(rows[1].length,11);assert.equal(rows[1][7],'수동확인필요');
 });
 test('complete GBIS base routes are not re-requested or marked pending', async () => {
  let final;

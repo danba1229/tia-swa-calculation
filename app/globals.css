@@ -1282,8 +1282,13 @@ button.mini-button {
 }
 
 .bus-stop-table {
-  min-width: 720px;
+  min-width: 620px;
 }
+
+.bus-stop-table th:nth-child(4), .bus-stop-table td:nth-child(4) { border-left: 2px solid var(--border); }
+.bus-stop-table th:nth-child(3n + 2), .bus-stop-table td:nth-child(3n + 2),
+.bus-stop-table th:nth-child(3n), .bus-stop-table td:nth-child(3n) { white-space: nowrap; }
+.transport-missing-note { display: block; margin-top: 6px; color: #80551d; line-height: 1.6; overflow-wrap: anywhere; }
 
 .bus-route-table {
   min-width: 1280px;

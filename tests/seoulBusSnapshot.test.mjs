@@ -54,9 +54,8 @@ test("missing operations data stays manual, never inferred from route number or 
   assert.equal(rows[0].length, 15);
   for (const row of rows.slice(1)) {
     assert.equal(row.length, 15);
-    if (row[2] === "-") continue;
-    assert.match(row[1], /수동 확인/);
-    row.slice(3).forEach(cell => assert.match(cell, /수동 확인/));
+    assert.equal(row[1], "수동확인필요");
+    row.slice(3).forEach(cell => assert.equal(cell, "수동확인필요"));
   }
   assert.equal(result.sourceDate, "2026-09-02");
 });

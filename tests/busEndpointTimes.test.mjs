@@ -34,9 +34,9 @@ test('Seoul general interval must not be relabeled weekday or Sunday', () => {
   const route = matchTdataRoute([{ routeId: '100000001', useAt: '1', opratAt: '1', mummCaralc: '8', mxmmCaralc: '12', caralcS: '15', caralcH: '20' }], '100000001');
   const row = createBusRouteTableRows([{ routes: [route] }])[1];
   assert.equal(row[10], '8~12분');
-  assert.match(row[11], /미제공/);
+  assert.equal(row[11], '수동확인필요');
   assert.equal(row[12], '15분');
-  assert.match(row[13], /미제공/);
+  assert.equal(row[13], '수동확인필요');
   assert.equal(row[14], '20분');
 });
 
