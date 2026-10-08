@@ -298,3 +298,73 @@ body:has(.research-workspace) { background: #f5f7fb; }
   .research-workspace > .step-nav-panel, .research-workspace .hero-card, .research-workspace .workspace-heading, .research-workspace .project-panel { display: none; }
   .research-workspace .workspace-results { container-type: normal; }
 }
+
+/* STEP 9 keeps its own map; the shared workspace map and layers stay mounted. */
+.research-workspace.signs-workspace .workspace-content { grid-template-columns: minmax(0, 1fr); }
+.research-workspace.signs-workspace .workspace-content > .project-panel,
+.research-workspace.signs-workspace .workspace-views,
+.research-workspace.signs-workspace .status-panel { display: none; }
+.research-workspace .traffic-signs { padding: 0; overflow: hidden; }
+.signs-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; }
+.signs-heading h2 { font-size: 22px; }
+.signs-heading p:not(.eyebrow) { color: #526780; font-size: 13px; margin-top: 7px; }
+.signs-region { flex-shrink: 0; border: 1px solid #cbdcec; background: #f4f8fd; color: #426587; padding: 6px 10px; border-radius: 6px; font-size: 12px; }
+.signs-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 24px 14px; flex-wrap: wrap; }
+.signs-filters { display: flex; gap: 7px; flex-wrap: wrap; }
+.research-workspace .signs-filters button { background: #f4f7fb; color: #536880; padding: 8px 12px; border: 1px solid #dbe4ef; font-size: 13px; }
+.research-workspace .signs-filters button[aria-pressed="true"] { color: #1748b5; background: #edf3ff; border-color: #acc8f8; }
+.signs-filters span { margin-left: 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.signs-status { background: #f8fafd; border-block: 1px solid #e1e8f0; padding: 10px 24px; font-size: 13px; color: #3d526d; }
+.signs-workbench { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(330px, 1fr); }
+.signs-map-frame { position: relative; height: clamp(620px, 68vh, 900px); background: #edf2f7; isolation: isolate; min-width: 0; }
+.signs-map { position: absolute; inset: 0; }
+.signs-overlay { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.signs-dot, .signs-callout { pointer-events: auto; cursor: pointer; }
+.signs-callout text { font-size: 12px; font-family: Arial, sans-serif; font-variant-numeric: tabular-nums; }
+.signs-callout:hover rect { fill: #fff3dc; stroke: #e76524; }
+.signs-site-label { font-size: 13px; font-weight: 800; fill: #172b46; stroke: white; stroke-width: 4px; paint-order: stroke; }
+.signs-map-message { position: absolute; z-index: 3; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 30px; background: #f0f4f8; color: #526780; }
+.signs-map-message strong { font-size: 18px; color: #2b435f; }
+.signs-map-message p { margin: 12px 0; }
+.signs-map-legend { position: absolute; z-index: 4; right: 12px; bottom: 32px; width: 216px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #334155; font-size: 11px; pointer-events: none; box-shadow: 0 2px 8px #24436325; overflow: hidden; }
+.signs-map-legend table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 11px; margin: 0; }
+.signs-map-legend caption { text-align: left; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #172b46; background: #f1f5f9; }
+.signs-map-legend th, .signs-map-legend td { padding: 4px 8px; height: 24px; line-height: 16px; border: 0; border-top: 1px solid #e2e8f0; white-space: nowrap; background: #fff; }
+.signs-map-legend th { color: #64748b; font-weight: 500; }
+.signs-map-legend th:first-child, .signs-map-legend td:first-child { text-align: center; width: 48px; }
+.signs-map-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.signs-confirmed { background: #2563eb; }.signs-unconfirmed { background: #dc2626; }
+.signs-map-legend .signs-site { background: #172b46; border-radius: 0; transform: rotate(45deg); }
+.signs-map-legend .signs-boundary { width: 22px; height: 0; border-radius: 0; border-top: 2px dashed #2563eb; vertical-align: middle; }
+.police-chart { display: flex; flex-direction: column; height: clamp(620px, 68vh, 900px); min-width: 0; border-left: 1px solid #dbe4ee; background: #f8fafd; }
+.police-chart-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px; background: #fff; }
+.police-chart-heading h3 { font-size: 16px; line-height: 1.5; }
+.police-chart a { color: #2458a3; text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
+.police-chart-tools { display: flex; align-items: center; gap: 8px; padding: 10px 12px; flex-wrap: wrap; border-block: 1px solid #e1e8f0; }
+.research-workspace .police-chart-tools button { padding: 4px 10px; min-height: 30px; font-size: 12px; background: #fff; border: 1px solid #cbd5e1; color: #334155; }
+.police-chart-tools button:disabled { opacity: .4; cursor: default; }
+.police-chart-tools output { min-width: 40px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+.police-chart-tools span { color: #64748b; font-size: 11px; }
+.police-chart-viewport { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; background: #e9edf2; }
+.police-chart-viewport img { display: block; }
+.police-chart-source { padding: 10px 14px; border-top: 1px solid #e1e8f0; background: #fff; font-size: 11px; color: #64748b; line-height: 1.7; }
+@media (max-width: 1100px) {
+  .signs-workbench { grid-template-columns: minmax(0, 1fr); }
+  .police-chart { height: 640px; border-left: 0; border-top: 1px solid #dbe4ee; }
+}
+.signs-hint { padding: 12px 24px; font-size: 12px; color: #596e87; border-top: 1px solid #e1e8f0; }
+.signs-detail { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 1.4fr); gap: 24px; padding: 10px 24px 22px; align-items: center; }
+.signs-detail label { display: grid; gap: 8px; font-size: 12px; color: #536880; min-width: 0; }
+.signs-detail select { width: 100%; min-width: 0; }
+.signs-detail strong { font-size: 14px; overflow-wrap: anywhere; }
+.signs-detail p { color: #536880; font-size: 12px; line-height: 1.8; }
+.signs-provenance { padding: 14px 24px; border-top: 1px solid #e1e8f0; font-size: 12px; line-height: 1.9; color: #596e87; }
+.signs-provenance summary { cursor: pointer; color: #314b6a; font-weight: 600; }
+@media (max-width: 700px) {
+  .signs-heading { padding: 18px 14px; align-items: flex-start; }
+  .signs-region { display: none; }
+  .signs-toolbar { padding: 0 14px 12px; }
+  .signs-status, .signs-hint, .signs-provenance { padding-inline: 14px; }
+  .signs-detail { grid-template-columns: minmax(0, 1fr); padding-inline: 14px; gap: 12px; }
+  .signs-map-frame { height: 580px; }
+}

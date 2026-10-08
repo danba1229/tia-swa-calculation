@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['@sparticuz/chromium', 'playwright-core'],
-  outputFileTracingIncludes: { '/api/accidents/radius': ['./node_modules/@sparticuz/chromium/bin/**', './node_modules/playwright-core/**'] },
+  outputFileTracingIncludes: { '/api/seoul-signs': ['./data/signs/**'], '/api/accidents/radius': ['./node_modules/@sparticuz/chromium/bin/**', './node_modules/playwright-core/**'] },
   async headers() {
     return [{
       source: "/indicator/:path*",
