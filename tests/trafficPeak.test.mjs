@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as XLSX from "xlsx";
-import { buildWeekAnalysis, countValue, weekDates, monthWeeks, isoDate } from "../lib/trafficPeak.js";
+import { buildWeekAnalysis, countValue, weekDates, monthWeeks, isoDate, trafficDateLabel } from "../lib/trafficPeak.js";
 import { parseTopisWorkbook, listTopisMonths } from "../lib/topisMonthly.js";
 
 const week = "2026-08-03";
@@ -27,6 +27,17 @@ test("daily sums and peaks use simultaneous in/out counts", () => {
   assert.deepEqual(a.peakCells, ["2026-08-07|17"]);
   assert.equal(a.dailyMax, 4300); assert.equal(a.weeklyMax, 2000);
 });
+
+test("summary date labels use calendar weekdays across month and year boundaries", () => {
+  assert.equal(trafficDateLabel("2026-08-03"), "8/3(월)");
+  assert.equal(trafficDateLabel("2026-08-09"), "8/9(일)");
+  assert.equal(trafficDateLabel("2025-12-31"), "12/31(수)");
+  assert.equal(trafficDateLabel("2026-01-01"), "1/1(목)");
+  assert.equal(trafficDateLabel("2024-02-29"), "2/29(목)");
+  assert.throws(() => trafficDateLabel("2026-02-30"));
+  const rows = records().map((r) => ({ ...r, weekday: "일" }));
+  assert.deepEqual(analyze(rows).peakDays.map(trafficDateLabel), ["8/7(금)"]);
+});
 test("missing direction does not become zero or partial daily total", () => {
   const a = analyze(records().filter((r) => !(r.date === week && r.direction === "out")));
   assert.equal(a.days[0].total, null); assert.equal(a.days[0].hours[0], null);
@@ -36,6 +47,13 @@ test("missing direction does not become zero or partial daily total", () => {
 test("single missing hour blocks daily and weekly definitive peaks", () => {
   const rows = records(); rows[0].hours[0] = null;
   const a = analyze(rows); assert.equal(a.days[0].total, null); assert.deepEqual(a.days[0].peakHours, []); assert.deepEqual(a.peakDays, []);
+  assert.equal(a.days[0].hours[0], null);
+  assert.equal(a.days[0].hours[1], 20);
+  assert.equal(a.days[1].total, 960);
+  assert.equal(a.days[1].peakHours.length, 24);
+  assert.equal(a.dailyMax, null);
+  assert.equal(a.weeklyMax, null);
+  assert.equal(a.validHours, 167);
 });
 test("explicit single-direction selection supports one direction without doubling", () => {
   const a = analyze(records().filter((r) => r.direction === "in"), { direction: "in" });

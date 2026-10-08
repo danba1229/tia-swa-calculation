@@ -22,10 +22,10 @@
 .connection button[aria-pressed="true"] { outline: 2px solid #175b7a; outline-offset: 2px; }
 .options input { width: 100%; min-width: 0; box-sizing: border-box; padding: 9px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); }
 .message, .warning { padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.7; background: #f5efdc; color: #6d4c0e; }
-.summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 14px 0; }
-.summary > span { display: grid; gap: 7px; align-content: start; background: #f0f4fa; border-radius: 10px; padding: 12px; }
-.summary small { color: var(--muted); font-size: 13px; }
-.summary strong { font-size: 15px; overflow-wrap: anywhere; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 8px; margin: 0; min-width: 0; }
+.summary > span { display: grid; gap: 4px; align-content: start; background: #f0f4fa; border-radius: 8px; padding: 10px; min-width: 0; }
+.summary small { color: var(--muted); font-size: 12px; }
+.summary strong { font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
 .legend { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; margin: 12px 0; }
 .legend span { padding: 5px 8px; border-radius: 5px; }
 .tableScroll { width: 100%; min-width: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
@@ -40,6 +40,6 @@
 .table .peakDay, .peakDay { background: #fff0c2; color: #593e08; }
 .table .peakHour, .peakHour { background: #cce7ed; color: #123d51; font-weight: 700; box-shadow: inset 0 0 0 1px #5995a8; }
 .table .weekPeak, .weekPeak { background: #175b7a; color: #fff; font-weight: 700; box-shadow: inset 0 0 0 2px #092f47; }
-@media(max-width: 680px) { .controls { grid-template-columns: 1fr; } .calendar { width: 224px; } .box { padding: 14px; } .summary { grid-template-columns: 1fr; } }
+@media(max-width: 680px) { .controls { grid-template-columns: 1fr; } .calendar { width: 224px; } .box { padding: 14px; } }
 
-@container (max-width: 600px) { .controls { grid-template-columns: minmax(0, 1fr); } .calendar { max-width: 280px; } .summary { grid-template-columns: minmax(0, 1fr); } }
+@container (max-width: 600px) { .controls { grid-template-columns: minmax(0, 1fr); } .calendar { max-width: 280px; } }
