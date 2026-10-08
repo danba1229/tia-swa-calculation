@@ -16,14 +16,22 @@ await mkdir(output, { recursive: true });
 const transport = await request.newContext({ proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined });
 const local = await request.newContext();
 const browser = await chromium.launch({ args: serverChromium.args.filter(arg => arg !== '--single-process'), executablePath: await serverChromium.executablePath(), headless: true });
-const context = await browser.newContext({ viewport: { width: 1800, height: 1300 }, deviceScaleFactor: 1 });
+const context = await browser.newContext({ viewport: { width: 1800, height: 1600 }, deviceScaleFactor: 1 });
 const page = await context.newPage();
 page.setDefaultTimeout(45000);
 const errors = [], requests = [], failures = [];
+let pendingImages = 0;
+async function waitForMapImages() {
+  for (let i = 0; i < 100 && pendingImages; i++) await page.waitForTimeout(200);
+  assert.equal(pendingImages, 0, "Map image responses completed");
+  await page.waitForTimeout(700);
+}
 page.on('pageerror', e => errors.push(e.message));
 await page.route('**/*', async route => {
   const req = route.request(), url = new URL(req.url());
   if (url.pathname === '/api/seoul-signs') requests.push(req.url());
+  const imageRequest = req.resourceType() === 'image';
+  if (imageRequest) pendingImages++;
   try {
     let response;
     if (url.origin === appOrigin) {
@@ -34,6 +42,7 @@ await page.route('**/*', async route => {
     if (response.status() >= 400) failures.push({ host: url.hostname, path: url.pathname, status: response.status() });
     await route.fulfill({ response });
   } catch (e) { failures.push({ host: url.hostname, path: url.pathname, error: e.message.split('\n')[0] }); await route.abort(); }
+  finally { if (imageRequest) pendingImages--; }
 });
 try {
   await page.goto(appOrigin, { waitUntil: 'domcontentloaded' });
@@ -55,7 +64,9 @@ try {
   assert.ok(mapInfo.mapImages > 5, 'Real Kakao map tiles loaded');
   assert.ok(mapInfo.callouts.every(text => text.length > 4), 'Official management identifiers, not sequential labels');
   await page.getByRole('heading', { name: '교통 표지판 위치도', exact: true }).click();
-  await page.screenshot({ path: `${output}/step9-seocho-500m.png`, fullPage: true });
+  await waitForMapImages();
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: `${output}/step9-seocho-500m.png` });
   await page.locator('.signs-callout').first().click();
   assert.ok(await page.locator('.signs-detail strong').textContent());
   await page.getByRole('group', { name: '표지판 종류' }).getByRole('button', { name: /^도로표지/ }).click();
@@ -81,8 +92,10 @@ try {
   await page.getByRole('button', { name: '조사 범위에 맞추기', exact: true }).click();
   await page.waitForTimeout(2500);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Mobile has no horizontal overflow');
+  await waitForMapImages();
+  await page.evaluate(() => document.activeElement?.blur());
   await page.screenshot({ path: `${output}/step9-mobile.png`, fullPage: true });
-  await page.setViewportSize({ width: 1800, height: 1300 });
+  await page.setViewportSize({ width: 1800, height: 1600 });
   await page.getByLabel('가로 범위(m)', { exact: true }).fill('2300');
   await page.getByLabel('세로 범위(m)', { exact: true }).fill('3200');
   await page.locator('.signs-status').filter({ hasText: '3,735건' }).waitFor();
