@@ -142,6 +142,10 @@ body:has(.research-workspace) { background: #f5f7fb; }
 .address-input-hint { color: var(--muted); font-size: 11px; line-height: 1.5; }
 .address-suggestions { position: absolute; z-index: 40; top: 68px; left: 0; right: 0; border: 1px solid #becde3; border-radius: 9px; background: #fff; box-shadow: 0 8px 24px #172b4d1f; overflow: hidden; }
 .address-search-status, .address-suggestion-source { padding: 9px 12px; font-size: 12px; color: var(--muted); background: #f5f8fc; line-height: 1.6; }
+.address-search-status { display: flex; align-items: center; gap: 8px; }
+.address-search-spinner { flex: 0 0 12px; width: 12px; height: 12px; border: 2px solid #becde3; border-top-color: #2456a6; border-radius: 50%; animation: address-search-spin 0.8s linear infinite; }
+@keyframes address-search-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .address-search-spinner { animation: none; } }
 .address-suggestions ul { list-style: none; margin: 0; padding: 4px; max-height: 320px; overflow-y: auto; overscroll-behavior: contain; }
 .address-suggestions li { margin: 0; padding: 0; }
 .research-workspace .address-suggestions button { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 54px; padding: 10px; background: #fff; color: var(--ink); text-align: left; font-weight: 400; border-radius: 5px; }

@@ -47,6 +47,7 @@ try {
   await fixtures(desktop);
   const page = await desktop.newPage();
   page.on('pageerror', e => errors.push(e.message));
+  await page.clock.install();
   await page.goto(base, { waitUntil: 'networkidle' });
   await page.getByText('초기 화면이 준비되었습니다.', { exact: true }).waitFor();
   const input = page.getByRole('combobox', { name: '주소지', exact: true });
@@ -55,6 +56,7 @@ try {
   await page.waitForTimeout(450);
   assert.equal(queries.length, 0);
   await input.fill('');
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
   // Dispatch a single rapid typing burst without host scheduling pauses between
   // characters (a real pause longer than the debounce correctly starts a search).
   await input.evaluate(element => {
@@ -64,8 +66,36 @@ try {
       element.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
+  await page.getByText('주소 후보 검색 중…', { exact: true }).waitFor();
+  assert.equal(await page.locator('.address-search-spinner').count(), 1);
+  assert.equal(await page.getByRole('listbox', { name: '주소 후보' }).getAttribute('aria-busy'), 'true');
+  await page.clock.runFor(149);
+  assert.equal(queries.length, 0);
+  await page.clock.runFor(1);
   await items.first().waitFor();
   assert.deepEqual(queries, ['서울 세종대로']);
+  assert.equal(await page.locator('.address-search-spinner').count(), 0);
+  await input.fill('');
+  await input.fill('서울 세종대로');
+  await items.first().waitFor();
+  assert.equal(await page.locator('.address-search-spinner').count(), 0);
+  await page.clock.runFor(500);
+  assert.deepEqual(queries, ['서울 세종대로']);
+  await input.press('Escape');
+  await input.press('ArrowDown');
+  await items.first().waitFor();
+  await page.clock.runFor(500);
+  assert.deepEqual(queries, ['서울 세종대로']);
+  // Expiry must lead to a fresh request, not an indefinitely reused answer.
+  await input.fill('');
+  await page.clock.fastForward(5 * 60 * 1000);
+  await input.fill('서울 세종대로');
+  await page.getByText('주소 후보 검색 중…', { exact: true }).waitFor();
+  await page.clock.runFor(150);
+  await items.first().waitFor();
+  assert.deepEqual(queries, ['서울 세종대로', '서울 세종대로']);
+  await page.clock.resume();
+  checks.push('150ms debounce, immediate loading feedback, cached repeat/reopen without requests and refresh after 5 minutes');
   assert.equal(await input.getAttribute('aria-expanded'), 'true');
   await input.press('ArrowDown');
   assert.equal(await items.first().getAttribute('aria-selected'), 'true');
@@ -121,9 +151,14 @@ try {
   await page.getByText('검색 결과가 없습니다. 도로명·번지 또는 건물명을 더 입력해 주세요.', { exact: true }).waitFor();
   await input.fill('오류주소');
   await page.getByText('자동완성을 불러오지 못했습니다. 주소를 직접 입력할 수 있습니다.', { exact: true }).waitFor();
+  const failuresBeforeRetry = queries.filter(query => query === '오류주소').length;
+  await input.fill('');
+  await input.fill('오류주소');
+  await page.getByText('자동완성을 불러오지 못했습니다. 주소를 직접 입력할 수 있습니다.', { exact: true }).waitFor();
+  assert.equal(queries.filter(query => query === '오류주소').length, failuresBeforeRetry + 1);
   await input.fill('직접 입력한 상세 주소');
   assert.equal(await input.inputValue(), '직접 입력한 상세 주소');
-  checks.push('Empty results and provider failures remain explicit and manual entry stays usable');
+  checks.push('Empty results and provider failures remain explicit, failed searches retry instead of caching, and manual entry stays usable');
 
   await input.fill('서울 시청');
   await items.first().waitFor();
