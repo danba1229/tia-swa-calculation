@@ -11,6 +11,7 @@ import { busRefreshStatusText } from "../lib/seoulBusRefreshStatus";
 import SubwayResults from "./SubwayResults";
 import TrafficAccidentStep from "./TrafficAccidentStep";
 import TrafficPeakAnalysis from "./TrafficPeakAnalysis";
+import { createSiteMapMarker } from "../lib/siteMapMarker";
 import useSiteLocation from "./useSiteLocation";
 import { createSubwayRows } from "../lib/subwayTable";
 import { readDraft } from "../lib/draftStorage";
@@ -79,7 +80,7 @@ const DEVELOPMENT_STATUS_FILTERS = ["전체", "반영", "반영검토", "참고"
 const STEP_NAV_ITEMS = [
   { step: 0, label: "전체 보기" },
   { step: 1, label: "가로망 조사" },
-  { step: 2, label: "사전조사지점" },
+  { step: 2, label: "사전조사·첨두 분석" },
   { step: 3, label: "토지이용/용도지역" },
   { step: 4, label: "주변지역 개발계획" },
   { step: 5, label: "버스·지하철" },
@@ -643,7 +644,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     map: null,
     marker: null,
     rectangle: null,
-    infoWindow: null,
     surveyMarkers: [],
     surveyOverlays: [],
     bikeStationOverlays: [],
@@ -1656,7 +1656,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       mapRuntimeRef.current.busScope = boundsData;
       setMapRevision((revision) => revision + 1);
 
-      mapRuntimeRef.current.marker = new kakao.maps.Marker({ position: center, map: mapRuntimeRef.current.map });
+      mapRuntimeRef.current.marker = createSiteMapMarker(kakao.maps, mapRuntimeRef.current.map, center);
       mapRuntimeRef.current.rectangle = new kakao.maps.Rectangle({
         bounds,
         strokeWeight: 2,
@@ -1668,10 +1668,6 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       });
       mapRuntimeRef.current.rectangle.setMap(mapRuntimeRef.current.map);
 
-      mapRuntimeRef.current.infoWindow = new kakao.maps.InfoWindow({
-        content: `<div style="padding:10px 12px;font-size:13px;line-height:1.5;"><strong>${escapeHtml(address)}</strong><br>가로 ${formatNumber(width)}m / 세로 ${formatNumber(height)}m</div>`,
-      });
-      mapRuntimeRef.current.infoWindow.open(mapRuntimeRef.current.map, mapRuntimeRef.current.marker);
       mapRuntimeRef.current.map.setBounds(bounds, 48, 48, 48, 48);
 
       setMapStatus("조사 영역에 걸친 도로를 자동 조사하는 중입니다.");
@@ -1895,6 +1891,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         }} />
       </StepNavigation>
 
+      <div className="step-content">
       <section className={`panel step-section ${shouldShowStep(1) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
@@ -1987,6 +1984,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         </div>
         <p className="status-text">{statusText}</p>
       </section>
+      </div>
     </main>
   );
 }
@@ -2543,10 +2541,6 @@ function clearMapOverlays(mapRuntimeRef) {
   if (mapRuntimeRef.current.rectangle) {
     mapRuntimeRef.current.rectangle.setMap(null);
     mapRuntimeRef.current.rectangle = null;
-  }
-  if (mapRuntimeRef.current.infoWindow) {
-    mapRuntimeRef.current.infoWindow.close();
-    mapRuntimeRef.current.infoWindow = null;
   }
   clearSurveyCandidateOverlays(mapRuntimeRef);
   clearBikeStationOverlays(mapRuntimeRef);

@@ -7,14 +7,21 @@ export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResu
   const region = detectSurveyRegion(form.basics.siteAddress);
   const peakCandidate = gyeonggiCandidates.find((candidate) => peakChoice?.address === form.basics.siteAddress
     && peakChoice.code === candidate.pointCode && peakChoice.route === candidate.routeCode) || gyeonggiCandidates[0];
-  return (<section className={`panel step-section ${shouldShowStep(2) ? "" : "is-hidden"}`}>
+  return (<section className={`panel step-section survey-analysis-step ${shouldShowStep(2) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
             <p className="eyebrow">Step 2</p>
-            <h2>가까운 사전조사지점</h2>
+            <h2>사전조사 · 첨두 분석</h2>
           </div>
+          <a className="survey-candidates-link" href="#nearby-survey-points">가까운 지점 보기</a>
         </div>
 
+        <TrafficPeakAnalysis key={`${form.basics.siteAddress}:${region === "gyeonggi" ? `${peakCandidate?.routeCode || ""}:${peakCandidate?.pointCode || ""}` : ""}`} address={form.basics.siteAddress}
+          region={region} candidates={region === "gyeonggi" ? gyeonggiCandidates : topisCandidates}
+          selectedCandidate={region === "gyeonggi" ? peakCandidate : null} active={shouldShowStep(2) || runAll} onMapPointChange={onPeakPointChange} />
+
+        <section id="nearby-survey-points" className="survey-candidates-compact" aria-label="가까운 사전조사지점">
+        <h3>가까운 사전조사지점</h3>
         {detectSurveyRegion(form.basics.siteAddress) === "seoul" ? (
           <div className="survey-recommendation-block">
             <div className="output-header">
@@ -79,6 +86,8 @@ export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResu
           </div>
         ) : null}
 
+        <details className="survey-source-details">
+        <summary>공식 자료 출처 · 추천 근거</summary>
         <div className="survey-recommendations">
           {surveyRecommendations.map((recommendation) => (
             <article key={recommendation.key} className="survey-recommendation-card">
@@ -103,10 +112,7 @@ export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResu
           </div>
           <p className="priority-note">{buildPriorityNote(selectedSurveyPoint, autoSurveyPoints)}</p>
         </div>
-
-        <TrafficPeakAnalysis key={`${form.basics.siteAddress}:${region === "gyeonggi" ? `${peakCandidate?.routeCode || ""}:${peakCandidate?.pointCode || ""}` : ""}`} address={form.basics.siteAddress}
-          region={region} candidates={region === "gyeonggi" ? gyeonggiCandidates : topisCandidates}
-          selectedCandidate={region === "gyeonggi" ? peakCandidate : null} active={shouldShowStep(2) || runAll} onMapPointChange={onPeakPointChange} />
-
+        </details>
+        </section>
       </section>);
 }

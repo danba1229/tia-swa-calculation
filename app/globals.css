@@ -167,6 +167,19 @@ h3 {
   display: none;
 }
 
+.step-content { min-width: 0; }
+
+.site-center-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #bc4b24;
+  box-shadow: 0 0 0 2px #833617, 0 2px 6px #0004;
+}
+
 .step-nav-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -955,6 +968,22 @@ button.mini-button {
   font-size: 13px;
 }
 
+.survey-analysis-step #weekly-traffic-analysis { margin-top: 0; scroll-margin-top: 20px; }
+.survey-candidates-link { font-size: 13px; color: var(--accent-strong); text-underline-offset: 3px; }
+.survey-candidates-compact { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); scroll-margin-top: 20px; }
+.survey-candidates-compact > h3 { margin: 0 0 12px; font-size: 16px; }
+.survey-candidates-compact .survey-recommendations { gap: 8px; margin-bottom: 10px; }
+.survey-candidates-compact .survey-recommendation-block { margin-bottom: 10px; }
+.survey-candidates-compact .survey-recommendation-card { padding: 10px 12px; border-radius: 12px; }
+.survey-candidates-compact .survey-recommendation-card h3 { margin: 5px 0; font-size: 14px; }
+.survey-candidates-compact .survey-recommendation-card p,
+.survey-candidates-compact .priority-note { font-size: 12px; line-height: 1.5; }
+.survey-candidates-compact .survey-rank { font-size: 12px; padding: 3px 8px; }
+.survey-candidates-compact .candidate-distance { margin-top: 4px !important; }
+.survey-candidates-compact .survey-links { margin-top: 6px; gap: 6px 12px; font-size: 12px; }
+.survey-candidates-compact .priority-card { padding: 12px; margin-top: 10px; }
+.survey-source-details > summary { cursor: pointer; padding: 10px 0; font-size: 13px; font-weight: 700; }
+
 .subpanel-grid,
 .chart-grid {
   display: grid;
@@ -1027,9 +1056,9 @@ button.mini-button {
     position: static;
   }
 
-  .app-shell.map-collapsed > .step-section,
-  .app-shell.map-collapsed > .status-panel {
+  .app-shell.map-collapsed > .step-content {
     grid-column: 1 / -1;
+    grid-row: 3;
   }
 }
 
@@ -1354,10 +1383,15 @@ button.mini-button {
     grid-row: 1;
   }
 
-  .app-shell > .step-section,
-  .app-shell > .status-panel {
+  .app-shell > .step-content {
     grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
+
+  .step-content > .panel { margin-top: 0; }
 
   .app-shell > .hero-card,
   .app-shell > .step-nav-panel,
