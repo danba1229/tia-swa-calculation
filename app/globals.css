@@ -167,8 +167,6 @@ h3 {
   display: none;
 }
 
-.step-content { min-width: 0; }
-
 .site-center-dot {
   display: block;
   width: 18px;
@@ -1056,9 +1054,9 @@ button.mini-button {
     position: static;
   }
 
-  .app-shell.map-collapsed > .step-content {
+  .app-shell.map-collapsed > .step-section,
+  .app-shell.map-collapsed > .status-panel {
     grid-column: 1 / -1;
-    grid-row: 3;
   }
 }
 
@@ -1383,15 +1381,10 @@ button.mini-button {
     grid-row: 1;
   }
 
-  .app-shell > .step-content {
+  .app-shell > .step-section,
+  .app-shell > .status-panel {
     grid-column: 2;
-    grid-row: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
   }
-
-  .step-content > .panel { margin-top: 0; }
 
   .app-shell > .hero-card,
   .app-shell > .step-nav-panel,

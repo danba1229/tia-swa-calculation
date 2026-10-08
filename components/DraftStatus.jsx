@@ -15,6 +15,6 @@ export default function DraftStatus({ status, restore }) {
   return <div className={`draft-status ${status === 'failed' ? 'draft-error' : ''}`}>
     <span role="status">{labels[status]}</span>
     <button type="button" className="ghost" onClick={downloadDraftBackup}>조사 백업</button>
-    {restore && <label className="ghost">백업 복원<input type="file" accept=".json" onChange={upload} /></label>}
+    {restore && <label className="ghost draft-restore">백업 복원<input type="file" aria-label="조사 백업 복원" accept=".json" onChange={upload} /></label>}
   </div>;
 }
