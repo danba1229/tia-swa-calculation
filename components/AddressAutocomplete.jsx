@@ -2,10 +2,13 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { ADDRESS_QUERY_MIN, ADDRESS_QUERY_MAX } from '../lib/addressQuery';
+import { createAddressSuggestionCache } from '../lib/addressSuggestionCache';
 
 export default function AddressAutocomplete({ value, onChange }) {
   const id = useId();
   const inputRef = useRef(null);
+  const cacheRef = useRef(null);
+  if (!cacheRef.current) cacheRef.current = createAddressSuggestionCache();
   const [focused, setFocused] = useState(false);
   const [composing, setComposing] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -14,12 +17,19 @@ export default function AddressAutocomplete({ value, onChange }) {
   const query = value.trim();
   const eligible = query.length >= ADDRESS_QUERY_MIN && query.length <= ADDRESS_QUERY_MAX;
   const visible = focused && !composing && !dismissed && eligible;
-  const current = result.query === query ? result : { status: 'loading', items: [] };
+  const cached = cacheRef.current.get(query);
+  const current = cached ? { status: 'ready', items: cached }
+    : result.query === query ? result : { status: 'loading', items: [] };
   const items = visible && current.status === 'ready' ? current.items : [];
 
   useEffect(() => {
     setActive(-1);
     if (!visible) return;
+    const cachedItems = cacheRef.current.get(query);
+    if (cachedItems) {
+      setResult({ query, status: 'ready', items: cachedItems });
+      return;
+    }
     let cancelled = false;
     const controller = new AbortController();
     setResult({ query, status: 'loading', items: [] });
@@ -32,11 +42,12 @@ export default function AddressAutocomplete({ value, onChange }) {
         const data = await response.json();
         if (cancelled) return;
         if (!response.ok || !data.success || !Array.isArray(data.suggestions)) throw new Error('Search failed');
+        cacheRef.current.set(query, data.suggestions);
         setResult({ query, status: 'ready', items: data.suggestions });
       } catch {
         if (!cancelled) setResult({ query, status: 'error', items: [] });
       }
-    }, 350);
+    }, 150);
     return () => { cancelled = true; clearTimeout(timer); controller.abort(); };
   }, [query, visible]);
 
@@ -84,7 +95,10 @@ export default function AddressAutocomplete({ value, onChange }) {
       onCompositionStart={() => setComposing(true)} onCompositionEnd={() => setComposing(false)} onKeyDown={onKeyDown} />
     <span id={`${id}-hint`} className="address-input-hint">도로명·지번·건물명 2자 이상 입력하면 주소를 추천합니다.</span>
     {visible && <div className="address-suggestions">
-      <p className="address-search-status" role="status">{message}</p>
+      <p className="address-search-status" role="status">
+        {current.status === 'loading' && <span className="address-search-spinner" aria-hidden="true" />}
+        {message}
+      </p>
       <ul id={`${id}-list`} role="listbox" aria-label="주소 후보" aria-busy={current.status === 'loading'}>
         {items.map((item, index) => <li key={item.address} role="presentation">
           <button id={`${id}-option-${index}`} role="option" aria-selected={index === active}
