@@ -136,6 +136,20 @@ body:has(.research-workspace) { background: #f5f7fb; }
 .research-workspace .hero-action-stack > button { grid-row: 2; min-height: 32px; font-size: 12px; padding: 6px 8px; }
 .research-workspace .hero-actions > button:last-child { grid-column: 2; grid-row: 1; font-size: 12px; }
 .workspace-start span { margin-right: 5px; }
+.address-autocomplete { position: relative; min-width: 0; display: grid; gap: 5px; }
+.research-workspace .hero-form > .inline-fields.full { align-self: start; }
+.research-workspace .hero-form .address-autocomplete > label { display: block; color: #4d617b; font-size: 12px; font-weight: 600; }
+.address-input-hint { color: var(--muted); font-size: 11px; line-height: 1.5; }
+.address-suggestions { position: absolute; z-index: 40; top: 68px; left: 0; right: 0; border: 1px solid #becde3; border-radius: 9px; background: #fff; box-shadow: 0 8px 24px #172b4d1f; overflow: hidden; }
+.address-search-status, .address-suggestion-source { padding: 9px 12px; font-size: 12px; color: var(--muted); background: #f5f8fc; line-height: 1.6; }
+.address-suggestions ul { list-style: none; margin: 0; padding: 4px; max-height: 320px; overflow-y: auto; overscroll-behavior: contain; }
+.address-suggestions li { margin: 0; padding: 0; }
+.research-workspace .address-suggestions button { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 54px; padding: 10px; background: #fff; color: var(--ink); text-align: left; font-weight: 400; border-radius: 5px; }
+.research-workspace .address-suggestions button:hover, .research-workspace .address-suggestions button[aria-selected=true] { background: #edf3ff; }
+.address-suggestion-type { flex-shrink: 0; padding: 3px 5px; border-radius: 4px; background: #eaf1fc; color: #2456b3; font-size: 11px; }
+.address-suggestion-text { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; line-height: 1.6; }
+.address-suggestion-text strong { font-size: 14px; font-weight: 600; }
+.address-suggestion-text > span, .address-suggestion-text small { font-size: 12px; color: var(--muted); }
 .workspace-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 26px 28px 20px; }
 .workspace-breadcrumb { font-size: 12px; color: #61738c; margin-bottom: 9px; }
 .workspace-breadcrumb span { color: #94a3b8; padding: 0 7px; }

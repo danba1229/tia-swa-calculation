@@ -13,6 +13,7 @@ import TrafficAccidentStep from "./TrafficAccidentStep";
 import TrafficPeakAnalysis from "./TrafficPeakAnalysis";
 import { createSiteMapMarker } from "../lib/siteMapMarker";
 import useSiteLocation from "./useSiteLocation";
+import AddressAutocomplete from "./AddressAutocomplete";
 import { createSubwayRows } from "../lib/subwayTable";
 import { readDraft } from "../lib/draftStorage";
 import useDraftPersistence from "./useDraftPersistence";
@@ -1855,10 +1856,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         <div className="hero-main">
           <div className="workspace-project-label"><span className="workspace-live-dot" aria-hidden="true" />사업지 및 조사 범위<span>직사각형 조사</span></div>
           <div className="hero-form">
-            <label className="full">
-              <span>주소지</span>
-              <input value={form.basics.siteAddress} onChange={(event) => updateBasics("siteAddress", event.target.value)} placeholder="예: 경기도 수원시 팔달구 효원로 241" />
-            </label>
+            <AddressAutocomplete value={form.basics.siteAddress} onChange={address => updateBasics("siteAddress", address)} />
             <div className="full site-location-status" role="status" aria-live="polite">
               {siteLocation.message}
               {siteLocation.status === 'ready' && <span> · 위도 {siteLocation.lat} / 경도 {siteLocation.lng}</span>}

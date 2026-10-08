@@ -13,12 +13,17 @@
 
 ## 검증
 
+주소 입력은 도로명·지번·건물명 2~100자로 후보를 검색한다. 350ms 입력 대기와 요청 취소를 사용하며 한글 조합 중에는 검색하지 않는다. 최대 6개 후보를 방향키/Enter 또는 클릭·터치로 선택하고 Esc로 닫을 수 있다. 선택 결과의 주소만 기존 사업지 입력에 전달하며 좌표는 기존 정밀 주소검색으로 다시 확인한다. 자동완성 오류나 결과 없음은 직접 입력을 막지 않는다.
+
+`POST /api/address-suggestions`는 기존 서버 환경변수 `KAKAO_REST_API_KEY`를 사용한다. 도로명·지번의 개별 주소를 우선하고 결과가 없으면 건물명 검색을 수행한다. 행정구역·도로의 대표좌표를 개별 주소로 추천하지 않는다. 인증키·원본 오류·후보 좌표를 클라이언트에 전달하지 않는다.
+
 `npm run build`는 ESLint, 기존 Node 테스트, Next 프로덕션 빌드를 순서대로 실행한다.
 
 별도 터미널에서 `npm run dev -- --hostname 127.0.0.1 --port 3002`를 실행한 다음:
 
 ```sh
 node scripts/check_workspace_ui.mjs http://127.0.0.1:3002
+node scripts/check_address_autocomplete.mjs http://127.0.0.1:3002
 ```
 
 이 검사는 별도 Chromium 프로필에서 실제 입력·추가·삭제, 8개 단계 이동, 지도/표 전환과 Esc, 레이어 토글, IndexedDB 재접속, JSON 백업·복원, XLSX 다운로드의 셀 값, 7개 화면 폭, `/embed`, 지표 로그인 화면을 확인한다. 스크린샷과 파일은 Git에서 제외된 `.preview-test-results/`에 저장된다.
