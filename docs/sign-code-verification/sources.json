@@ -1,0 +1,24 @@
+{
+  "checkedAtKST": "2026-10-08",
+  "scope": "2023.12 chart comparison, not latest-law certification or official Seoul code dictionary",
+  "snapshotSha256": "200bb4aa14b3ef678f5d54bbd7c5336a741e728a68c248cf175bd70acdfc20b8",
+  "seoulSafetyRawSha256": "7b089d2908c5be647128bd63422a7872a7c77c9822a51cd5766be55e8ae08221",
+  "chartCopies": [
+    {
+      "url": "https://download.blog.naver.com/open/47d25bebfea3a37f52bcd5e1dc39443c9dcd31d6ec/EFsQaLZKxrzO9txbLuoSggWaFwbSq_BueFsNeT9mkG0pHoy_UH0h5Py3CIZo6ihv0z2BXGjv7AYFMUrUSOrbFJhY5xvanwti/2023%20%EA%B5%90%ED%86%B5%EC%95%88%EC%A0%84%EC%8B%9C%EC%84%A4%20%EC%9D%BC%EB%9E%8C%ED%91%9C.pdf",
+      "page": "https://m.blog.naver.com/terraqua_official/224107473547",
+      "sha256": "5cd5d09dc3d238639993ebfda8abae4e5db1bf39a7a019ef05fe88987e3755fe",
+      "bytes": 8650174,
+      "origin": "third-party repost of police chart; original server unavailable"
+    },
+    {
+      "url": "https://www.jwsafety.co.kr/NFUpload/nfupload_down.php?tmp_name=1794370325_8dbc348e.pdf&name=2023+%EA%B5%90%ED%86%B5%EC%95%88%EC%A0%84%EC%8B%9C%EC%84%A4+%EC%9D%BC%EB%9E%8C%ED%91%9C.pdf",
+      "sha256": "5cd5d09dc3d238639993ebfda8abae4e5db1bf39a7a019ef05fe88987e3755fe",
+      "bytes": 8650174,
+      "hostType": "commercial repost, not original police server",
+      "fetchedVia": "normal public page session and same-origin attachment link"
+    }
+  ],
+  "directOfficialPdf": "https://www.police.go.kr/component/file/ND_fileDownload.do?q_fileSn=157415&q_fileId=ced086c7-308f-43ae-ad09-8a25e1ab8f17",
+  "directOfficialFetchResult": "503 upstream connection timeout; original hash not available"
+}
