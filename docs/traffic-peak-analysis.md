@@ -90,6 +90,27 @@ that response. These are public website endpoints, not a versioned OpenAPI, so
 schema failures stop ingestion instead of guessing. Three bounded attempts are
 made for network failures; individual month failure does not overwrite good data.
 
+### TOPIS diagnostics and delayed recovery
+
+- Each request logs JSON with endpoint path (no query/body), attempt, HTTP status,
+  connect/http/body/decode stage, elapsed milliseconds and bounded nested error
+  names/codes/syscalls. `AggregateError.errors` is included for IPv4/IPv6 failures.
+  Raw error messages, response bodies, credentials and DB URLs are never logged.
+- Transient transport errors, HTTP 408/429/5xx receive up to three requests with
+  1.5/3 second delays. Retry-After is respected up to 60 seconds. Certificate/TLS,
+  HTTP 4xx other than 408/429, JSON/schema and workbook validation failures stop.
+- If source connectivity still fails, retry affected years/months after 2 minutes
+  and then 5 minutes (three collection rounds maximum). Completed months are
+  skipped within the run. Unchanged fingerprints avoid file downloads. Validation
+  failures remain failed even if a different month's transient failure recovers.
+- DB errors stop the run, rather than being mistaken for source network errors.
+  GitHub job timeout is 40 minutes; exhaustion/validation failure exits nonzero.
+  No source data is deleted or replaced by an empty result on failure. Recovery
+  records CHECKED/NO_CHANGE/UPDATED; earlier failure records remain in the audit.
+- The manual GitHub workflow may run on a feature branch for authorized collection
+  verification. It uses the existing database secret; it does not merge code or
+  deploy production. Scheduled runs still use main until the PR is approved.
+
 Raw XLSX and parsed compressed rows are stored with SHA-256. Immutable versions
 are retained after corrections. No private source is made publicly accessible;
 the app exposes only these public TOPIS original workbooks. Source check time,
