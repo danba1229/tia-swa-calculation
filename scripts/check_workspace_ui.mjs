@@ -10,7 +10,7 @@ const base = process.argv[2] || 'http://127.0.0.1:3002';
 assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a local server; this check edits an isolated survey draft.');
 const output = '.preview-test-results';
 await mkdir(output, { recursive: true });
-const browser = await chromium.launch({ args: serverChromium.args, executablePath: await serverChromium.executablePath(), headless: true });
+const browser = await chromium.launch({ args: serverChromium.args.filter(arg => arg !== '--single-process'), executablePath: await serverChromium.executablePath(), headless: true });
 const context = await browser.newContext({ viewport: { width: 1600, height: 1050 }, acceptDownloads: true });
 const page = await context.newPage();
 page.setDefaultTimeout(15000);
@@ -28,7 +28,7 @@ async function noPageOverflow(label) {
 try {
   await page.goto(base, { waitUntil: 'networkidle' });
   await page.getByText('초기 화면이 준비되었습니다.', { exact: true }).waitFor();
-  assert.equal(await nav.getByRole('button').count(), 9);
+  assert.equal(await nav.getByRole('button').count(), 10);
   await page.getByRole('button', { name: '조사 시작', exact: true }).click();
   await page.getByText('주소지를 먼저 입력해 주세요.', { exact: true }).waitFor();
   checks.push('Empty-address validation still runs from the primary action');

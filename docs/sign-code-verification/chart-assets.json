@@ -1,0 +1,20 @@
+{
+  "version": "2023.12",
+  "officialPost": "https://www.police.go.kr/user/bbs/BD_selectBbs.do?q_bbsCode=1001&q_bbscttSn=20240521062714460",
+  "provenance": "Two identical public reposts; direct original-server comparison and later amendments not verified. See sources.json.",
+  "conversion": "pdftoppm -scale-to 4400 -singlefile -png input.pdf chart; Pillow RGB WebP quality=92 method=6; no content edits",
+  "dimensions": [
+    3136,
+    4400
+  ],
+  "assets": {
+    "police-sign-chart-2023-12.pdf": {
+      "bytes": 8650174,
+      "sha256": "5cd5d09dc3d238639993ebfda8abae4e5db1bf39a7a019ef05fe88987e3755fe"
+    },
+    "police-sign-chart-2023-12.webp": {
+      "bytes": 1141894,
+      "sha256": "ee9bbc498eaeb2a75a22a2ce3754a1bd4ca492a4958bcce261a0985564570875"
+    }
+  }
+}

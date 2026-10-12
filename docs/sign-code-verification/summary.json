@@ -1,0 +1,35 @@
+{
+  "A": {
+    "distinctCodes": 124,
+    "records": 182707,
+    "seochoRecords": 95
+  },
+  "B": {
+    "distinctCodes": 8,
+    "records": 353,
+    "seochoRecords": 0
+  },
+  "C": {
+    "distinctCodes": 22,
+    "records": 892,
+    "seochoRecords": 0
+  },
+  "D": {
+    "distinctCodes": 64,
+    "records": 36090,
+    "seochoRecords": 13
+  },
+  "E": {
+    "distinctCodes": 1,
+    "records": 45,
+    "seochoRecords": 0
+  },
+  "sources": {
+    "safetyRecords": 220087,
+    "roadRecords": 12008,
+    "chartSignCodes": 144,
+    "chartAllCodes": 210,
+    "seochoSafety": 108,
+    "seochoRoad": 11
+  }
+}
