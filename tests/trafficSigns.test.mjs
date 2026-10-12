@@ -129,7 +129,7 @@ test('751 remark rules retain multi-code releases and ignore only LED installati
 test('ignored source codes are removed from display only, not raw records or other sources', () => {
   const points = ['704', '750', '232', '712-1', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex }));
   const original = structuredClone(points);
-  assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), ['712-1', '751']);
+  assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), ['751']);
   assert.deepEqual(points, original);
   assert.equal(visibleSigns(points.map(p => ({ ...p, source: 'R' }))).length, 5);
 });
