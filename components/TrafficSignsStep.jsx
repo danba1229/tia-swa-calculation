@@ -107,7 +107,7 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
       {(!screen || mapError) && <div className="signs-map-message"><strong>{mapError ? '지도 연결 확인이 필요합니다' : current ? '지도를 불러오고 있습니다' : '주소와 조사 범위를 확인해 주세요'}</strong><p>{mapError || scopeError || error || '서울시 표지판 위치를 큰 지도에서 확인합니다.'}</p>{mapError && <button type="button" onClick={() => setRetryMap(v => v + 1)}>지도 다시 연결</button>}</div>}
       <div className="signs-map-legend"><table><caption>범례</caption><thead><tr><th scope="col">표시</th><th scope="col">의미</th></tr></thead><tbody>
         <tr><td><i className="signs-location" aria-label="파란 점" /></td><td>표지판 위치</td></tr>
-        <tr><td>123</td><td>일람표 번호 / 대응 후보</td></tr>
+        <tr><td>123</td><td>일람표 번호 · 후보/사용자 지정</td></tr>
         <tr><td>?</td><td>일람표 번호 미확인</td></tr>
         <tr><td><i className="signs-site" /></td><td>사업지</td></tr>
         <tr><td><i className="signs-boundary" /></td><td>조사 범위</td></tr>
@@ -115,9 +115,9 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
     </div>
     {visible && <PoliceSignChart />}
     </div>
-    <p className="signs-hint">번호는 경찰청 일람표의 대응 후보이며, 대응 미확인·도로 안내표지는 ?로 표시합니다. <strong>번호 클릭: 카카오 로드뷰 새 탭 열기 · 점 클릭: 원본 코드와 비고 확인.</strong> 로드뷰 영상이 없거나 표지판이 보이지 않을 수 있으므로 촬영일과 주변 화면을 확인하세요. 밀집 구간은 확대하거나 아래 목록에서 선택하세요.</p>
+    <p className="signs-hint">번호는 경찰청 일람표의 대응 후보 또는 사용자 지정 매핑입니다. 지정 여부와 서울시 원본 코드는 표지판을 선택하면 확인할 수 있으며, 대응 미확인·도로 안내표지는 ?로 표시합니다. <strong>번호 클릭: 카카오 로드뷰 새 탭 열기 · 점 클릭: 원본 코드와 비고 확인.</strong> 로드뷰 영상이 없거나 표지판이 보이지 않을 수 있으므로 촬영일과 주변 화면을 확인하세요. 밀집 구간은 확대하거나 아래 목록에서 선택하세요.</p>
     {current && <div className="signs-detail"><label><span>표지판 선택 · 공식 관리번호</span><select value={selected?.id || ''} onChange={e => choose(e.target.value)}><option value="">{points.length ? '관리번호를 선택하세요' : '범위 내 공개자료 없음'}</option>{points.map(p => <option value={p.id} key={p.id}>{p.managementId} · {p.label} · {SOURCE_NAMES[p.source]}</option>)}</select></label>
-      <div aria-live="polite">{selected ? <><strong>{selected.policeCode ? `일람표 ${selected.policeCode} · 대응 후보` : '수동확인필요'} · 관리번호 {selected.managementId}</strong><p className="signs-source-remark"><b>비고</b> · {selected.sourceCodeRemark}</p><p>{selected.reason}</p><p>{SOURCE_NAMES[selected.source]} · 위도 {selected.lat} / 경도 {selected.lng}{selected.source === 'S' && ` · 규격코드 ${selected.specification || '수동확인필요'}`}</p>{selected.roadviewUrl && <a className="signs-roadview-link" href={selected.roadviewUrl} target="_blank" rel="noopener noreferrer">카카오 로드뷰 열기 ↗</a>}</> : <p>지도 위 점 또는 관리번호를 선택하면 서울시 원본 코드가 비고에 표시됩니다.</p>}</div></div>}
+      <div aria-live="polite">{selected ? <><strong>{selected.policeCode ? `일람표 ${selected.policeCode} · ${selected.mappingBasis === 'user' ? '사용자 지정' : '대응 후보'}` : '수동확인필요'} · 관리번호 {selected.managementId}</strong><p className="signs-source-remark"><b>비고</b> · {selected.sourceCodeRemark}</p><p>{selected.reason}</p><p>{SOURCE_NAMES[selected.source]} · 위도 {selected.lat} / 경도 {selected.lng}{selected.source === 'S' && ` · 규격코드 ${selected.specification || '수동확인필요'}`}</p>{selected.roadviewUrl && <a className="signs-roadview-link" href={selected.roadviewUrl} target="_blank" rel="noopener noreferrer">카카오 로드뷰 열기 ↗</a>}</> : <p>지도 위 점 또는 관리번호를 선택하면 서울시 원본 코드가 비고에 표시됩니다.</p>}</div></div>}
     <details className="signs-provenance signs-secondary-sources"><summary>보조 자료 확인</summary>
       <p><a href="https://www.data.go.kr/data/15028194/standard.do" target="_blank" rel="noopener noreferrer">전국도로안전표지 표준데이터 ↗</a> · 지역별 공개 안전표지 자료를 대조하는 참고 경로입니다. 서울 수록 범위와 개별 표지번호의 대응은 미확인입니다.</p>
       <p><a href="https://www.safetyzone.go.kr/mapPtl/ptl/mapMain.do" target="_blank" rel="noopener noreferrer">경찰청 보호구역 통합관리시스템 ↗</a> · 어린이·노인·장애인 보호구역 시설 현황 참고용입니다. 공개 안내의 API는 보호구역 지정 현황이며 개별 표지판 API는 확인되지 않았습니다.</p>

@@ -4,6 +4,46 @@ import { signScope, selectSigns, layoutSignLabels } from '../lib/trafficSigns.js
 import { loadSignSnapshot, querySeoulSigns } from '../lib/server/seoulSigns.js';
 import { classifySign, signRoadviewUrl } from '../lib/signClassification.js';
 import { POLICE_SIGN_CODES } from '../lib/policeSignCodes.js';
+import { SEOUL_SIGN_CODE_MAPPINGS } from '../lib/seoulSignCodeMappings.js';
+
+test('eight user-approved codes map regardless of remarks while retaining original records', () => {
+  const expected = {
+    '205-2': '205의2', '206-2': '206의2', '309-2': '309의2', '320-2': '320의2',
+    '320-3': '320의3', '320-4': '320의4', '321-2': '321의2', '415-2': '415의2',
+  };
+  assert.deepEqual(SEOUL_SIGN_CODE_MAPPINGS, expected);
+  for (const [code, target] of Object.entries(expected)) {
+    for (const remark of ['', '직진및유턴', '보행자주의', '소방차 출동시']) {
+      const point = { id: 'S:one', source: 'S', label: 'one', sourceIndex: code, lat: 37.48, lng: 127.03, remark };
+      const original = structuredClone(point);
+      const result = classifySign(point);
+      assert.equal(result.label, target);
+      assert.equal(result.policeCode, target);
+      assert.ok(POLICE_SIGN_CODES.includes(target));
+      assert.equal(result.mappingBasis, 'user');
+      assert.match(result.reason, /사용자 지정 매핑.*추가 확인/);
+      assert.equal(result.sourceIndex, code);
+      assert.ok(result.sourceCodeRemark.endsWith(code));
+      assert.equal(result.managementId, 'one');
+      assert.equal(result.color, '#2563eb');
+      assert.equal(result.roadviewUrl, 'https://map.kakao.com/link/roadview/37.48,127.03');
+      assert.deepEqual(point, original);
+      assert.equal(classifySign({ ...point, source: 'R' }).policeCode, null);
+    }
+  }
+});
+
+test('user mapping changes exactly 353 existing safety records and leaves other codes alone', async () => {
+  const { rows } = await loadSignSnapshot();
+  let mapped = 0;
+  for (const [id, lat, lng, sourceIndex] of rows) {
+    const source = id.slice(0, 1);
+    const result = classifySign({ id, source, label: id.slice(2), lat, lng, sourceIndex });
+    if (result.mappingBasis === 'user') mapped++;
+    else assert.equal(result.policeCode, source === 'S' && POLICE_SIGN_CODES.includes(sourceIndex) ? sourceIndex : null);
+  }
+  assert.equal(mapped, 353);
+});
 
 test('chart number equality never verifies meaning or invents codes for unknown/road signs', () => {
   const base = { id: 'S:one', source: 'S', label: 'one', lat: 37.48, lng: 127.03 };
@@ -14,7 +54,7 @@ test('chart number equality never verifies meaning or invents codes for unknown/
     assert.equal(result.color, '#2563eb');
     assert.equal(result.managementId, 'one');
   }
-  for (const code of ['220-1', '110-2', '751', '704', '513', '999', '']) {
+  for (const code of ['220-1', '110-2', '309-3', '415-3', '751', '704', '513', '999', '', 'toString', '__proto__']) {
     const result = classifySign({ ...base, sourceIndex: code });
     assert.equal(result.label, '?');
     assert.equal(result.policeCode, null);
