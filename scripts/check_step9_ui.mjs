@@ -62,14 +62,14 @@ try {
   await page.locator('.signs-overlay .signs-callout').first().waitFor();
   await page.waitForTimeout(2500);
   const mapInfo = await page.evaluate(() => ({ address: document.querySelector('.site-location-status').textContent, summary: document.querySelector('.signs-status').textContent, callouts: [...document.querySelectorAll('.signs-callout text')].map(n => n.textContent), mapImages: [...document.querySelectorAll('.signs-map img')].filter(n => n.complete && n.naturalWidth > 0).length }));
-  assert.ok(mapInfo.summary.includes('119건'));
+  assert.ok(mapInfo.summary.includes('118건'));
   assert.ok(mapInfo.mapImages > 5, 'Real Kakao map tiles loaded');
-  assert.ok(mapInfo.callouts.every(text => text === '?' || POLICE_SIGN_CODES.includes(text)), 'Only police sign chart candidates or unknown labels');
+  assert.ok(mapInfo.callouts.every(text => text === '?' || text.split(', ').every(code => POLICE_SIGN_CODES.includes(code))), 'Only police sign chart candidates or unknown labels');
   assert.ok(mapInfo.callouts.includes('?'));
   assert.ok(mapInfo.summary.includes('전체 추가 확인 필요'));
   assert.ok(await page.getByText('모든 자료는 추가 확인이 필요합니다.', { exact: true }).isVisible());
   assert.equal(await page.locator('.signs-dot[fill="#dc2626"]').count(), 0);
-  assert.equal(await page.locator('.signs-dot[fill="#2563eb"]').count(), 119);
+  assert.equal(await page.locator('.signs-dot[fill="#2563eb"]').count(), 118);
   const chart = page.locator('.police-chart');
   await page.waitForFunction(() => document.querySelector('.police-chart img')?.naturalWidth === 3136);
   assert.equal(await page.locator('.signs-map-legend caption').textContent(), '범례');
@@ -121,7 +121,7 @@ try {
   await page.getByRole('group', { name: '표지판 종류' }).getByRole('button', { name: /^도로표지/ }).click();
   await page.waitForFunction(() => document.querySelectorAll('.signs-dot').length === 11);
   await page.getByRole('group', { name: '표지판 종류' }).getByRole('button', { name: /^전체 표지판/ }).click();
-  await page.waitForFunction(() => document.querySelectorAll('.signs-dot').length === 119);
+  await page.waitForFunction(() => document.querySelectorAll('.signs-dot').length === 118);
   assert.equal(await page.locator('.signs-secondary-sources a').count(), 2);
   const requestCount = requests.length;
   await nav.getByRole('button').nth(5).click();
@@ -149,8 +149,8 @@ try {
   await page.setViewportSize({ width: 1800, height: 1600 });
   await page.getByLabel('가로 범위(m)', { exact: true }).fill('2300');
   await page.getByLabel('세로 범위(m)', { exact: true }).fill('3200');
-  await page.locator('.signs-status').filter({ hasText: '3,735건' }).waitFor();
-  await page.waitForFunction(() => document.querySelectorAll('.signs-dot').length === 3735);
+  await page.locator('.signs-status').filter({ hasText: '3,685건' }).waitFor();
+  await page.waitForFunction(() => document.querySelectorAll('.signs-dot').length === 3685);
   await page.waitForTimeout(2000);
   await page.screenshot({ path: `${output}/step9-seocho-default.png`, fullPage: true });
   assert.deepEqual(errors, []);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { signScope, selectSigns, layoutSignLabels } from '../lib/trafficSigns.js';
 import { loadSignSnapshot, querySeoulSigns } from '../lib/server/seoulSigns.js';
-import { classifySign, signRoadviewUrl } from '../lib/signClassification.js';
+import { classifySign, signRoadviewUrl, visibleSigns } from '../lib/signClassification.js';
 import { POLICE_SIGN_CODES } from '../lib/policeSignCodes.js';
 import { SEOUL_SIGN_CODE_MAPPINGS } from '../lib/seoulSignCodeMappings.js';
 
@@ -41,7 +41,7 @@ test('user mapping changes exactly 10213 existing safety records and leaves othe
   for (const [id, lat, lng, sourceIndex] of rows) {
     const source = id.slice(0, 1);
     const result = classifySign({ id, source, label: id.slice(2), lat, lng, sourceIndex });
-    if (result.mappingBasis === 'user') {
+    if (Object.hasOwn(SEOUL_SIGN_CODE_MAPPINGS, sourceIndex) && source === 'S') {
       mapped++;
       if (result.policeCode === '224') speedMapped++;
     }
@@ -86,18 +86,64 @@ test('roadview links use latitude then longitude and reject absent or invalid co
   for (const patch of [{ lat: null }, { lat: '' }, { lng: undefined }, { lng: ' ' }, { lat: Infinity }, { lng: 'javascript:bad' }, { lat: 91 }, { lng: 181 }]) assert.equal(signRoadviewUrl({ lat: 37.48, lng: 127.03, ...patch }), null);
 });
 
-test('Seocho example has 95 chart candidates, five user-mapped speed signs and 19 unknowns', async () => {
+test('Seocho display excludes 704 and maps the actual 751 remark without guessing composites', async () => {
   const result = await querySeoulSigns({ lat: 37.483625, lng: 127.032683, width: 500, height: 500 });
-  const classified = result.points.map(p => classifySign(p));
-  assert.equal(classified.length, 119);
+  assert.equal(result.points.length, 119);
+  const classified = visibleSigns(result.points);
+  assert.equal(classified.length, 118);
   assert.ok(classified.every(p => p.color === '#2563eb'));
   assert.ok(classified.every(p => p.sourceCodeRemark.includes(p.sourceIndex)));
   assert.equal(classified.filter(p => p.mappingBasis === 'code-match').length, 95);
   const mapped = classified.filter(p => p.mappingBasis === 'user');
-  assert.equal(mapped.length, 5);
-  assert.ok(mapped.every(p => p.sourceIndex === '220-1' && p.policeCode === '224' && p.label === '224'));
-  assert.equal(classified.filter(p => p.policeCode).length, 100);
-  assert.equal(classified.filter(p => p.label === '?').length, 19);
+  assert.equal(mapped.length, 6);
+  assert.equal(mapped.filter(p => p.sourceIndex === '220-1' && p.policeCode === '224').length, 5);
+  assert.equal(mapped.find(p => p.sourceIndex === '751').sourceRemark, '30/LED');
+  assert.equal(classified.filter(p => p.policeCode).length, 101);
+  assert.equal(classified.filter(p => p.label === '?').length, 17);
+});
+
+test('751 remark rules retain multi-code releases and ignore only LED installation notation', () => {
+  const base = { source: 'S', sourceIndex: '751', label: 'one', lat: 37.5, lng: 127 };
+  for (const [sourceRemark, codes] of [
+    ['30', ['224']], ['30/LED', ['224']], ['30 / LED', ['224']],
+    ['30 해제', ['224', '427']], ['30해제 / LED', ['224', '427']],
+    ['여기부터 속도를 줄이시오', ['415']], ['여기부터 속도를줄이시오 / LED', ['415']],
+    ['어린이보호구역 해제', ['324', '427']],
+  ]) {
+    const result = classifySign({ ...base, sourceRemark });
+    assert.deepEqual(result.policeCodes, codes);
+    assert.equal(result.label, codes.join(', '));
+    assert.equal(result.ignored, false);
+    assert.equal(result.sourceRemark, sourceRemark);
+    assert.equal(result.mappingBasis, 'user');
+  }
+  for (const sourceRemark of ['LED', ' led / ']) assert.equal(visibleSigns([{ ...base, sourceRemark }]).length, 0);
+  for (const sourceRemark of ['', '40', '우회전시', '어린이보호구역/30', '어린이보호구역해제/30해제', '30 주의']) {
+    const result = classifySign({ ...base, sourceRemark });
+    assert.equal(result.label, '?');
+    assert.equal(result.ignored, false);
+  }
+  assert.equal(classifySign({ ...base, source: 'R', sourceRemark: '30 해제' }).label, '?');
+});
+
+test('ignored source codes are removed from display only, not raw records or other sources', () => {
+  const points = ['704', '750', '232', '712-1', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex }));
+  const original = structuredClone(points);
+  assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), ['712-1', '751']);
+  assert.deepEqual(points, original);
+  assert.equal(visibleSigns(points.map(p => ({ ...p, source: 'R' }))).length, 5);
+});
+
+test('751 raw remark ingestion reconciles all records with exact mapping and exclusion totals', async () => {
+  const { rows } = await loadSignSnapshot();
+  const counts = {};
+  for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
+    if (id[0] !== 'S' || sourceIndex !== '751') continue;
+    const p = classifySign({ source: 'S', sourceIndex, sourceRemark, lat, lng });
+    const key = p.ignored ? 'ignored' : p.label;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  assert.deepEqual(counts, { '224': 3440, '415': 1505, '224, 427': 1027, '324, 427': 414, ignored: 640, '?': 14522 });
 });
 
 test('labels avoid reserved legend area without discarding any points', () => {
