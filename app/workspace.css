@@ -333,7 +333,12 @@ body:has(.research-workspace) { background: #f5f7fb; }
 .signs-map-legend th { color: #64748b; font-weight: 500; }
 .signs-map-legend th:first-child, .signs-map-legend td:first-child { text-align: center; width: 48px; }
 .signs-map-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
-.signs-confirmed { background: #2563eb; }.signs-unconfirmed { background: #dc2626; }
+.signs-location { background: #2563eb; }
+.signs-review-notice { margin: 0 24px 16px; padding: 12px 14px; background: #f0f5fc; border-left: 3px solid #2563eb; color: #40546a; font-size: 12px; line-height: 1.8; }
+.signs-review-notice strong { display: block; color: #234a83; }
+.signs-callout:focus-visible rect { stroke: #172b46; stroke-width: 3px; }
+.signs-source-remark { background: #f0f5fc; padding: 6px 9px; margin-top: 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.signs-roadview-link { display: inline-block; margin-top: 8px; color: #2458a3; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .signs-map-legend .signs-site { background: #172b46; border-radius: 0; transform: rotate(45deg); }
 .signs-map-legend .signs-boundary { width: 22px; height: 0; border-radius: 0; border-top: 2px dashed #2563eb; vertical-align: middle; }
 .police-chart { display: flex; flex-direction: column; height: clamp(620px, 68vh, 900px); min-width: 0; border-left: 1px solid #dbe4ee; background: #f8fafd; }
@@ -364,6 +369,7 @@ body:has(.research-workspace) { background: #f5f7fb; }
   .signs-heading { padding: 18px 14px; align-items: flex-start; }
   .signs-region { display: none; }
   .signs-toolbar { padding: 0 14px 12px; }
+  .signs-review-notice { margin-inline: 14px; }
   .signs-status, .signs-hint, .signs-provenance { padding-inline: 14px; }
   .signs-detail { grid-template-columns: minmax(0, 1fr); padding-inline: 14px; gap: 12px; }
   .signs-map-frame { height: 580px; }

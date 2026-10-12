@@ -66,9 +66,10 @@ try {
   assert.ok(mapInfo.mapImages > 5, 'Real Kakao map tiles loaded');
   assert.ok(mapInfo.callouts.every(text => text === '?' || POLICE_SIGN_CODES.includes(text)), 'Only police sign chart candidates or unknown labels');
   assert.ok(mapInfo.callouts.includes('?'));
-  assert.ok(mapInfo.summary.includes('의미 확인 0건 / 추가 확인 119건'));
-  assert.equal(await page.locator('.signs-dot[fill="#dc2626"]').count(), 119);
-  assert.equal(await page.locator('.signs-dot[fill="#2563eb"]').count(), 0);
+  assert.ok(mapInfo.summary.includes('전체 추가 확인 필요'));
+  assert.ok(await page.getByText('모든 자료는 추가 확인이 필요합니다.', { exact: true }).isVisible());
+  assert.equal(await page.locator('.signs-dot[fill="#dc2626"]').count(), 0);
+  assert.equal(await page.locator('.signs-dot[fill="#2563eb"]').count(), 119);
   const chart = page.locator('.police-chart');
   await page.waitForFunction(() => document.querySelector('.police-chart img')?.naturalWidth === 3136);
   assert.equal(await page.locator('.signs-map-legend caption').textContent(), '범례');
@@ -91,16 +92,37 @@ try {
   await page.getByRole('heading', { name: '교통 표지판 위치도', exact: true }).click();
   await waitForMapImages();
   await page.waitForTimeout(700);
-  await page.screenshot({ path: `${output}/step9-seocho-500m.png` });
-  await page.locator('.signs-callout').first().click();
+  // Validate the outbound link and popup with a controlled landing page. This
+  // tests coordinate delivery, not Kakao imagery availability or capture dates.
+  let roadviewRequest;
+  await context.route('https://map.kakao.com/link/roadview/**', async route => {
+    roadviewRequest = route.request().url();
+    await route.fulfill({ status: 200, contentType: 'text/html', body: '<title>Roadview link test</title>' });
+  });
+  const firstLink = page.locator('.signs-callout').first();
+  const expectedRoadview = await firstLink.getAttribute('href');
+  const popupEvent = page.waitForEvent('popup');
+  await firstLink.click();
+  const popup = await popupEvent;
+  await popup.waitForLoadState('domcontentloaded');
+  assert.equal(roadviewRequest, expectedRoadview);
+  assert.equal(popup.url(), expectedRoadview);
+  await popup.close();
+  const selectionId = await page.locator('.signs-detail select').inputValue();
+  const point = await local.get(base + '/api/seoul-signs?lat=37.483625&lng=127.032683&width=500&height=500').then(r => r.json()).then(r => r.points.find(p => p.id === selectionId));
+  assert.equal(expectedRoadview, `https://map.kakao.com/link/roadview/${point.lat},${point.lng}`);
+  assert.ok((await page.locator('.signs-source-remark').textContent()).includes(point.sourceIndex));
+  assert.equal(await page.locator('.signs-roadview-link').getAttribute('href'), expectedRoadview);
+  await page.screenshot({ path: `${output}/step9-seocho-500m.png`, fullPage: true });
   assert.ok(await page.locator('.signs-detail strong').textContent());
-  assert.equal(await page.locator('.signs-dot[r="7"]').getAttribute('fill'), '#dc2626', 'Selection preserves verification color');
+  assert.equal(await page.locator('.signs-dot[r="7"]').getAttribute('fill'), '#2563eb', 'Selection preserves unified color');
   await page.locator('.signs-detail select').selectOption({ label: await page.locator('.signs-detail option').filter({ hasText: ' · ? · ' }).first().textContent() });
   assert.ok((await page.locator('.signs-detail strong').textContent()).includes('수동확인필요'));
   await page.getByRole('group', { name: '표지판 종류' }).getByRole('button', { name: /^도로표지/ }).click();
   await page.waitForFunction(() => document.querySelectorAll('.signs-dot').length === 11);
   await page.getByRole('group', { name: '표지판 종류' }).getByRole('button', { name: /^전체 표지판/ }).click();
   await page.waitForFunction(() => document.querySelectorAll('.signs-dot').length === 119);
+  assert.equal(await page.locator('.signs-secondary-sources a').count(), 2);
   const requestCount = requests.length;
   await nav.getByRole('button').nth(5).click();
   assert.equal(await signs.isVisible(), false);
