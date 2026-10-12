@@ -6,14 +6,16 @@ import { classifySign, signRoadviewUrl } from '../lib/signClassification.js';
 import { POLICE_SIGN_CODES } from '../lib/policeSignCodes.js';
 import { SEOUL_SIGN_CODE_MAPPINGS } from '../lib/seoulSignCodeMappings.js';
 
-test('eight user-approved codes map regardless of remarks while retaining original records', () => {
+test('sixteen user-approved codes map regardless of remarks while retaining original records', () => {
   const expected = {
     '205-2': '205의2', '206-2': '206의2', '309-2': '309의2', '320-2': '320의2',
     '320-3': '320의3', '320-4': '320의4', '321-2': '321의2', '415-2': '415의2',
+    '220-1': '224', '220-2': '224', '220-3': '224', '220-4': '224',
+    '220-5': '224', '220-6': '224', '220-7': '224', '220-8': '224',
   };
   assert.deepEqual(SEOUL_SIGN_CODE_MAPPINGS, expected);
   for (const [code, target] of Object.entries(expected)) {
-    for (const remark of ['', '직진및유턴', '보행자주의', '소방차 출동시']) {
+    for (const remark of ['', '30', '40', '직진및유턴', '보행자주의', '소방차 출동시']) {
       const point = { id: 'S:one', source: 'S', label: 'one', sourceIndex: code, lat: 37.48, lng: 127.03, remark };
       const original = structuredClone(point);
       const result = classifySign(point);
@@ -33,16 +35,20 @@ test('eight user-approved codes map regardless of remarks while retaining origin
   }
 });
 
-test('user mapping changes exactly 353 existing safety records and leaves other codes alone', async () => {
+test('user mapping changes exactly 10213 existing safety records and leaves other codes alone', async () => {
   const { rows } = await loadSignSnapshot();
-  let mapped = 0;
+  let mapped = 0, speedMapped = 0;
   for (const [id, lat, lng, sourceIndex] of rows) {
     const source = id.slice(0, 1);
     const result = classifySign({ id, source, label: id.slice(2), lat, lng, sourceIndex });
-    if (result.mappingBasis === 'user') mapped++;
+    if (result.mappingBasis === 'user') {
+      mapped++;
+      if (result.policeCode === '224') speedMapped++;
+    }
     else assert.equal(result.policeCode, source === 'S' && POLICE_SIGN_CODES.includes(sourceIndex) ? sourceIndex : null);
   }
-  assert.equal(mapped, 353);
+  assert.equal(mapped, 10213);
+  assert.equal(speedMapped, 9860);
 });
 
 test('chart number equality never verifies meaning or invents codes for unknown/road signs', () => {
@@ -54,7 +60,7 @@ test('chart number equality never verifies meaning or invents codes for unknown/
     assert.equal(result.color, '#2563eb');
     assert.equal(result.managementId, 'one');
   }
-  for (const code of ['220-1', '110-2', '309-3', '415-3', '751', '704', '513', '999', '', 'toString', '__proto__']) {
+  for (const code of ['220-0', '220-9', '220-10', '110-2', '309-3', '415-3', '751', '704', '513', '999', '', 'toString', '__proto__']) {
     const result = classifySign({ ...base, sourceIndex: code });
     assert.equal(result.label, '?');
     assert.equal(result.policeCode, null);
@@ -80,14 +86,18 @@ test('roadview links use latitude then longitude and reject absent or invalid co
   for (const patch of [{ lat: null }, { lat: '' }, { lng: undefined }, { lng: ' ' }, { lat: Infinity }, { lng: 'javascript:bad' }, { lat: 91 }, { lng: 181 }]) assert.equal(signRoadviewUrl({ lat: 37.48, lng: 127.03, ...patch }), null);
 });
 
-test('Seocho example remains 119 unverified points, with 95 chart candidates and 24 unknowns', async () => {
+test('Seocho example has 95 chart candidates, five user-mapped speed signs and 19 unknowns', async () => {
   const result = await querySeoulSigns({ lat: 37.483625, lng: 127.032683, width: 500, height: 500 });
   const classified = result.points.map(p => classifySign(p));
   assert.equal(classified.length, 119);
   assert.ok(classified.every(p => p.color === '#2563eb'));
   assert.ok(classified.every(p => p.sourceCodeRemark.includes(p.sourceIndex)));
-  assert.equal(classified.filter(p => p.policeCode).length, 95);
-  assert.equal(classified.filter(p => p.label === '?').length, 24);
+  assert.equal(classified.filter(p => p.mappingBasis === 'code-match').length, 95);
+  const mapped = classified.filter(p => p.mappingBasis === 'user');
+  assert.equal(mapped.length, 5);
+  assert.ok(mapped.every(p => p.sourceIndex === '220-1' && p.policeCode === '224' && p.label === '224'));
+  assert.equal(classified.filter(p => p.policeCode).length, 100);
+  assert.equal(classified.filter(p => p.label === '?').length, 19);
 });
 
 test('labels avoid reserved legend area without discarding any points', () => {
