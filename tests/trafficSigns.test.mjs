@@ -87,16 +87,16 @@ test('513 maps only the two approved full phrases after whitespace normalization
   assert.equal(classifySign({ source: 'R', sourceIndex: '513', sourceRemark: '속도를 줄이시오' }).label, '?');
 });
 
-test('new 514 and 513 rules cover 540 snapshot records and keep other 513 remarks unknown', async () => {
+test('514 and 513 keep their mapped records while unmatched 513 records are hidden', async () => {
   const { rows } = await loadSignSnapshot();
   const counts = {};
   for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
     if (id[0] !== 'S' || !(sourceIndex.startsWith('514') || sourceIndex === '513')) continue;
     const result = classifySign({ source: 'S', sourceIndex, sourceRemark, lat, lng });
-    const key = `${sourceIndex === '513' ? '513' : '514'}:${result.label}`;
+    const key = `${sourceIndex === '513' ? '513' : '514'}:${result.ignored ? 'ignored' : result.label}`;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, { '514:417': 261, '514:418': 211, '514:419': 60, '513:407의4': 4, '513:415': 4, '513:?': 89 });
+  assert.deepEqual(counts, { '514:417': 261, '514:418': 211, '514:419': 60, '513:407의4': 4, '513:415': 4, '513:ignored': 89 });
 });
 
 test('chart number equality never verifies meaning or invents codes for unknown/road signs', () => {
@@ -184,7 +184,7 @@ test('ignored source codes are removed from display only, not raw records or oth
   assert.deepEqual(points, original);
   assert.equal(visibleSigns(points.map(p => ({ ...p, source: 'R' }))).length, points.length);
   for (const sourceIndex of ['540-1', '543-1', '532-1', '534-1', '559-1']) {
-    assert.equal(classifySign({ source: 'S', sourceIndex, sourceRemark: '보행신호시' }).ignored, false);
+    assert.equal(classifySign({ source: 'S', sourceIndex, sourceRemark: '보행신호시' }).ignored, true);
   }
 });
 
@@ -241,9 +241,9 @@ test('distance types cover 202 records and 526 uses text while exclusions retain
     const key = `${sourceIndex}:${result.ignored ? 'ignored' : result.label}`;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, { '526:일방': 165, '521:401': 8, '521:402': 4, '521:422': 5, '521:425': 86, '521:?': 95,
-    '538:401': 3, '538:420': 1, '538:421': 1, '538:422': 36, '538:425': 40, '538:?': 10,
-    '563:401': 1, '563:420': 1, '563:422': 16, '563:?': 5,
+  assert.deepEqual(counts, { '526:일방': 165, '521:401': 8, '521:402': 4, '521:422': 5, '521:425': 86, '521:ignored': 95,
+    '538:401': 3, '538:420': 1, '538:421': 1, '538:422': 36, '538:425': 40, '538:ignored': 10,
+    '563:401': 1, '563:420': 1, '563:422': 16, '563:ignored': 5,
     '540:ignored': 25, '543:ignored': 5, '532:ignored': 35, '534:ignored': 8, '559:ignored': 41 });
 });
 
@@ -257,6 +257,33 @@ test('751 raw remark ingestion reconciles all records with exact mapping and exc
     counts[key] = (counts[key] || 0) + 1;
   }
   assert.deepEqual(counts, { '224': 3787, '415': 1505, '224, 427': 1446, '324, 427': 414, ignored: 9223, '?': 5173 });
+});
+
+test('non-751 unmatched safety signs are hidden without dropping mappings, labels or road signs', async () => {
+  const { rows } = await loadSignSnapshot();
+  const counts = {};
+  for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
+    const point = { id, label: id.slice(2), source: id[0], lat, lng, sourceIndex, sourceRemark };
+    const result = classifySign(point);
+    const state = result.ignored ? 'excluded' : result.displayOnly ? 'text' : result.policeCode ? result.mappingBasis : 'unmapped';
+    const key = `${point.source}:${state}`;
+    counts[key] = (counts[key] || 0) + 1;
+    if (point.source === 'S' && state === 'unmapped') assert.equal(sourceIndex, '751');
+    assert.equal(result.sourceRemark, sourceRemark);
+    assert.equal(result.managementId, point.label);
+  }
+  assert.deepEqual(counts, { 'S:user': 18107, 'S:code-match': 182707, 'S:text': 165,
+    'S:excluded': 13935, 'S:unmapped': 5173, 'R:unmapped': 12008 });
+  const points = [
+    { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
+    { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },
+    { source: 'S', sourceIndex: '526', sourceRemark: '' },
+    { source: 'S', sourceIndex: '751', sourceRemark: '30/여기부터 속도를 줄이시오' },
+    { source: 'R', sourceIndex: '513', sourceRemark: '' },
+  ];
+  const original = structuredClone(points);
+  assert.deepEqual(visibleSigns(points).map(p => p.label), ['415', '일방', '?', '?']);
+  assert.deepEqual(points, original);
 });
 
 test('labels avoid reserved legend area without discarding any points', () => {
