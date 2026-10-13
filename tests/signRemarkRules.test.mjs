@@ -82,3 +82,45 @@ test('separators, unrelated numeric units and unknown compound fragments cannot 
     assert.equal(result.ignored, false, raw);
   }
 });
+
+test('approved bicycle types use full phrases without guessing caution or crosswalk shapes', () => {
+  for (const [remark, expected] of [
+    ['자전거 전용도로', ['302']], ['자전거전용도로 해제', ['302', '427']],
+    ['자전거·보행자 겸용도로', ['303']], ['자전거및보행자겸용도로', ['303']],
+    ['자전거보행자겸용도로 해제', ['303', '427']], ['자전거및보행자전용도로 해제', ['303', '427']],
+    ['연서로 자전거 전용차로', ['318']], ['연세로 자전거 전용차로', ['318']],
+  ]) assert.deepEqual(codes(remark), expected, remark);
+  for (const remark of ['자전거주의', '횡단보도', '자전거전용', '자전거전용 해제',
+    '자전거전용도로해재', '자전거전용도로 / 연서로 이곳에서 1.8km',
+    '자전거통합표지(겸용도로해제)', '원동기장치자전거통행금지', '자전거전용도로 아님']) {
+    assert.equal(classifySign(point(remark)).label, '?', remark);
+    assert.equal(classifySign(point(remark)).ignored, false, remark);
+  }
+});
+
+test('photo decisions apply only to the reviewed record and preserve evidence and raw data', () => {
+  const reviewed = [
+    { id: 'S:04-0000386810', sourceRemark: '자전거주의', lat: 37.4983714, lng: 127.1255598, expected: [], ignored: true },
+    { id: 'S:04-0000386695', sourceRemark: '횡단보도', lat: 37.4555957, lng: 127.0637639, expected: ['132'] },
+    { id: 'S:04-0000318429', sourceRemark: '좌로굽은도로', lat: 37.4679511, lng: 126.9468186, expected: ['112'] },
+    { id: 'S:04-0000359126', sourceRemark: '우로굽은길', lat: 37.4697156, lng: 126.9518899, expected: ['111'] },
+  ];
+  for (const { expected, ignored = false, ...record } of reviewed) {
+    const p = { ...point(record.sourceRemark), ...record }, before = structuredClone(p);
+    const result = classifySign(p);
+    assert.deepEqual(result.policeCodes, expected);
+    assert.equal(result.ignored, ignored);
+    assert.match(result.reason, /로드뷰 2026-/);
+    assert.equal(result.color, '#2563eb');
+    assert.deepEqual(p, before);
+    result.policeCodes.push('999');
+    assert.deepEqual(classifySign(p).policeCodes, expected);
+    for (const change of [{ id: 'S:other' }, { sourceRemark: record.sourceRemark + ' 변경' },
+      { lat: record.lat + 0.001 }, { lng: record.lng + 0.001 }, { lat: undefined }, { source: 'R' }]) {
+      const other = classifySign({ ...p, ...change });
+      assert.deepEqual(other.policeCodes, []);
+      assert.equal(other.ignored, false);
+    }
+    assert.equal(classifySign({ ...p, sourceIndex: '134' }).policeCode, '134');
+  }
+});

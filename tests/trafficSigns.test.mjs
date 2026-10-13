@@ -258,11 +258,11 @@ test('751 raw remark ingestion reconciles all records with exact mapping and exc
   const counts = {};
   for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
     if (id[0] !== 'S' || sourceIndex !== '751') continue;
-    const p = classifySign({ source: 'S', sourceIndex, sourceRemark, lat, lng });
+    const p = classifySign({ id, label: id.slice(2), source: 'S', sourceIndex, sourceRemark, lat, lng });
     const key = p.ignored ? 'ignored' : p.label;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, {"220": 113, "221": 22, "224": 3892, "323": 40, "324": 69, "401": 161, "402": 8, "415": 1564, "220, 221": 412, "ignored": 10063, "?": 1808, "224, 415": 696, "418, 415": 262, "324, 224, 427": 6, "224, 427": 1446, "415, 420": 59, "224, 418, 415": 32, "324, 427": 483, "324, 224": 160, "323, 427": 42, "323, 415": 14, "323, 224": 22, "일방": 47, "224, 415, 420": 46, "324, 224, 415": 6, "418, 415, 420": 13, "224, 420": 3, "415, 421": 11, "224, 415, 421": 8, "324, 420": 1, "323, 418, 415": 3, "324, 415": 19, "324, 402": 1, "324, 415, 420": 5, "323, 224, 427": 1, "324, 224, 415, 420": 3, "418, 415, 421": 1, "224, 418, 415, 420": 2, "224, 418, 415, 421": 1, "323, 224, 415": 2, "324, 418, 415, 421": 1});
+  assert.deepEqual(counts, {"111": 1, "112": 1, "132": 1, "220": 113, "221": 22, "224": 3892, "302": 4, "318": 27, "323": 40, "324": 69, "401": 161, "402": 8, "415": 1564, "220, 221": 412, "ignored": 10064, "?": 1743, "224, 415": 696, "418, 415": 262, "324, 224, 427": 6, "224, 427": 1446, "415, 420": 59, "224, 418, 415": 32, "324, 427": 483, "324, 224": 160, "323, 427": 42, "323, 415": 14, "323, 224": 22, "일방": 47, "224, 415, 420": 46, "324, 224, 415": 6, "418, 415, 420": 13, "224, 420": 3, "415, 421": 11, "224, 415, 421": 8, "324, 420": 1, "323, 418, 415": 3, "302, 427": 28, "324, 415": 19, "303, 427": 2, "324, 402": 1, "324, 415, 420": 5, "323, 224, 427": 1, "324, 224, 415, 420": 3, "418, 415, 421": 1, "224, 418, 415, 420": 2, "224, 418, 415, 421": 1, "323, 224, 415": 2, "324, 418, 415, 421": 1});
 });
 
 test('non-751 unmatched safety signs are hidden without dropping mappings, labels or road signs', async () => {
@@ -278,7 +278,7 @@ test('non-751 unmatched safety signs are hidden without dropping mappings, label
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.managementId, point.label);
   }
-  assert.deepEqual(counts, {"S:user": 20585, "S:code-match": 182707, "R:unmapped": 12008, "S:excluded": 14775, "S:unmapped": 1808, "S:text": 212});
+  assert.deepEqual(counts, {"S:user": 20649, "S:code-match": 182707, "R:unmapped": 12008, "S:excluded": 14776, "S:unmapped": 1743, "S:text": 212});
   const points = [
     { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
     { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },
