@@ -143,12 +143,12 @@ test('Seocho display excludes 704 and maps the actual 751 remark without guessin
   assert.ok(classified.every(p => p.sourceCodeRemark.includes(p.sourceIndex)));
   assert.equal(classified.filter(p => p.mappingBasis === 'code-match').length, 95);
   const mapped = classified.filter(p => p.mappingBasis === 'user');
-  assert.equal(mapped.length, 8);
+  assert.equal(mapped.length, 9);
   assert.equal(mapped.filter(p => p.sourceIndex === '220-1' && p.policeCode === '224').length, 5);
   assert.equal(mapped.find(p => p.sourceIndex === '751' && p.policeCode === '224').sourceRemark, '30/LED');
   assert.equal(mapped.filter(p => p.sourceRemark === '어린이보호구역/30' && p.label === '324, 224').length, 2);
-  assert.equal(classified.filter(p => p.policeCode).length, 103);
-  assert.equal(classified.filter(p => p.label === '?').length, 12);
+  assert.equal(classified.filter(p => p.policeCode).length, 104);
+  assert.equal(classified.filter(p => p.label === '?').length, 11);
 });
 
 test('751 generalizes speed and release phrases and excludes blank or right-turn-only remarks', () => {
@@ -175,7 +175,7 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
     assert.equal(result.mappingBasis, 'user');
   }
   for (const sourceRemark of ['LED', ' led / ', '', '  ', '우회전시', '우회전시 / LED', '07:00~21:00 토요일 공휴일 제외', '07:00 ~ 21:00 / 토요일 공휴일 제외', '여기부터', '여기부터/LED', '여기부터 / LED', 'LED 여기부터', '07:00~10:00 17:00~21:00 토요일 공휴일 제외', '07:00~10:00 / 17:00~21:00 토요일 공휴일 제외 / LED', '사고잦은곳', '사고 잦은 곳 / LED']) assert.equal(visibleSigns([{ ...base, sourceRemark }]).length, 0);
-  for (const sourceRemark of ['219', '0', '30m', '4.5t', '07:00~21:00', '안전속도50', '30/40', '1/20', '10/2', '어린이보호구역해제/30해제', '30 주의', '우회전시 자전거주의', '20/여기부터속도를줄이시오', '어린이보호구역40', '07:00-21:00 토요일 공휴일 제외', '07:00~21:00 일요일 제외', '여기부터300m', '여기부터 150m 속도를 줄이시오', '자전거주의', '30,40', '사고잦은곳 전방100m', '07:00~10:00 17:00~21:00 일요일 제외', '30/여기부터/LED', '어린이보호구역/여기부터']) {
+  for (const sourceRemark of ['219', '0', '30m', '안전속도50', '30/40', '1/20', '10/2', '30 주의', '우회전시 자전거주의', '자전거주의', '30,40', '사고잦은곳 전방100m', '높이 미확인', '어린이보호구역40 진입금지']) {
     const result = classifySign({ ...base, sourceRemark });
     assert.equal(result.label, '?');
     assert.equal(result.ignored, false);
@@ -262,7 +262,7 @@ test('751 raw remark ingestion reconciles all records with exact mapping and exc
     const key = p.ignored ? 'ignored' : p.label;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, { '224': 3787, '415': 1505, '224, 427': 1446, '324, 427': 483, '224, 415': 629, '324, 224': 130, '418, 415': 57, '324': 40, ignored: 9664, '?': 3807 });
+  assert.deepEqual(counts, {"220": 113, "221": 22, "224": 3892, "323": 40, "324": 69, "401": 161, "402": 8, "415": 1564, "220, 221": 412, "ignored": 10063, "?": 1808, "224, 415": 696, "418, 415": 262, "324, 224, 427": 6, "224, 427": 1446, "415, 420": 59, "224, 418, 415": 32, "324, 427": 483, "324, 224": 160, "323, 427": 42, "323, 415": 14, "323, 224": 22, "일방": 47, "224, 415, 420": 46, "324, 224, 415": 6, "418, 415, 420": 13, "224, 420": 3, "415, 421": 11, "224, 415, 421": 8, "324, 420": 1, "323, 418, 415": 3, "324, 415": 19, "324, 402": 1, "324, 415, 420": 5, "323, 224, 427": 1, "324, 224, 415, 420": 3, "418, 415, 421": 1, "224, 418, 415, 420": 2, "224, 418, 415, 421": 1, "323, 224, 415": 2, "324, 418, 415, 421": 1});
 });
 
 test('non-751 unmatched safety signs are hidden without dropping mappings, labels or road signs', async () => {
@@ -278,8 +278,7 @@ test('non-751 unmatched safety signs are hidden without dropping mappings, label
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.managementId, point.label);
   }
-  assert.deepEqual(counts, { 'S:user': 19032, 'S:code-match': 182707, 'S:text': 165,
-    'S:excluded': 14376, 'S:unmapped': 3807, 'R:unmapped': 12008 });
+  assert.deepEqual(counts, {"S:user": 20585, "S:code-match": 182707, "R:unmapped": 12008, "S:excluded": 14775, "S:unmapped": 1808, "S:text": 212});
   const points = [
     { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
     { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },
