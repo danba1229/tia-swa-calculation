@@ -175,12 +175,12 @@ test('751 remark rules retain multi-code releases and ignore only LED installati
 });
 
 test('ignored source codes are removed from display only, not raw records or other sources', () => {
-  const points = ['704', '750', '232', '712-1', '540', '543', '532', '534', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex }));
+  const points = ['704', '750', '232', '712-1', '540', '543', '532', '534', '559', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex }));
   const original = structuredClone(points);
   assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), ['751']);
   assert.deepEqual(points, original);
   assert.equal(visibleSigns(points.map(p => ({ ...p, source: 'R' }))).length, points.length);
-  for (const sourceIndex of ['540-1', '543-1', '532-1', '534-1', '559']) {
+  for (const sourceIndex of ['540-1', '543-1', '532-1', '534-1', '559-1']) {
     assert.equal(classifySign({ source: 'S', sourceIndex, sourceRemark: '보행신호시' }).ignored, false);
   }
 });
@@ -222,7 +222,7 @@ test('distance mappings require full section or arrow phrases, not numeric or mi
   assert.equal(classifySign({ source: 'S', sourceIndex: '559', sourceRemark: '보행신호시' }).policeCode, null);
 });
 
-test('conditional mappings cover eleven records; exact exclusions hide 73 and preserve 559', async () => {
+test('conditional mappings cover eleven records; exact exclusions hide 114 including 559', async () => {
   const { rows } = await loadSignSnapshot();
   const counts = {};
   for (const [id, , , sourceIndex, , , sourceRemark] of rows) {
@@ -233,7 +233,7 @@ test('conditional mappings cover eleven records; exact exclusions hide 73 and pr
   }
   assert.deepEqual(counts, { '526:?': 165, '521:401': 6, '521:402': 1, '521:?': 191,
     '538:401': 3, '538:?': 88, '563:401': 1, '563:?': 22,
-    '540:ignored': 25, '543:ignored': 5, '532:ignored': 35, '534:ignored': 8, '559:?': 41 });
+    '540:ignored': 25, '543:ignored': 5, '532:ignored': 35, '534:ignored': 8, '559:ignored': 41 });
 });
 
 test('751 raw remark ingestion reconciles all records with exact mapping and exclusion totals', async () => {
