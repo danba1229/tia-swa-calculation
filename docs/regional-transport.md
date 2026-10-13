@@ -134,3 +134,32 @@ Official references:
 - https://www.data.go.kr/data/15098554/openapi.do
 - https://t-data.seoul.go.kr/dataprovide/trafficdataviewopenapi.do?data_id=1053
 - https://data.seoul.go.kr/dataList/OA-101/A/1/datasetView.do
+
+## Bus route summary table — 2026-10-13
+
+The screen, clipboard and CSV now use **버스노선표** with nine columns:
+버스 종류 / 버스번호 / 노선 기점 / 노선 종점 / 첫차 / 막차 /
+배차간격(일반) / 배차간격(토요일) / 배차간격(공휴일).
+This presentation supersedes the wider table described above; raw endpoint,
+Sunday and weekday fields remain available in saved data and enrichment logic.
+
+- First/last are origin departure times only, formatted as clock times without
+  calendar dates. Intermediate-stop or terminal times never fill missing origins.
+- Seoul general intervals retain their existing source precedence. The header
+  says general is **presumed weekday**, as requested, with the explicit caveat
+  that Seoul does not document the applicable day. GBIS weekday values populate
+  the same general column; its weekday definition is documented, not inferred.
+- The same route ID appearing at several stops produces one row, sorted by bus
+  number with numeric collation (2, 10, 100). Missing cells may be filled from
+  another occurrence of that same route. Different IDs with equal display
+  numbers remain distinct. Legacy records without IDs require equal number,
+  type and endpoints to deduplicate. Source stop/route arrays are not mutated.
+- Stops without routes do not create fictional all-missing route rows. Their
+  missing-data explanations remain beside the table and in export notes.
+- The separate bus stop table remains; the stop-name column is removed from
+  the route summary. Exported route rows and header notes match the screen.
+
+Validation: `npm run build` (ESLint, 284 tests, Next.js production build), and
+`node scripts/check_transport_tables.mjs http://127.0.0.1:3017` for isolated
+fixture-based browser checks of deduplication, natural ordering, nine columns,
+header explanations, CSV/clipboard parity and responsive layout.

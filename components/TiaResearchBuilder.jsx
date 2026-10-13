@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import seoulTopisPoints from "../app/seoul-topis-points.json";
-import { BUS_ROUTE_COLUMNS, createBusRouteTableRows, createBusStopTableRows } from "../lib/seoulBusTable";
+import { BUS_ROUTE_COLUMNS, BUS_ROUTE_NOTE, createBusRouteTableRows, createBusStopTableRows } from "../lib/seoulBusTable";
 import { nullableArea, areaStats, createRequestGate, validSurveyCenter } from "../lib/researchIntegrity";
 import { summarizeProjects } from "../lib/tiaScope";
 import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../lib/busMapOverlays";
@@ -1433,7 +1433,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ["버스 자료출처", publicTransportResult.busSource, "자료 기준일", publicTransportResult.busSourceDate],
       ...busStopTableRows(busStops),
       [],
-      ["정류장별 경유 버스노선"],
+      ["버스노선표"],
+      ["안내", BUS_ROUTE_NOTE],
       ...busRouteTableRows(busStops),
       [], ["지하철역 · 운행일/행선지별 시간표"], ["자료출처", publicTransportResult.subwaySource || "국토교통부 TAGO"],
       ...createSubwayRows(publicTransportResult.subwayStations || []),

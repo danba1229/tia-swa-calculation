@@ -1291,7 +1291,7 @@ button.mini-button {
 .transport-missing-note { display: block; margin-top: 6px; color: #80551d; line-height: 1.6; overflow-wrap: anywhere; }
 
 .bus-route-table {
-  min-width: 1280px;
+  min-width: 920px;
 }
 
 .future-transport-grid {

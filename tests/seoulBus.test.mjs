@@ -150,7 +150,7 @@ test("station route failure is explicit rather than a fabricated count of zero",
     assert.equal(result.summary.failedStationRoutes, 2);
     assert.equal(result.summary.partial, true);
     assert.match(result.stations[0].routeError, /응답 오류/);
-    assert.ok(createBusRouteTableRows(result.stations)[1].slice(1).every(value => value === "수동확인필요"));
+    assert.equal(createBusRouteTableRows(result.stations).length, 1);
   }, (url) => url.pathname.endsWith("/getRouteByStation") ? new Response(xml([], "4")) : undefined);
 });
 
@@ -188,11 +188,12 @@ test("missing key fails without sending any request", async () => {
 
 test("UI/CSV have identical row widths and never reuse old inferred weekday times", () => {
   const rows = createBusRouteTableRows([{ stationName: "legacy", routes: [{ routeName: "123", firstBusTime: "05:00", weekdayInterval: "12분" }] }, { stationName: "failed", routeError: "조회 실패" }]);
-  assert.equal(BUS_ROUTE_COLUMNS.length, 15);
+  assert.equal(BUS_ROUTE_COLUMNS.length, 9);
   assert.ok(rows.every((row) => row.length === BUS_ROUTE_COLUMNS.length));
   assert.equal(rows[1][3], "수동확인필요");
-  assert.equal(rows[1][10], "수동확인필요");
-  assert.ok(rows[2].slice(1).every(value => value === "수동확인필요"));
+  assert.equal(rows[1][6], "수동확인필요");
+  assert.equal(rows.length, 2);
+  assert.equal(rows[1][4], "수동확인필요");
   assert.ok(!BUS_ROUTE_COLUMNS.includes("조회 상태"));
 });
 
@@ -202,7 +203,7 @@ test("table uses endpoint times only and never substitutes intermediate stop tim
     { originFirstBusTime: "04:00", originLastBusTime: "23:00" },
   ] }]);
   assert.deepEqual(rows[1].slice(4, 6), ["04:00", "23:00"]);
-  rows[2].slice(7, 9).forEach(value => assert.equal(value, "수동확인필요"));
+  rows[2].slice(6, 9).forEach(value => assert.equal(value, "수동확인필요"));
   assert.ok(!JSON.stringify(rows).includes("05:10"));
   assert.ok(!JSON.stringify(rows).includes("25:10"));
   assert.ok(!JSON.stringify(rows).includes("internal error"));
@@ -314,9 +315,9 @@ test("actual component CSV/clipboard serializers retain row shape and escape spe
   assert.equal(csv([['A,"B"', "한글\n표", "00123"]]), '"A,""B""","한글\n표",00123');
   assert.equal(clipboard([["A\tB", "한글\n표", "00123"]]), "A B\t한글 표\t00123");
   const rows = createBusRouteTableRows([{ stationName: "A", routes: [route] }]);
-  assert.equal(clipboard(rows).split("\n")[0].split("\t").length, 15);
-  assert.ok(csv(rows).includes("기점 첫차"));
-  assert.ok(csv(rows).includes("배차시간(토요일)"));
+  assert.equal(clipboard(rows).split("\n")[0].split("\t").length, 9);
+  assert.ok(csv(rows).includes("첫차"));
+  assert.ok(csv(rows).includes("배차간격(토요일)"));
 });
 
 test("approved HTTP API success exposes only parsed data, not provider messages or request URLs", async () => {

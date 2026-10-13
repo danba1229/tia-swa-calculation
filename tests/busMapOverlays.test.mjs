@@ -1,4 +1,5 @@
 import test from "node:test";
+import { BUS_ROUTE_NOTE } from "../lib/seoulBusTable.js";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
@@ -124,6 +125,7 @@ test("bus and bicycle exports contain only the chosen step's data", () => {
   const component = readFileSync(new URL("../components/TiaResearchBuilder.jsx", import.meta.url), "utf8");
   const source = component.slice(component.indexOf('  function publicTransportExportRows('), component.indexOf('  async function copyPublicTransportTables('));
   const context = vm.createContext({
+    BUS_ROUTE_NOTE,
     publicTransportResult: { source: "bike source", busSource: "bus source", busSourceDate: "2026-09-30" },
     bikeStations: ["bike"], busStops: ["bus"],
     publicBikeTableRows: (rows) => rows.map((row) => [row]),
@@ -138,6 +140,9 @@ test("bus and bicycle exports contain only the chosen step's data", () => {
   assert.doesNotMatch(bike, /bus source|route/);
   assert.match(bus, /bus source/);
   assert.match(bus, /route/);
+  assert.match(bus, /버스노선표/);
+  assert.match(bus, /첫차·막차는 노선 기점 기준/);
+  assert.match(bus, /배차간격\(일반\)은 평일 기준으로 추정/);
   assert.match(bus, /subway/);
   assert.doesNotMatch(bike, /subway/);
   assert.doesNotMatch(bus, /bike source/);

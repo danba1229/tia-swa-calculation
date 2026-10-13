@@ -10,9 +10,10 @@ await mkdir('.preview-test-results', { recursive: true });
 const browser = await chromium.launch({ args: c.args.filter(arg => arg !== '--single-process'), executablePath: await c.executablePath(), headless: true });
 const context = await browser.newContext({ viewport: { width: 1600, height: 1100 }, acceptDownloads: true });
 const route = { busRouteId: '100000001', routeName: '470', routeType: '간선', startStation: '기점', endStation: '종점', originFirstBusTime: '2026-10-02 04:30:00', originLastBusTime: '2026-10-02 23:10:00', terminalFirstBusTime: '05:00', terminalLastBusTime: '25:10', endpointTimeBasis: '서울 노선 기점 · 일치 종점 정류소 운행시간(요일 구분 미제공)' };
+const routes = [route, { ...route, busRouteId: '100000002', routeName: '10' }, { ...route, busRouteId: '100000003', routeName: '2' }];
 const stops = [
   { id: 'a', arsId: '22863', stationId: '1', stationName: '서초구청', distanceMeters: 10, latitude: 37.4, longitude: 127.1, location: '37.4, 127.1', routes: [], routeError: '공식 파일에 연결된 노선 없음 · 수동 확인 필요' },
-  { id: 'b', arsId: '00123', stationId: '2', stationName: '서울역', distanceMeters: 20, routes: [route] },
+  { id: 'b', arsId: '00123', stationId: '2', stationName: '서울역', distanceMeters: 20, routes },
   { id: 'c', arsId: '00234', stationId: '3', stationName: '시청', distanceMeters: 30, routes: [route] },
 ];
 const stations = [
@@ -27,7 +28,7 @@ try {
     if (path === '/api/geocode') return send({ success: true, x: 127.03, y: 37.48, latitude: 37.48, longitude: 127.03, matchedAddress: '서울특별시 서초구 남부순환로 2584' });
     if (path === '/api/address-suggestions') return send({ success: true, suggestions: [] });
     if (path === '/api/seoul-bus') return send({ success: true, busStops: stops, summary: { returnedCount: 3 }, source: '서울시 공식 파일', sourceDate: '2026-09-02' });
-    if (path === '/api/seoul-bus/details') return send({ success: true, updates: [{ busRouteId: route.busRouteId, detail: route, stationTimes: [], fetchedAt: '2026-10-08' }] });
+    if (path === '/api/seoul-bus/details') return send({ success: true, updates: routes.filter(r => intercepted.request().postDataJSON().routeIds.includes(r.busRouteId)).map(r => ({ busRouteId: r.busRouteId, detail: r, stationTimes: [], fetchedAt: '2026-10-08' })) });
     if (path === '/api/subway') return send({ success: true, stations, source: '국토교통부 TAGO' });
     if (path === '/api/seoul-bike') return send({ success: true, stations: [], summary: { returnedCount: 0 } });
     if (path.startsWith('/api/traffic-volume')) return send({ months: [] });
@@ -45,15 +46,22 @@ try {
   await page.waitForFunction(() => [...document.querySelectorAll('button')].some(button => button.textContent === '교통시설 조회' && !button.disabled));
   assert.deepEqual(await stopTable.locator('th').allTextContents(), ['정류장명(정류장번호)', '거리', '정차노선수', '정류장명(정류장번호)', '거리', '정차노선수']);
   assert.equal(await stopTable.locator('tbody tr').count(), 2);
-  assert.deepEqual(await stopTable.locator('tbody tr').first().locator('td').allTextContents(), ['서초구청(22863)', '10m', '수동확인필요', '서울역(00123)', '20m', '1']);
+  assert.deepEqual(await stopTable.locator('tbody tr').first().locator('td').allTextContents(), ['서초구청(22863)', '10m', '수동확인필요', '서울역(00123)', '20m', '3']);
   assert.equal(await stopTable.locator('tbody tr').last().locator('td[colspan="3"]').count(), 1);
   const busSection = page.locator('.subpanel').filter({ has: page.getByRole('heading', { name: '버스정류장', exact: true }) });
   assert.match(await busSection.locator('.subpanel-header').innerText(), /공식 파일에 연결된 노선 없음/);
   assert.doesNotMatch(await stopTable.innerText(), /위도|경도|공식 파일|37\.4/);
-  const routesSection = page.locator('.subpanel').filter({ has: page.getByRole('heading', { name: '정류장별 경유 버스노선', exact: true }) });
+  const routesSection = page.locator('.subpanel').filter({ has: page.getByRole('heading', { name: '버스노선표', exact: true }) });
   const routeCells = await routesSection.locator('tbody tr').nth(1).locator('td').allTextContents();
   assert.deepEqual(routeCells.slice(4, 6), ['04:30', '23:10']);
-  assert.equal(routeCells[8], '25:10');
+  const headers = ['버스 종류', '버스번호', '노선 기점', '노선 종점', '첫차', '막차', '배차간격(일반)', '배차간격(토요일)', '배차간격(공휴일)'];
+  assert.deepEqual(await routesSection.locator('th').allTextContents(), headers);
+  const renderedRows = await routesSection.locator('tbody tr').evaluateAll(nodes => nodes.map(n => [...n.querySelectorAll('td')].map(td => td.textContent)));
+  assert.deepEqual(renderedRows.map(row => row[1]), ['2', '10', '470']);
+  assert.ok(renderedRows.every(row => row.length === 9));
+  assert.doesNotMatch(await routesSection.locator('tbody').innerText(), /서울역|시청|25:10/);
+  assert.match(await routesSection.locator('.subpanel-source').innerText(), /첫차·막차는 노선 기점 기준/);
+  assert.match(await routesSection.locator('.subpanel-source').innerText(), /배차간격\(일반\)은 평일 기준으로 추정/);
   assert.doesNotMatch(await routesSection.locator('tbody').innerText(), /2026-10-02|수동 확인/);
   const subway = page.locator('.subpanel').filter({ has: page.getByRole('heading', { name: '지하철역 · 운행일/행선지별 첫차·막차', exact: true }) });
   assert.match(await subway.locator('.subpanel-header').innerText(), /공식 역·노선 코드 없음/);
@@ -73,6 +81,15 @@ try {
   assert.ok(csv.slice(start + 1, start + 4).every(row => row.length === 3));
   assert.ok(content.includes('04:30') && !content.includes('2026-10-02'));
   assert.ok(content.includes('공식 파일에 연결된 노선 없음'));
+  const routeStart = csv.findIndex(row => row[0] === '버스 종류');
+  assert.deepEqual(csv[routeStart], headers);
+  assert.deepEqual(csv.slice(routeStart + 1, routeStart + 4), renderedRows);
+  assert.ok(csv.some(row => row[0] === '버스노선표'));
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.locator('.step-section:visible').getByRole('button', { name: '표 복사', exact: true }).click();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  assert.ok(copied.includes(headers.join('\t')));
+  for (const row of renderedRows) assert.ok(copied.includes(row.join('\t')));
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     await stopTable.scrollIntoViewIfNeeded();
@@ -80,7 +97,7 @@ try {
     await page.screenshot({ path: `.preview-test-results/transport-tables-${width}.png`, fullPage: true });
   }
   assert.deepEqual(errors, []);
-  const result = { passed: true, pairedStops: true, oddStopPadding: true, missingReasonsInHeaders: true, timesOnly: true, oneStopPerCsvRow: true, mobileNoPageOverflow: true, fixtures: true };
+  const result = { passed: true, nineRouteColumns: true, uniqueSortedRoutes: true, csvAndClipboardMatchScreen: true, pairedStops: true, oddStopPadding: true, missingReasonsInHeaders: true, timesOnly: true, oneStopPerCsvRow: true, mobileNoPageOverflow: true, fixtures: true };
   await writeFile('.preview-test-results/transport-tables-validation.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result, null, 2));
 } finally { await context.close(); await browser.close(); }
