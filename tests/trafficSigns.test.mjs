@@ -175,11 +175,65 @@ test('751 remark rules retain multi-code releases and ignore only LED installati
 });
 
 test('ignored source codes are removed from display only, not raw records or other sources', () => {
-  const points = ['704', '750', '232', '712-1', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex }));
+  const points = ['704', '750', '232', '712-1', '540', '543', '532', '534', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex }));
   const original = structuredClone(points);
   assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), ['751']);
   assert.deepEqual(points, original);
-  assert.equal(visibleSigns(points.map(p => ({ ...p, source: 'R' }))).length, 5);
+  assert.equal(visibleSigns(points.map(p => ({ ...p, source: 'R' }))).length, points.length);
+  for (const sourceIndex of ['540-1', '543-1', '532-1', '534-1', '559']) {
+    assert.equal(classifySign({ source: 'S', sourceIndex, sourceRemark: '보행신호시' }).ignored, false);
+  }
+});
+
+test('526 requires an explicit one-way arrow direction and preserves incomplete remarks', () => {
+  for (const [sourceRemark, code] of [['일방통행 (오른쪽 화살표)', '326'], ['일방통행→', '326'],
+    ['학교내 일방통행(좌측)', '327'], ['일방통행←', '327'], ['일방통행 위쪽', '328'], ['일방통행(↑)', '328']]) {
+    const point = { source: 'S', sourceIndex: '526', sourceRemark };
+    const result = classifySign(point);
+    assert.equal(result.policeCode, code);
+    assert.equal(result.sourceRemark, sourceRemark);
+    assert.equal(result.mappingBasis, 'user');
+    assert.equal(classifySign({ ...point, source: 'R' }).policeCode, null);
+  }
+  for (const sourceRemark of ['', '일방통행', '학교내 일방통행', '학교앞', '일반통행', '일방통행(오른쪽/왼쪽)', '일방통행 우측통행 주의', '일방통행(좌측 화살표 철거)']) {
+    const result = classifySign({ source: 'S', sourceIndex: '526', sourceRemark, direction: '002' });
+    assert.equal(result.policeCode, null);
+    assert.equal(result.ignored, false);
+  }
+});
+
+test('distance mappings require full section or arrow phrases, not numeric or mixed notes', () => {
+  for (const sourceIndex of ['521', '538', '563']) {
+    for (const [sourceRemark, code] of [['100m 앞부터', '401'], ['전방10m부터', '401'], ['전방 0.5km 앞부터', '401'],
+      ['여기부터500M', '402'], ['여기서부터 300m', '402'], ['구간시작 100m', '417'], ['구간 내', '418'],
+      ['구간끝 30m', '419'], ['↑ 전방 50m', '422'], ['전방50m ↑', '422']]) {
+      const point = { source: 'S', sourceIndex, sourceRemark };
+      const result = classifySign(point);
+      assert.equal(result.policeCode, code);
+      assert.equal(result.sourceRemark, sourceRemark);
+      assert.equal(result.mappingBasis, 'user');
+      assert.equal(classifySign({ ...point, source: 'R' }).policeCode, null);
+    }
+    for (const sourceRemark of ['', '100', '100m', '전방100m', '좌측 전방 50m', '우전방5m', '전방100m육교',
+      '여기부터100m (휴교일제외)', 'SCHOOL20 M 여기부터300M', '구간끝130m 구간내200m', '200m앞부터/LED', '구간시작점검']) {
+      assert.equal(classifySign({ source: 'S', sourceIndex, sourceRemark }).policeCode, null);
+    }
+  }
+  assert.equal(classifySign({ source: 'S', sourceIndex: '559', sourceRemark: '보행신호시' }).policeCode, null);
+});
+
+test('conditional mappings cover eleven records; exact exclusions hide 73 and preserve 559', async () => {
+  const { rows } = await loadSignSnapshot();
+  const counts = {};
+  for (const [id, , , sourceIndex, , , sourceRemark] of rows) {
+    if (id[0] !== 'S' || !['526', '521', '538', '563', '540', '543', '532', '534', '559'].includes(sourceIndex)) continue;
+    const result = classifySign({ source: 'S', sourceIndex, sourceRemark });
+    const key = `${sourceIndex}:${result.ignored ? 'ignored' : result.label}`;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  assert.deepEqual(counts, { '526:?': 165, '521:401': 6, '521:402': 1, '521:?': 191,
+    '538:401': 3, '538:?': 88, '563:401': 1, '563:?': 22,
+    '540:ignored': 25, '543:ignored': 5, '532:ignored': 35, '534:ignored': 8, '559:?': 41 });
 });
 
 test('751 raw remark ingestion reconciles all records with exact mapping and exclusion totals', async () => {
