@@ -35,7 +35,7 @@ test('sixteen user-approved codes map regardless of remarks while retaining orig
   }
 });
 
-test('user mapping changes exactly 10213 existing safety records and leaves other codes alone', async () => {
+test('fixed-code mapping covers 10213 records alongside the approved 514 families', async () => {
   const { rows } = await loadSignSnapshot();
   let mapped = 0, speedMapped = 0;
   for (const [id, lat, lng, sourceIndex] of rows) {
@@ -45,10 +45,58 @@ test('user mapping changes exactly 10213 existing safety records and leaves othe
       mapped++;
       if (result.policeCode === '224') speedMapped++;
     }
+    else if (source === 'S' && sourceIndex.startsWith('514')) assert.ok(['417', '418', '419'].includes(result.policeCode));
     else assert.equal(result.policeCode, source === 'S' && POLICE_SIGN_CODES.includes(sourceIndex) ? sourceIndex : null);
   }
   assert.equal(mapped, 10213);
   assert.equal(speedMapped, 9860);
+});
+
+test('514 families prioritize subtype over distance and reject malformed or unrelated suffixes', () => {
+  for (const [sourceIndex, expected] of [['514', '417'], ['514-100', '417'], ['514-200', '417'], ['514-400', '417'],
+    ['514-1', '418'], ['514-1-50', '418'], ['514-1-200', '418'], ['514-1-600', '418'],
+    ['514-2', '419'], ['514-2-100', '419'], ['514-2-400', '419']]) {
+    for (const sourceRemark of ['', '2000m', '구간끝 190m', '보수요망']) {
+      const point = { id: 'S:one', source: 'S', label: 'one', lat: 37.5, lng: 127, sourceIndex, sourceRemark };
+      const result = classifySign(point);
+      assert.equal(result.label, expected);
+      assert.equal(result.sourceIndex, sourceIndex);
+      assert.equal(result.sourceRemark, sourceRemark);
+      assert.equal(result.mappingBasis, 'user');
+      assert.match(result.reason, /원본 비고와 관계없이/);
+      assert.equal(result.ignored, false);
+      assert.equal(classifySign({ ...point, source: 'R' }).label, '?');
+    }
+  }
+  for (const sourceIndex of ['514-Z', '514-1-Z', '514-2-100-extra', '514-100-200', '1514-100', '521', '538', '563']) {
+    assert.equal(classifySign({ source: 'S', sourceIndex }).label, '?');
+  }
+});
+
+test('513 maps only the two approved full phrases after whitespace normalization', () => {
+  for (const [sourceRemark, expected] of [['보행자 작동신호기', '407의4'], ['보행자작동신호기', '407의4'],
+    ['속도를 줄이시오', '415'], [' 속도를줄이시오 ', '415']]) {
+    const result = classifySign({ source: 'S', sourceIndex: '513', sourceRemark });
+    assert.equal(result.label, expected);
+    assert.equal(result.sourceRemark, sourceRemark);
+    assert.match(result.reason, /원본 비고에 따라/);
+  }
+  for (const sourceRemark of ['', '보행시 작동신호기', '보행자 작동신호기 안내', '여기부터 속도를 줄이시오', '속도를 줄이시오/LED', '신호준수']) {
+    assert.equal(classifySign({ source: 'S', sourceIndex: '513', sourceRemark }).label, '?');
+  }
+  assert.equal(classifySign({ source: 'R', sourceIndex: '513', sourceRemark: '속도를 줄이시오' }).label, '?');
+});
+
+test('new 514 and 513 rules cover 540 snapshot records and keep other 513 remarks unknown', async () => {
+  const { rows } = await loadSignSnapshot();
+  const counts = {};
+  for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
+    if (id[0] !== 'S' || !(sourceIndex.startsWith('514') || sourceIndex === '513')) continue;
+    const result = classifySign({ source: 'S', sourceIndex, sourceRemark, lat, lng });
+    const key = `${sourceIndex === '513' ? '513' : '514'}:${result.label}`;
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  assert.deepEqual(counts, { '514:417': 261, '514:418': 211, '514:419': 60, '513:407의4': 4, '513:415': 4, '513:?': 89 });
 });
 
 test('chart number equality never verifies meaning or invents codes for unknown/road signs', () => {
