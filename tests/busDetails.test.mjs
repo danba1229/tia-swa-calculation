@@ -43,9 +43,9 @@ test("detail merge preserves all stops/routes, matches NODE_ID and leaves day-sp
   assert.match(result[1].routes[0].stationFirstBusTime, /미제공/);
   assert.match(result[1].routes[0].stationTimeError, /해당 정류장/);
   const rows = createBusRouteTableRows(result);
-  assert.equal(rows[1][10], "12분");
-  rows[1].slice(11).forEach(value=>assert.equal(value, "수동확인필요"));
-  assert.equal(rows[1].length, 15);
+  assert.equal(rows[1][6], "12분");
+  rows[1].slice(7).forEach(value=>assert.equal(value, "수동확인필요"));
+  assert.equal(rows[1].length, 9);
 });
 
 test("ambiguous repeat visits and conflicting station IDs never pick an arbitrary time", () => {
@@ -93,7 +93,7 @@ test("systemic failure halts requests and marks pending rows without deleting da
   assert.equal(last.stations.length, 2);
   assert.equal(last.stations[0].routes[1].detailStatus, "NOT_QUERIED");
   assert.match(last.stations[0].routes[0].detailError, /HTTPS 시간 초과/);
-  assert.equal(createBusRouteTableRows(last.stations)[1].length, 15);
+  assert.equal(createBusRouteTableRows(last.stations)[1].length, 9);
   assert.equal(last.stations[0].routes[0].routeName, "400");
 });
 

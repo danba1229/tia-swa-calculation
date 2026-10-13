@@ -29,9 +29,10 @@ test('bus display drops calendar dates without shifting provider clock or extend
   const route = { originFirstBusTime: '2026-10-02 04:30:00', originLastBusTime: '2026-10-02 23:10:00', terminalFirstBusTime: '05:30', terminalLastBusTime: '25:10', routeType: '수동 확인 필요', endpointTimeBasis: '서울 노선 기점 · 일치 종점 정류소 운행시간(요일 구분 미제공)' };
   const rows = createBusRouteTableRows([{ stationName: '시청', routes: [route] }]);
   assert.deepEqual(rows[1].slice(4, 6), ['04:30', '23:10']);
-  assert.deepEqual(rows[1].slice(7, 9), ['05:30', '25:10']);
-  assert.equal(rows[1][1], MANUAL_CHECK);
-  assert.equal(rows[1][9], route.endpointTimeBasis);
+  assert.equal(rows[1][0], MANUAL_CHECK);
+  assert.ok(!rows[1].includes('05:30'));
+  assert.ok(!rows[1].includes('25:10'));
+  assert.ok(!rows[0].includes('운행시간 기준'));
   assert.equal(route.originFirstBusTime, '2026-10-02 04:30:00');
 });
 
