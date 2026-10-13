@@ -163,6 +163,9 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
     ['어린이보호구역 해제', ['324', '427']], ['어린이보호 해제', ['324', '427']],
     ['30/여기부터속도를줄이시오/LED', ['224', '415']], ['30 여기부터 속도를 줄이시오', ['224', '415']],
     ['어린이보호구역 30', ['324', '224']], ['어린이보호구역/30', ['324', '224']],
+    ['30, 여기부터 속도를 줄이시오', ['224', '415']], ['30, 여기부터 속도를 줄이시오 / LED', ['224', '415']],
+    ['여기부터 300m 속도를 줄이시오', ['418', '415']], ['여기부터300m속도를줄이시오/LED', ['418', '415']],
+    ['어린이보호구역', ['324']], ['어린이 보호구역 / LED', ['324']],
   ]) {
     const result = classifySign({ ...base, sourceRemark });
     assert.deepEqual(result.policeCodes, codes);
@@ -171,8 +174,8 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.mappingBasis, 'user');
   }
-  for (const sourceRemark of ['LED', ' led / ', '', '  ', '우회전시', '우회전시 / LED', '07:00~21:00 토요일 공휴일 제외', '07:00 ~ 21:00 / 토요일 공휴일 제외', '여기부터', '여기부터/LED', '여기부터 / LED', 'LED 여기부터']) assert.equal(visibleSigns([{ ...base, sourceRemark }]).length, 0);
-  for (const sourceRemark of ['219', '0', '30m', '4.5t', '07:00~21:00', '안전속도50', '30/40', '1/20', '10/2', '어린이보호구역해제/30해제', '30 주의', '우회전시 자전거주의', '20/여기부터속도를줄이시오', '어린이보호구역40', '07:00-21:00 토요일 공휴일 제외', '07:00~21:00 일요일 제외', '여기부터300m', '여기부터 300m 속도를 줄이시오', '30/여기부터/LED', '어린이보호구역/여기부터']) {
+  for (const sourceRemark of ['LED', ' led / ', '', '  ', '우회전시', '우회전시 / LED', '07:00~21:00 토요일 공휴일 제외', '07:00 ~ 21:00 / 토요일 공휴일 제외', '여기부터', '여기부터/LED', '여기부터 / LED', 'LED 여기부터', '07:00~10:00 17:00~21:00 토요일 공휴일 제외', '07:00~10:00 / 17:00~21:00 토요일 공휴일 제외 / LED', '사고잦은곳', '사고 잦은 곳 / LED']) assert.equal(visibleSigns([{ ...base, sourceRemark }]).length, 0);
+  for (const sourceRemark of ['219', '0', '30m', '4.5t', '07:00~21:00', '안전속도50', '30/40', '1/20', '10/2', '어린이보호구역해제/30해제', '30 주의', '우회전시 자전거주의', '20/여기부터속도를줄이시오', '어린이보호구역40', '07:00-21:00 토요일 공휴일 제외', '07:00~21:00 일요일 제외', '여기부터300m', '여기부터 150m 속도를 줄이시오', '자전거주의', '30,40', '사고잦은곳 전방100m', '07:00~10:00 17:00~21:00 일요일 제외', '30/여기부터/LED', '어린이보호구역/여기부터']) {
     const result = classifySign({ ...base, sourceRemark });
     assert.equal(result.label, '?');
     assert.equal(result.ignored, false);
@@ -259,7 +262,7 @@ test('751 raw remark ingestion reconciles all records with exact mapping and exc
     const key = p.ignored ? 'ignored' : p.label;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, { '224': 3787, '415': 1505, '224, 427': 1446, '324, 427': 483, '224, 415': 527, '324, 224': 130, ignored: 9563, '?': 4107 });
+  assert.deepEqual(counts, { '224': 3787, '415': 1505, '224, 427': 1446, '324, 427': 483, '224, 415': 629, '324, 224': 130, '418, 415': 57, '324': 40, ignored: 9664, '?': 3807 });
 });
 
 test('non-751 unmatched safety signs are hidden without dropping mappings, labels or road signs', async () => {
@@ -275,8 +278,8 @@ test('non-751 unmatched safety signs are hidden without dropping mappings, label
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.managementId, point.label);
   }
-  assert.deepEqual(counts, { 'S:user': 18833, 'S:code-match': 182707, 'S:text': 165,
-    'S:excluded': 14275, 'S:unmapped': 4107, 'R:unmapped': 12008 });
+  assert.deepEqual(counts, { 'S:user': 19032, 'S:code-match': 182707, 'S:text': 165,
+    'S:excluded': 14376, 'S:unmapped': 3807, 'R:unmapped': 12008 });
   const points = [
     { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
     { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },
