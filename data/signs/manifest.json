@@ -1,12 +1,13 @@
 {
-  "version": "seoul-signs-20261008-v1",
+  "version": "seoul-signs-20261012-v2",
   "schema": [
     "sourcePrefixedId",
     "latitude",
     "longitude",
     "sourceIndexOrType",
     "installedOn",
-    "specificationCode"
+    "specificationCode",
+    "sourceRemark"
   ],
   "counts": {
     "S": 220087,
@@ -18,7 +19,7 @@
     "road_outside_review_envelope": 4,
     "road_duplicate_or_missing_id": 8
   },
-  "sha256": "200bb4aa14b3ef678f5d54bbd7c5336a741e728a68c248cf175bd70acdfc20b8",
+  "sha256": "bbebdda0fe0b46666beca5f3c996e3c26b1991d267a8d37a9f9ac6d842be493f",
   "reviewEnvelope": [
     126.75,
     37.4,

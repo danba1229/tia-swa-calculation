@@ -314,6 +314,16 @@ body:has(.research-workspace) { background: #f5f7fb; }
 .research-workspace .signs-filters button { background: #f4f7fb; color: #536880; padding: 8px 12px; border: 1px solid #dbe4ef; font-size: 13px; }
 .research-workspace .signs-filters button[aria-pressed="true"] { color: #1748b5; background: #edf3ff; border-color: #acc8f8; }
 .signs-filters span { margin-left: 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.signs-version-switch { padding: 0 24px 16px; }
+.research-workspace .signs-version-switch button { font-size: 14px; font-weight: 700; padding: 10px 16px; }
+.seoul-sign-code-list { flex: 1; min-height: 0; overflow: auto; }
+.seoul-sign-code-list table { width: 100%; min-width: 0; table-layout: fixed; margin: 0; font-size: 12px; }
+.seoul-sign-code-list th, .seoul-sign-code-list td { padding: 10px 12px; white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
+.seoul-sign-code-list thead th { position: sticky; top: 0; background: #edf2f7; z-index: 1; }
+.seoul-sign-code-list th:first-child { width: 27%; }
+.seoul-sign-code-list th:nth-child(2) { width: 18%; }
+.seoul-sign-code-list small { display: block; color: #64748b; font-weight: 400; margin-top: 4px; }
+.seoul-sign-code-list > p { padding: 16px; color: #64748b; font-size: 13px; }
 .signs-status { background: #f8fafd; border-block: 1px solid #e1e8f0; padding: 10px 24px; font-size: 13px; color: #3d526d; }
 .signs-workbench { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(330px, 1fr); }
 .signs-map-frame { position: relative; height: clamp(620px, 68vh, 900px); background: #edf2f7; isolation: isolate; min-width: 0; }

@@ -28,7 +28,7 @@ for item in r.iterShapeRecords():
  lng,lat=transform.transform(x,y)
  if not (37.4<=lat<=37.72 and 126.75<=lng<=127.2):exclusions['safety_outside_review_envelope']+=1;continue
  # Source code is preserved, never decoded as speed limit or regulatory meaning.
- rows.append(['S:'+id,round(lat,7),round(lng,7),str(d.get('MRK_NUM') or ''),str(d.get('ESB_YMD') or ''),str(d.get('A064_KND_C') or '')])
+ rows.append(['S:'+id,round(lat,7),round(lng,7),str(d.get('MRK_NUM') or ''),str(d.get('ESB_YMD') or ''),str(d.get('A064_KND_C') or ''),str(d.get('RMK') or '').strip()])
 b,rm=raw('seoul_sign_csv');text=b.decode('cp949')
 roads=list(csv.DictReader(io.StringIO(text)));counts=collections.Counter(d['표지일련번호'].strip() for d in roads)
 for d in roads:
@@ -37,11 +37,11 @@ for d in roads:
  try:lat,lng=float(d['위도']),float(d['경도'])
  except (ValueError,TypeError):exclusions['road_invalid_coordinate']+=1;continue
  if not (37.4<=lat<=37.72 and 126.75<=lng<=127.2):exclusions['road_outside_review_envelope']+=1;continue
- rows.append(['R:'+id,round(lat,7),round(lng,7),d['표지종별'],'',''])
+ rows.append(['R:'+id,round(lat,7),round(lng,7),d['표지종별'],'','',''])
 rows.sort(key=lambda r:(r[1],r[2],r[0]))
 content=json.dumps(rows,ensure_ascii=False,separators=(',',':')).encode()
 compressed=gzip.compress(content,compresslevel=9,mtime=0);(out/'seoul-signs.json.gz').write_bytes(compressed)
-meta={'version':'seoul-signs-20261008-v1','schema':['sourcePrefixedId','latitude','longitude','sourceIndexOrType','installedOn','specificationCode'], 'counts':dict(collections.Counter(r[0][0] for r in rows)), 'excluded':dict(exclusions),'sha256':hashlib.sha256(compressed).hexdigest(), 'reviewEnvelope':[126.75,37.4,127.2,37.72], 'sources':[
+meta={'version':'seoul-signs-20261012-v2','schema':['sourcePrefixedId','latitude','longitude','sourceIndexOrType','installedOn','specificationCode','sourceRemark'], 'counts':dict(collections.Counter(r[0][0] for r in rows)), 'excluded':dict(exclusions),'sha256':hashlib.sha256(compressed).hexdigest(), 'reviewEnvelope':[126.75,37.4,127.2,37.72], 'sources':[
  {'key':'S','name':'서울시 안전표지 관련 정보','url':'https://data.seoul.go.kr/dataList/OA-15540/S/1/datasetView.do','file':'A064_P_안전표시_20260213.zip','fileVersion':'2026-02-13','facilityDate':None,'rawSha256':sm['sha256'],'rawCount':len(r),'license':'공공누리 1유형: 출처표시'},
  {'key':'R','name':'서울시 도로표지 설치정보','url':'https://data.seoul.go.kr/dataList/OA-15017/S/1/datasetView.do','file':'서울특별시 도로표지 설치현황(20250417).csv','fileVersion':'2025-04-17','facilityDate':None,'rawSha256':rm['sha256'],'rawCount':len(roads),'license':'공공누리 1유형: 출처표시'}],
  'notes':['서울시 공개 원본의 공간검색이며 최신 현장 시설 전체 목록이 아닙니다.','파일 버전과 시설 기준일은 다릅니다.','관리번호 중복, 좌표 불일치 5m 초과, 검토 영역 밖 자료는 제외했습니다. 검토 영역은 행정경계가 아닙니다.','표지인덱스·규격코드에서 실제 표지 내용을 추정하지 않습니다.']}

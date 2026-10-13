@@ -1,16 +1,19 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { layoutSignLabels, signScope } from '../lib/trafficSigns';
-import { classifySign } from '../lib/signClassification';
+import { visibleSigns } from '../lib/signClassification';
 import PoliceSignChart from './PoliceSignChart';
+import SeoulSignReference from './SeoulSignReference';
 
 const SOURCE_NAMES = { S: '안전표지', R: '도로표지' };
 export default function TrafficSignsStep({ visible, siteLocation, width, height, refresh, loadMaps, onPhase }) {
   const [result, setResult] = useState(null), [error, setError] = useState('');
   const [mapError, setMapError] = useState(''), [retryMap, setRetryMap] = useState(0);
   const [selectedId, setSelectedId] = useState(''), [source, setSource] = useState('all');
+  const [mode, setMode] = useState('police');
+  const isSeoul = mode === 'seoul';
   const [screen, setScreen] = useState(null);
-  const container = useRef(null), fit = useRef(null), mapRef = useRef(null);
+  const container = useRef(null), fit = useRef(null), mapRef = useRef(null), pointsRef = useRef([]), redraw = useRef(null);
   const key = JSON.stringify([siteLocation.address, siteLocation.status, siteLocation.lat, siteLocation.lng, width, height, refresh]);
   let scopeError = '';
   if (siteLocation.status !== 'ready') scopeError = siteLocation.message;
@@ -26,7 +29,7 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
     onPhase('loading');
     const timer = setTimeout(async () => {
       try {
-        const query = new URLSearchParams({ lat: siteLocation.lat, lng: siteLocation.lng, width, height });
+        const query = new URLSearchParams({ lat: siteLocation.lat, lng: siteLocation.lng, width, height, v: '20261012-rmk' });
         const response = await fetch(`/api/seoul-signs?${query}`, { signal: controller.signal });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || '표지판 조회에 실패했습니다.');
@@ -40,8 +43,11 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
     return () => { clearTimeout(timer); controller.abort(); };
   }, [visible, key, scopeError, siteLocation.lat, siteLocation.lng, width, height, onPhase]);
 
-  const points = useMemo(() => (current?.points || []).filter(p => source === 'all' || p.source === source).map(p => classifySign(p)), [current, source]);
+  const displayPoints = useMemo(() => visibleSigns(current?.points || [], mode), [current, mode]);
+  const points = useMemo(() => displayPoints.filter(p => source === 'all' || p.source === source), [displayPoints, source]);
+  const ignoredCount = (current?.points.length || 0) - displayPoints.length;
   const selected = points.find(p => p.id === selectedId);
+  useEffect(() => { pointsRef.current = points; redraw.current?.(); }, [points]);
   useEffect(() => {
     if (!visible || !current || !container.current) { setScreen(null); return; }
     let cancelled = false, observer, frame, map, kakao, rectangle;
@@ -53,9 +59,10 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
         if (cancelled || !map) return;
         const projection = map.getProjection();
         const project = p => { const position = projection.containerPointFromCoords(new kakao.maps.LatLng(p.lat, p.lng)); return { ...p, x: position.x, y: position.y }; };
-        setScreen({ width: node.clientWidth, height: node.clientHeight, points: points.map(project), site: project(current.scope) });
+        setScreen({ width: node.clientWidth, height: node.clientHeight, points: pointsRef.current.map(project), site: project(current.scope) });
       });
     };
+    redraw.current = draw;
     loadMaps().then(sdk => {
       if (cancelled) return;
       kakao = sdk;
@@ -73,28 +80,29 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
     return () => {
       cancelled = true; cancelAnimationFrame(frame); observer?.disconnect();
       if (map) for (const event of ['bounds_changed', 'idle']) kakao.maps.event.removeListener(map, event, draw);
-      rectangle?.setMap(null); fit.current = null; mapRef.current = null; node.replaceChildren();
+      rectangle?.setMap(null); fit.current = null; mapRef.current = null; redraw.current = null; node.replaceChildren();
     };
-  }, [visible, current, points, loadMaps, retryMap]);
+  }, [visible, current, loadMaps, retryMap]);
 
-  const layout = useMemo(() => screen ? layoutSignLabels(screen.points, screen.width, screen.height, selectedId, [{ x: screen.width - 236, y: screen.height - 246, w: 228, h: 222 }]) : { points: [], labels: [] }, [screen, selectedId]);
+  const layout = useMemo(() => screen ? layoutSignLabels(screen.points, screen.width, screen.height, selectedId, [{ x: screen.width - 236, y: screen.height - 272, w: 228, h: 248 }]) : { points: [], labels: [] }, [screen, selectedId]);
   const choose = id => {
     setSelectedId(id);
     const point = points.find(p => p.id === id);
     if (point && mapRef.current && window.kakao) mapRef.current.panTo(new window.kakao.maps.LatLng(point.lat, point.lng));
   };
   return <section className={`panel step-section traffic-signs ${visible ? '' : 'is-hidden'}`} aria-label="STEP 9 교통 표지판">
-    <div className="signs-heading"><div><p className="eyebrow">STEP 09 · SEOUL</p><h2>교통 표지판 위치도</h2><p>서울시 표지판 위치를 경찰청 일람표와 대조합니다.</p></div><span className="signs-region">서울시 공식 공개자료</span></div>
+    <div className="signs-heading"><div><p className="eyebrow">STEP 09 · SEOUL</p><h2>교통 표지판 위치도</h2><p>같은 서울시 위치자료를 원본 코드 또는 경찰청 일람표 기준으로 확인합니다.</p></div><span className="signs-region">서울시 공식 공개자료</span></div>
+    <div className="signs-version-switch signs-filters" role="group" aria-label="표지판 표시 기준">{[['seoul', '서울시 기준'], ['police', '경찰청 일람표 기준']].map(([value, label]) => <button type="button" key={value} aria-pressed={mode === value} onClick={() => { setMode(value); setSelectedId(''); }}>{label}</button>)}</div>
     <p className="signs-review-notice"><strong>모든 자료는 추가 확인이 필요합니다.</strong> 표지의 종류·위치·설치 상태를 현장 또는 촬영일을 확인한 로드뷰로 대조하세요. 파란색은 표지판 위치를 나타냅니다.</p>
     <div className="signs-toolbar">
-      <div className="signs-filters" role="group" aria-label="표지판 종류">{[['all', '전체 표지판'], ['S', '안전표지'], ['R', '도로표지']].map(([value, label]) => <button type="button" key={value} aria-pressed={source === value} onClick={() => { setSource(value); setSelectedId(''); }}>{label}{current && <span>{current.points.filter(p => value === 'all' || p.source === value).length.toLocaleString('ko-KR')}</span>}</button>)}</div>
+      <div className="signs-filters" role="group" aria-label="표지판 종류">{[['all', '전체 표지판'], ['S', '안전표지'], ['R', '도로표지']].map(([value, label]) => <button type="button" key={value} aria-pressed={source === value} onClick={() => { setSource(value); setSelectedId(''); }}>{label}{current && <span>{displayPoints.filter(p => value === 'all' || p.source === value).length.toLocaleString('ko-KR')}</span>}</button>)}</div>
       <button type="button" className="secondary" disabled={!screen} onClick={() => fit.current?.()}>조사 범위에 맞추기</button>
     </div>
-    <div className="signs-status" role="status">{scopeError || error || (!current ? '서울 표지판을 조회하고 있습니다…' : `범위 내 ${points.length.toLocaleString('ko-KR')}건 · ${current.scope.width.toLocaleString('ko-KR')} × ${current.scope.height.toLocaleString('ko-KR')}m · 전체 추가 확인 필요`)}{current && screen && ` · 현재 화면 번호 ${layout.labels.length}/${layout.points.length}개`}</div>
+    <div className="signs-status" role="status">{scopeError || error || (!current ? '서울 표지판을 조회하고 있습니다…' : `${isSeoul ? '서울시 기준' : '경찰청 일람표 기준'} · 범위 내 ${points.length.toLocaleString('ko-KR')}건 · ${current.scope.width.toLocaleString('ko-KR')} × ${current.scope.height.toLocaleString('ko-KR')}m · 전체 추가 확인 필요 · ${isSeoul ? '원본 전체 표시' : `사용자 지정 제외 ${ignoredCount}건`}`)}{current && screen && ` · 현재 화면 번호 ${layout.labels.length}/${layout.points.length}개`}</div>
     <div className="signs-workbench">
     <div className="signs-map-frame">
       <div ref={container} className="signs-map" aria-label="서울 교통 표지판 지도" />
-      {screen && current && <svg className="signs-overlay" width={screen.width} height={screen.height} aria-label="경찰청 일람표 번호와 인출선">
+      {screen && current && <svg className="signs-overlay" width={screen.width} height={screen.height} aria-label={isSeoul ? '서울시 원본 코드와 인출선' : '경찰청 일람표 번호와 인출선'}>
         {layout.labels.map(p => <line key={p.id} x1={p.x} y1={p.y} x2={Math.max(p.box.x, Math.min(p.x, p.box.x + p.box.w))} y2={Math.max(p.box.y, Math.min(p.y, p.box.y + p.box.h))} stroke={p.color} strokeWidth={p.id === selectedId ? 2 : 1} />)}
         {layout.points.map(p => <circle key={p.id} data-sign-id={p.id} cx={p.x} cy={p.y} r={p.id === selectedId ? 7 : 4} fill={p.color} stroke={p.id === selectedId ? '#172b46' : 'white'} strokeWidth={p.id === selectedId ? 2.5 : 1.5} className="signs-dot" onClick={() => setSelectedId(p.id)}><title>{p.label} · 추가 확인 필요 · {p.sourceCodeRemark} · 관리번호 {p.managementId}</title></circle>)}
         {layout.labels.map(p => <a key={p.id} className="signs-callout" href={p.roadviewUrl || undefined} target="_blank" rel="noopener noreferrer" aria-label={`${p.label} · 관리번호 ${p.managementId} 카카오 로드뷰 새 탭에서 열기`} onClick={() => setSelectedId(p.id)}>
@@ -107,17 +115,18 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
       {(!screen || mapError) && <div className="signs-map-message"><strong>{mapError ? '지도 연결 확인이 필요합니다' : current ? '지도를 불러오고 있습니다' : '주소와 조사 범위를 확인해 주세요'}</strong><p>{mapError || scopeError || error || '서울시 표지판 위치를 큰 지도에서 확인합니다.'}</p>{mapError && <button type="button" onClick={() => setRetryMap(v => v + 1)}>지도 다시 연결</button>}</div>}
       <div className="signs-map-legend"><table><caption>범례</caption><thead><tr><th scope="col">표시</th><th scope="col">의미</th></tr></thead><tbody>
         <tr><td><i className="signs-location" aria-label="파란 점" /></td><td>표지판 위치</td></tr>
-        <tr><td>123</td><td>일람표 번호 / 대응 후보</td></tr>
-        <tr><td>?</td><td>일람표 번호 미확인</td></tr>
+        <tr><td>123</td><td>{isSeoul ? '서울시 원본 코드' : '일람표 번호 · 후보/사용자 지정'}</td></tr>
+        {!isSeoul && <tr><td>일방</td><td>일방통행 · 방향 미확인</td></tr>}
+        <tr><td>?</td><td>{isSeoul ? '서울시 원본 코드 없음' : '도로표지 · 일람표 번호 미확인'}</td></tr>
         <tr><td><i className="signs-site" /></td><td>사업지</td></tr>
         <tr><td><i className="signs-boundary" /></td><td>조사 범위</td></tr>
       </tbody></table></div>
     </div>
-    {visible && <PoliceSignChart />}
+    {visible && (isSeoul ? <SeoulSignReference points={points} /> : <PoliceSignChart />)}
     </div>
-    <p className="signs-hint">번호는 경찰청 일람표의 대응 후보이며, 대응 미확인·도로 안내표지는 ?로 표시합니다. <strong>번호 클릭: 카카오 로드뷰 새 탭 열기 · 점 클릭: 원본 코드와 비고 확인.</strong> 로드뷰 영상이 없거나 표지판이 보이지 않을 수 있으므로 촬영일과 주변 화면을 확인하세요. 밀집 구간은 확대하거나 아래 목록에서 선택하세요.</p>
+    <p className="signs-hint">{isSeoul ? '서울시 공개자료의 원본 코드와 비고를 그대로 표시합니다. 경찰청 기준에서 제외한 보조·미매핑 안전표지도 포함합니다. 원본 코드가 없는 자료만 ?로 표시하며, 오른쪽 목록에서 범위 내 코드와 비고 예시를 확인할 수 있습니다.' : '번호는 경찰청 일람표의 대응 후보 또는 사용자 지정 매핑입니다. 중량·높이·폭 제한은 수치와 관계없이 220·221·222로 표시합니다. 보조표지는 해제(427)·견인지역(428)만 표시하고, 나머지 보조표지와 미매핑 안전표지는 제외합니다. 복합 표지는 남은 번호를 쉼표로 함께 표시합니다. 방향 미확인 일방통행은 일방, 도로 안내표지는 ?로 표시합니다.'} <strong>코드 클릭: 카카오 로드뷰 새 탭 열기 · 점 클릭: 원본 코드와 비고 확인.</strong> 로드뷰 촬영일과 주변 화면을 확인하세요. 밀집 구간은 확대하거나 아래 목록에서 선택하세요.</p>
     {current && <div className="signs-detail"><label><span>표지판 선택 · 공식 관리번호</span><select value={selected?.id || ''} onChange={e => choose(e.target.value)}><option value="">{points.length ? '관리번호를 선택하세요' : '범위 내 공개자료 없음'}</option>{points.map(p => <option value={p.id} key={p.id}>{p.managementId} · {p.label} · {SOURCE_NAMES[p.source]}</option>)}</select></label>
-      <div aria-live="polite">{selected ? <><strong>{selected.policeCode ? `일람표 ${selected.policeCode} · 대응 후보` : '수동확인필요'} · 관리번호 {selected.managementId}</strong><p className="signs-source-remark"><b>비고</b> · {selected.sourceCodeRemark}</p><p>{selected.reason}</p><p>{SOURCE_NAMES[selected.source]} · 위도 {selected.lat} / 경도 {selected.lng}{selected.source === 'S' && ` · 규격코드 ${selected.specification || '수동확인필요'}`}</p>{selected.roadviewUrl && <a className="signs-roadview-link" href={selected.roadviewUrl} target="_blank" rel="noopener noreferrer">카카오 로드뷰 열기 ↗</a>}</> : <p>지도 위 점 또는 관리번호를 선택하면 서울시 원본 코드가 비고에 표시됩니다.</p>}</div></div>}
+      <div aria-live="polite">{selected ? <><strong>{isSeoul ? `서울시 원본 코드 ${selected.label}` : selected.policeCode ? `일람표 ${selected.policeCode} · ${selected.mappingBasis === 'user' ? '사용자 지정' : '대응 후보'}` : selected.displayOnly ? `${selected.label} · 방향 미확인 · 사용자 지정` : '수동확인필요'} · 관리번호 {selected.managementId}</strong><p className="signs-source-remark"><b>비고</b> · {selected.sourceCodeRemark}</p>{selected.source === 'S' && <p><b>원본 비고</b> · {selected.sourceRemark || '수동확인필요'}</p>}<p>{selected.reason}</p><p>{SOURCE_NAMES[selected.source]} · 위도 {selected.lat} / 경도 {selected.lng}{selected.source === 'S' && ` · 규격코드 ${selected.specification || '수동확인필요'}`}</p>{selected.roadviewUrl && <a className="signs-roadview-link" href={selected.roadviewUrl} target="_blank" rel="noopener noreferrer">카카오 로드뷰 열기 ↗</a>}</> : <p>지도 위 점 또는 관리번호를 선택하면 서울시 원본 코드가 비고에 표시됩니다.</p>}</div></div>}
     <details className="signs-provenance signs-secondary-sources"><summary>보조 자료 확인</summary>
       <p><a href="https://www.data.go.kr/data/15028194/standard.do" target="_blank" rel="noopener noreferrer">전국도로안전표지 표준데이터 ↗</a> · 지역별 공개 안전표지 자료를 대조하는 참고 경로입니다. 서울 수록 범위와 개별 표지번호의 대응은 미확인입니다.</p>
       <p><a href="https://www.safetyzone.go.kr/mapPtl/ptl/mapMain.do" target="_blank" rel="noopener noreferrer">경찰청 보호구역 통합관리시스템 ↗</a> · 어린이·노인·장애인 보호구역 시설 현황 참고용입니다. 공개 안내의 API는 보호구역 지정 현황이며 개별 표지판 API는 확인되지 않았습니다.</p>
