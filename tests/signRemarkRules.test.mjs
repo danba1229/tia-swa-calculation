@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { seoul751RemarkRule } from '../lib/seoulSignRemarkRules.js';
 import { classifySign, visibleSigns } from '../lib/signClassification.js';
 
 const point = sourceRemark => ({ id: 'S:sample', label: 'sample', source: 'S', sourceIndex: '751', sourceRemark, lat: 37.5, lng: 127 });
-const codes = remark => classifySign(point(remark)).policeCodes;
+// Parser tests retain the original meanings; display-policy tests below cover suppression.
+const codes = remark => seoul751RemarkRule(remark)?.codes || [];
 
 test('approved protection, speed, slowdown and release components combine across formatting', () => {
   for (const [zone, code] of [['노인', '323'], ['어린이', '324']]) {
@@ -37,16 +39,16 @@ test('weight and labeled height map independently of limits without assuming oth
   for (const height of ['3.5m', '4M', '5미터']) assert.deepEqual(codes(`높이 ${height} 제한`), ['221']);
   const raw = '차량운행제한 / 총중량 32t 축하중 10t / 높이 4.0m 길이 16.7m 폭 2.5m / 07:00~21:00';
   const p = point(raw), original = structuredClone(p), result = classifySign(p);
-  assert.deepEqual(result.policeCodes, ['220', '221']);
+  assert.deepEqual(result.policeCodes, ['220', '221', '222']);
   assert.equal(result.sourceRemark, raw);
-  assert.match(result.reason, /길이·폭·시간/);
+  assert.match(result.reason, /길이·시간/);
   assert.deepEqual(p, original);
   assert.deepEqual(codes('차량운행제한 40t 4.0m 2.5m'), ['220']);
   assert.deepEqual(codes('4.5t/LED'), ['220']);
-  for (const raw of ['4m', '길이16.7m 폭2.5m', '높이 확인 필요', '높이4m제한해제', '30km/h 화물차 주의']) assert.deepEqual(codes(raw), []);
+  for (const raw of ['4m', '높이 확인 필요', '높이4m제한해제', '30km/h 화물차 주의']) assert.deepEqual(codes(raw), []);
 });
 
-test('only approved exclusions disappear; bicycle and crosswalk records remain pending', () => {
+test('unresolved bicycle and crosswalk records are excluded without guessing their shapes', () => {
   for (const raw of ['통합표지', '(통합표지)', '(통합표지) / LED', '토요일 공휴일 제외', '중앙차로 버스 전용 / 24시간 전일제', '청색차로 버스전용 07:00~21:00',
     '24시간 전일제', '07:00-10:00, 17:00-21:00 / 토요일 공휴일 제외', '사고많은곳', '사고가 잦은 곳']) {
     assert.equal(visibleSigns([point(raw)]).length, 0, raw);
@@ -55,7 +57,7 @@ test('only approved exclusions disappear; bicycle and crosswalk records remain p
   for (const raw of ['자전거주의', '(통합표지) 자전거주의', '전방50m 횡단보도', '주차허용시간 22:00~07:00',
     '시간제 차량통행제한 여기부터70m 08:00~09:00', '우회전금지,좌일방통행통합판']) {
     const result = classifySign(point(raw));
-    assert.equal(result.ignored, false, raw);
+    assert.equal(result.ignored, true, raw);
     assert.equal(result.label, '?', raw);
   }
 });
@@ -79,7 +81,7 @@ test('separators, unrelated numeric units and unknown compound fragments cannot 
     '어린이보호구역 24시간', '노인보호구역 여기부터 250m 05:00~22:00', '30 속도제한 40']) {
     const result = classifySign(point(raw));
     assert.equal(result.label, '?', raw);
-    assert.equal(result.ignored, false, raw);
+    assert.equal(result.ignored, true, raw);
   }
 });
 
@@ -90,11 +92,11 @@ test('approved bicycle types use full phrases without guessing caution or crossw
     ['자전거보행자겸용도로 해제', ['303', '427']], ['자전거및보행자전용도로 해제', ['303', '427']],
     ['연서로 자전거 전용차로', ['318']], ['연세로 자전거 전용차로', ['318']],
   ]) assert.deepEqual(codes(remark), expected, remark);
-  for (const remark of ['자전거주의', '횡단보도', '자전거전용', '자전거전용 해제',
+  for (const remark of ['자전거주의', '횡단보도', '자전거전용',
     '자전거전용도로해재', '자전거전용도로 / 연서로 이곳에서 1.8km',
-    '자전거통합표지(겸용도로해제)', '원동기장치자전거통행금지', '자전거전용도로 아님']) {
+    '원동기장치자전거통행금지', '자전거전용도로 아님']) {
     assert.equal(classifySign(point(remark)).label, '?', remark);
-    assert.equal(classifySign(point(remark)).ignored, false, remark);
+    assert.equal(classifySign(point(remark)).ignored, true, remark);
   }
 });
 
@@ -119,7 +121,7 @@ test('photo decisions apply only to the reviewed record and preserve evidence an
       { lat: record.lat + 0.001 }, { lng: record.lng + 0.001 }, { lat: undefined }, { source: 'R' }]) {
       const other = classifySign({ ...p, ...change });
       assert.deepEqual(other.policeCodes, []);
-      assert.equal(other.ignored, false);
+      assert.equal(other.ignored, change.source !== 'R');
     }
     assert.equal(classifySign({ ...p, sourceIndex: '134' }).policeCode, '134');
   }

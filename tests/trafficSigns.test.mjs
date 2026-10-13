@@ -4,7 +4,7 @@ import { signScope, selectSigns, layoutSignLabels } from '../lib/trafficSigns.js
 import { loadSignSnapshot, querySeoulSigns } from '../lib/server/seoulSigns.js';
 import { classifySign, signRoadviewUrl, visibleSigns } from '../lib/signClassification.js';
 import { POLICE_SIGN_CODES } from '../lib/policeSignCodes.js';
-import { SEOUL_SIGN_CODE_MAPPINGS } from '../lib/seoulSignCodeMappings.js';
+import { SEOUL_SIGN_CODE_MAPPINGS, seoulSignDisplayRule } from '../lib/seoulSignCodeMappings.js';
 
 test('sixteen user-approved codes map regardless of remarks while retaining original records', () => {
   const expected = {
@@ -19,11 +19,12 @@ test('sixteen user-approved codes map regardless of remarks while retaining orig
       const point = { id: 'S:one', source: 'S', label: 'one', sourceIndex: code, lat: 37.48, lng: 127.03, remark };
       const original = structuredClone(point);
       const result = classifySign(point);
-      assert.equal(result.label, target);
-      assert.equal(result.policeCode, target);
+      assert.equal(result.label, code === '415-2' ? '?' : target);
+      assert.equal(result.policeCode, code === '415-2' ? null : target);
+      assert.equal(result.ignored, code === '415-2');
       assert.ok(POLICE_SIGN_CODES.includes(target));
       assert.equal(result.mappingBasis, 'user');
-      assert.match(result.reason, /사용자 지정 매핑.*추가 확인/);
+      if (code !== '415-2') assert.match(result.reason, /사용자 지정 매핑.*추가 확인/);
       assert.equal(result.sourceIndex, code);
       assert.ok(result.sourceCodeRemark.endsWith(code));
       assert.equal(result.managementId, 'one');
@@ -45,8 +46,8 @@ test('fixed-code mapping covers 10213 records alongside the approved 514 familie
       mapped++;
       if (result.policeCode === '224') speedMapped++;
     }
-    else if (source === 'S' && sourceIndex.startsWith('514')) assert.ok(['417', '418', '419'].includes(result.policeCode));
-    else assert.equal(result.policeCode, source === 'S' && POLICE_SIGN_CODES.includes(sourceIndex) ? sourceIndex : null);
+    else if (source === 'S' && sourceIndex.startsWith('514')) assert.equal(result.ignored, true);
+    else assert.equal(result.policeCode, source === 'S' && POLICE_SIGN_CODES.includes(sourceIndex) && (!sourceIndex.startsWith('4') || ['427', '428'].includes(sourceIndex)) ? sourceIndex : null);
   }
   assert.equal(mapped, 10213);
   assert.equal(speedMapped, 9860);
@@ -59,12 +60,13 @@ test('514 families prioritize subtype over distance and reject malformed or unre
     for (const sourceRemark of ['', '2000m', '구간끝 190m', '보수요망']) {
       const point = { id: 'S:one', source: 'S', label: 'one', lat: 37.5, lng: 127, sourceIndex, sourceRemark };
       const result = classifySign(point);
-      assert.equal(result.label, expected);
+      assert.equal(result.label, '?');
+      assert.deepEqual(result.omittedPoliceCodes, [expected]);
       assert.equal(result.sourceIndex, sourceIndex);
       assert.equal(result.sourceRemark, sourceRemark);
       assert.equal(result.mappingBasis, 'user');
-      assert.match(result.reason, /원본 비고와 관계없이/);
-      assert.equal(result.ignored, false);
+      assert.match(result.reason, /보조표지/);
+      assert.equal(result.ignored, true);
       assert.equal(classifySign({ ...point, source: 'R' }).label, '?');
     }
   }
@@ -77,9 +79,10 @@ test('513 maps only the two approved full phrases after whitespace normalization
   for (const [sourceRemark, expected] of [['보행자 작동신호기', '407의4'], ['보행자작동신호기', '407의4'],
     ['속도를 줄이시오', '415'], [' 속도를줄이시오 ', '415']]) {
     const result = classifySign({ source: 'S', sourceIndex: '513', sourceRemark });
-    assert.equal(result.label, expected);
+    assert.equal(result.label, '?');
+    assert.deepEqual(result.omittedPoliceCodes, [expected]);
     assert.equal(result.sourceRemark, sourceRemark);
-    assert.match(result.reason, /원본 비고에 따라/);
+    assert.match(result.reason, /보조표지/);
   }
   for (const sourceRemark of ['', '보행시 작동신호기', '보행자 작동신호기 안내', '여기부터 속도를 줄이시오', '속도를 줄이시오/LED', '신호준수']) {
     assert.equal(classifySign({ source: 'S', sourceIndex: '513', sourceRemark }).label, '?');
@@ -87,7 +90,7 @@ test('513 maps only the two approved full phrases after whitespace normalization
   assert.equal(classifySign({ source: 'R', sourceIndex: '513', sourceRemark: '속도를 줄이시오' }).label, '?');
 });
 
-test('514 and 513 keep their mapped records while unmatched 513 records are hidden', async () => {
+test('514 and 513 supplementary records are excluded while source rows remain available', async () => {
   const { rows } = await loadSignSnapshot();
   const counts = {};
   for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
@@ -96,7 +99,7 @@ test('514 and 513 keep their mapped records while unmatched 513 records are hidd
     const key = `${sourceIndex === '513' ? '513' : '514'}:${result.ignored ? 'ignored' : result.label}`;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, { '514:417': 261, '514:418': 211, '514:419': 60, '513:407의4': 4, '513:415': 4, '513:ignored': 89 });
+  assert.deepEqual(counts, { '514:ignored': 532, '513:ignored': 97 });
 });
 
 test('chart number equality never verifies meaning or invents codes for unknown/road signs', () => {
@@ -138,16 +141,16 @@ test('Seocho display excludes 704 and maps the actual 751 remark without guessin
   const result = await querySeoulSigns({ lat: 37.483625, lng: 127.032683, width: 500, height: 500 });
   assert.equal(result.points.length, 119);
   const classified = visibleSigns(result.points);
-  assert.equal(classified.length, 115);
+  assert.equal(classified.length, 101);
   assert.ok(classified.every(p => p.color === '#2563eb'));
   assert.ok(classified.every(p => p.sourceCodeRemark.includes(p.sourceIndex)));
-  assert.equal(classified.filter(p => p.mappingBasis === 'code-match').length, 95);
+  assert.equal(classified.filter(p => p.mappingBasis === 'code-match').length, 81);
   const mapped = classified.filter(p => p.mappingBasis === 'user');
   assert.equal(mapped.length, 9);
   assert.equal(mapped.filter(p => p.sourceIndex === '220-1' && p.policeCode === '224').length, 5);
   assert.equal(mapped.find(p => p.sourceIndex === '751' && p.policeCode === '224').sourceRemark, '30/LED');
   assert.equal(mapped.filter(p => p.sourceRemark === '어린이보호구역/30' && p.label === '324, 224').length, 2);
-  assert.equal(classified.filter(p => p.policeCode).length, 104);
+  assert.equal(classified.filter(p => p.policeCode).length, 90);
   assert.equal(classified.filter(p => p.label === '?').length, 11);
 });
 
@@ -159,18 +162,18 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
     ['최고속도제한 40 해제', ['224', '427']], ['속도해제(30)', ['224', '427']],
     ['30속도 해제', ['224', '427']], ['50 km 속도제한 해제', ['224', '427']],
     ['30 해제', ['224', '427']], ['30해제 / LED', ['224', '427']],
-    ['여기부터 속도를 줄이시오', ['415']], ['여기부터 속도를줄이시오 / LED', ['415']],
+    ['여기부터 속도를 줄이시오', []], ['여기부터 속도를줄이시오 / LED', []],
     ['어린이보호구역 해제', ['324', '427']], ['어린이보호 해제', ['324', '427']],
-    ['30/여기부터속도를줄이시오/LED', ['224', '415']], ['30 여기부터 속도를 줄이시오', ['224', '415']],
+    ['30/여기부터속도를줄이시오/LED', ['224']], ['30 여기부터 속도를 줄이시오', ['224']],
     ['어린이보호구역 30', ['324', '224']], ['어린이보호구역/30', ['324', '224']],
-    ['30, 여기부터 속도를 줄이시오', ['224', '415']], ['30, 여기부터 속도를 줄이시오 / LED', ['224', '415']],
-    ['여기부터 300m 속도를 줄이시오', ['418', '415']], ['여기부터300m속도를줄이시오/LED', ['418', '415']],
+    ['30, 여기부터 속도를 줄이시오', ['224']], ['30, 여기부터 속도를 줄이시오 / LED', ['224']],
+    ['여기부터 300m 속도를 줄이시오', []], ['여기부터300m속도를줄이시오/LED', []],
     ['어린이보호구역', ['324']], ['어린이 보호구역 / LED', ['324']],
   ]) {
     const result = classifySign({ ...base, sourceRemark });
     assert.deepEqual(result.policeCodes, codes);
-    assert.equal(result.label, codes.join(', '));
-    assert.equal(result.ignored, false);
+    assert.equal(result.label, codes.join(', ') || '?');
+    assert.equal(result.ignored, codes.length === 0);
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.mappingBasis, 'user');
   }
@@ -178,7 +181,7 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
   for (const sourceRemark of ['219', '0', '30m', '안전속도50', '30/40', '1/20', '10/2', '30 주의', '우회전시 자전거주의', '자전거주의', '30,40', '사고잦은곳 전방100m', '높이 미확인', '어린이보호구역40 진입금지']) {
     const result = classifySign({ ...base, sourceRemark });
     assert.equal(result.label, '?');
-    assert.equal(result.ignored, false);
+    assert.equal(result.ignored, true);
   }
   assert.equal(classifySign({ ...base, source: 'R', sourceRemark: '30 해제' }).label, '?');
 });
@@ -186,7 +189,7 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
 test('ignored source codes are removed from display only, not raw records or other sources', () => {
   const points = ['704', '750', '232', '712-1', '540', '543', '532', '534', '559', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex, sourceRemark: '미지정 문구' }));
   const original = structuredClone(points);
-  assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), ['751']);
+  assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), []);
   assert.deepEqual(points, original);
   assert.equal(visibleSigns(points.map(p => ({ ...p, source: 'R' }))).length, points.length);
   for (const sourceIndex of ['540-1', '543-1', '532-1', '534-1', '559-1']) {
@@ -225,7 +228,10 @@ test('distance templates map type independently of distance and retain unrecogni
       ['전방 250m 시간X학교앞', '422'], ['160m 유치원앞', '425']]) {
       const point = { source: 'S', sourceIndex, sourceRemark };
       const result = classifySign(point);
-      assert.equal(result.policeCode, code);
+      assert.equal(result.policeCode, null);
+      assert.deepEqual(seoulSignDisplayRule(point).codes, [code]);
+      assert.deepEqual(result.omittedPoliceCodes, [code]);
+      assert.equal(result.ignored, true);
       assert.equal(result.sourceRemark, sourceRemark);
       assert.equal(result.mappingBasis, 'user');
       assert.equal(classifySign({ ...point, source: 'R' }).policeCode, null);
@@ -238,7 +244,7 @@ test('distance templates map type independently of distance and retain unrecogni
   assert.equal(classifySign({ source: 'S', sourceIndex: '559', sourceRemark: '보행신호시' }).policeCode, null);
 });
 
-test('distance types cover 202 records and 526 uses text while exclusions retain exact scope', async () => {
+test('distance supplementary families are hidden while 526 retains approved one-way text', async () => {
   const { rows } = await loadSignSnapshot();
   const counts = {};
   for (const [id, , , sourceIndex, , , sourceRemark] of rows) {
@@ -247,10 +253,7 @@ test('distance types cover 202 records and 526 uses text while exclusions retain
     const key = `${sourceIndex}:${result.ignored ? 'ignored' : result.label}`;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, { '526:일방': 165, '521:401': 8, '521:402': 4, '521:422': 5, '521:425': 86, '521:ignored': 95,
-    '538:401': 3, '538:420': 1, '538:421': 1, '538:422': 36, '538:425': 40, '538:ignored': 10,
-    '563:401': 1, '563:420': 1, '563:422': 16, '563:ignored': 5,
-    '540:ignored': 25, '543:ignored': 5, '532:ignored': 35, '534:ignored': 8, '559:ignored': 41 });
+  assert.deepEqual(counts, {"521:ignored": 198, "538:ignored": 91, "563:ignored": 23, "532:ignored": 35, "559:ignored": 41, "540:ignored": 25, "526:일방": 165, "534:ignored": 8, "543:ignored": 5});
 });
 
 test('751 raw remark ingestion reconciles all records with exact mapping and exclusion totals', async () => {
@@ -262,10 +265,10 @@ test('751 raw remark ingestion reconciles all records with exact mapping and exc
     const key = p.ignored ? 'ignored' : p.label;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, {"111": 1, "112": 1, "132": 1, "220": 113, "221": 22, "224": 3892, "302": 4, "318": 27, "323": 40, "324": 69, "401": 161, "402": 8, "415": 1564, "220, 221": 412, "ignored": 10064, "?": 1743, "224, 415": 696, "418, 415": 262, "324, 224, 427": 6, "224, 427": 1446, "415, 420": 59, "224, 418, 415": 32, "324, 427": 483, "324, 224": 160, "323, 427": 42, "323, 415": 14, "323, 224": 22, "일방": 47, "224, 415, 420": 46, "324, 224, 415": 6, "418, 415, 420": 13, "224, 420": 3, "415, 421": 11, "224, 415, 421": 8, "324, 420": 1, "323, 418, 415": 3, "302, 427": 28, "324, 415": 19, "303, 427": 2, "324, 402": 1, "324, 415, 420": 5, "323, 224, 427": 1, "324, 224, 415, 420": 3, "418, 415, 421": 1, "224, 418, 415, 420": 2, "224, 418, 415, 421": 1, "323, 224, 415": 2, "324, 418, 415, 421": 1});
+  assert.deepEqual(counts, {"111": 1, "112": 1, "132": 1, "220": 112, "221": 15, "224": 4680, "302": 4, "318": 27, "323": 57, "324": 96, "427": 34, "428": 11, "220, 221, 222": 409, "ignored": 13841, "324, 224, 427": 6, "224, 427": 1446, "324, 427": 483, "324, 224": 169, "323, 427": 42, "323, 224": 24, "일방": 47, "221, 222": 7, "302, 427": 28, "303, 427": 2, "220, 221": 3, "323, 224, 427": 1, "220, 222": 1});
 });
 
-test('non-751 unmatched safety signs are hidden without dropping mappings, labels or road signs', async () => {
+test('all unmatched safety signs are hidden while retained numbers, labels and road signs survive', async () => {
   const { rows } = await loadSignSnapshot();
   const counts = {};
   for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
@@ -274,11 +277,11 @@ test('non-751 unmatched safety signs are hidden without dropping mappings, label
     const state = result.ignored ? 'excluded' : result.displayOnly ? 'text' : result.policeCode ? result.mappingBasis : 'unmapped';
     const key = `${point.source}:${state}`;
     counts[key] = (counts[key] || 0) + 1;
-    if (point.source === 'S' && state === 'unmapped') assert.equal(sourceIndex, '751');
+    if (point.source === 'S') assert.notEqual(state, 'unmapped');
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.managementId, point.label);
   }
-  assert.deepEqual(counts, {"S:user": 20649, "S:code-match": 182707, "R:unmapped": 12008, "S:excluded": 14776, "S:unmapped": 1743, "S:text": 212});
+  assert.deepEqual(counts, {"S:user": 17868, "S:code-match": 149534, "R:unmapped": 12008, "S:excluded": 52473, "S:text": 212});
   const points = [
     { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
     { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },
@@ -287,7 +290,7 @@ test('non-751 unmatched safety signs are hidden without dropping mappings, label
     { source: 'R', sourceIndex: '513', sourceRemark: '' },
   ];
   const original = structuredClone(points);
-  assert.deepEqual(visibleSigns(points).map(p => p.label), ['415', '일방', '224, 415', '?']);
+  assert.deepEqual(visibleSigns(points).map(p => p.label), ['일방', '224', '?']);
   assert.deepEqual(points, original);
 });
 
