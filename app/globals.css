@@ -1044,7 +1044,7 @@ button.mini-button {
   overflow-wrap: anywhere;
 }
 
-.map-collapsed .project-map-card .map-view {
+.map-collapsed .project-map-card .survey-map-surface {
   display: none;
 }
 
@@ -1724,12 +1724,6 @@ button.mini-button {
   flex-basis: 100%;
   margin: 0;
   color: var(--muted);
-}
-
-.map-expanded #selected-bus-stop-info {
-  max-height: 25vh;
-  overflow: auto;
-  flex-shrink: 0;
 }
 
 .map-expanded .map-status {

@@ -163,3 +163,28 @@ Validation: `npm run build` (ESLint, 284 tests, Next.js production build), and
 `node scripts/check_transport_tables.mjs http://127.0.0.1:3017` for isolated
 fixture-based browser checks of deduplication, natural ordering, nine columns,
 header explanations, CSV/clipboard parity and responsive layout.
+
+## Bus stop information on the map — 2026-10-14
+
+STEP 5 no longer renders the separate bus stop table. Click a bus icon to open
+a card inside the map with 정류장명(정류장번호), 경유버스 (number/type),
+정차노선수 and 사업지와 거리 in metres. Distance remains straight-line distance.
+The shared map keeps this card within its normal, expanded and mobile bounds.
+
+Route counts deduplicate route IDs; different IDs remain distinct. A failed or
+unavailable route lookup displays 수동확인필요, not zero. Unavailable route types
+use the same label; source/lookup explanations appear below the fields. The card
+updates as route details arrive and remains open across map expansion. Hiding
+bus stops, changing the address or removing the selected stop clears it.
+
+The bus route table and subway table are unchanged. Clipboard/CSV retain the
+stop list (one stop per row), alongside the existing route/subway data.
+
+Validation: `npm run build` (lint, 288 tests, production build),
+`node scripts/check_transport_tables.mjs http://127.0.0.1:3018` (table,
+clipboard and actual CSV download), and
+`node scripts/check_bus_stop_popup.mjs http://127.0.0.1:3018` (local build,
+real Kakao map SDK/public geocoding, fixture bus responses). Browser checks
+cover delayed detail updates, missing data, click/keyboard/close, map toggles,
+address changes and desktop/mobile bounds. The fixture stop coordinates and
+route associations verify interaction, not actual service at those locations.

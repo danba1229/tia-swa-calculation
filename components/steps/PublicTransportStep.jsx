@@ -1,15 +1,11 @@
 "use client";
 
-import { BUS_STOP_COLUMNS, BUS_ROUTE_NOTE, createBusStopTableRows } from "../../lib/seoulBusTable";
+import { BUS_ROUTE_NOTE } from "../../lib/seoulBusTable";
 import { transportMissingNote } from "../../lib/transportTableDisplay";
 
-export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, busRefreshStatusText, busRouteTableRows, busStops, copyPublicTransportTables, downloadPublicTransportCsv, form, formatFacilityDistance, formatNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }) {
-  const stopRows = createBusStopTableRows(busStops, formatFacilityDistance);
+export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, busRefreshStatusText, busRouteTableRows, busStops, copyPublicTransportTables, downloadPublicTransportCsv, form, formatNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }) {
   const routeRows = busRouteTableRows(busStops);
-  const stopNote = transportMissingNote(stopRows, busStops.map(stop => stop.routeError));
   const routeNote = transportMissingNote(routeRows, busStops.flatMap(stop => [stop.routeError, ...(stop.routes || []).flatMap(route => [route.detailError, route.endpointTimeError, route.supplementError])]));
-  const pairedStops = [];
-  for (let index = 1; index < stopRows.length; index += 2) pairedStops.push([stopRows[index], stopRows[index + 1]]);
   return (<section className={`panel step-section ${shouldShowStep(5) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
@@ -41,7 +37,7 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
               ? publicTransportResult.busError
               : publicTransportResult.searched
                 ? publicTransportResult.busSummary ? `조사 범위 안의 버스정류장 ${formatNumber(publicTransportResult.busSummary.returnedCount)}개를 정리했습니다.` : publicTransportResult.error || "버스 조회 결과를 확인하지 못했습니다."
-                : "교통시설 조회를 누르면 버스정류장·경유노선·지하철역을 표로 정리합니다."}
+                : "교통시설 조회를 누르면 버스정류장을 지도에서 확인하고 버스노선·지하철역을 표로 정리합니다."}
           </p>
           <p className="verification-source">
             원자료: {publicTransportResult.busSource || "서울시 버스정류소 위치정보 · 버스노선별 정류소정보"}
@@ -57,6 +53,7 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
           {publicTransportResult.busDetailError ? <p className="verification-source" role="alert">{publicTransportResult.busDetailError} 기본 정류장·경유노선 목록은 유지합니다.</p> : null}
           {publicTransportResult.busRouteTotal > 0 && <p role="status">경유노선 보완: {publicTransportResult.busRouteCompleted || 0}/{publicTransportResult.busRouteTotal}개 정류장 조회 시도 · {publicTransportResult.busRouteLoading ? "이어서 조회 중" : "조회 종료"}</p>}
           {publicTransportResult.busRouteError && <p role="alert">{publicTransportResult.busRouteError}</p>}
+          <p className="hint">지도에서 버스정류장 아이콘을 누르면 정류장명·경유버스·정차노선수·사업지와 거리를 확인할 수 있습니다. 지도는 상단의 조사 시작으로 표시합니다.</p>
           <p className="hint">누락 항목 재시도는 성공 자료를 유지합니다. 버스노선표의 첫차·막차는 노선 기점 기준입니다. API 미제공 값은 수동 확인이 필요합니다. API 재조회 대기 중이면 최대 5분 뒤 다시 시도하세요.</p>
           {publicTransportResult.busSummary?.partial ? (
             <p className="verification-source">버스 정보 일부 조회 실패: 경유노선 {publicTransportResult.busSummary.failedStationRoutes || 0}개 정류장, 노선 상세 {publicTransportResult.busSummary.failedRouteDetails || 0}건, 기종점 첫·막차 {publicTransportResult.busSummary.failedStationTimes || 0}건. 조회된 결과는 유지하며 누락 항목은 수동 확인이 필요합니다.</p>
@@ -65,38 +62,6 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
             <p className="verification-source">범위 안 정류장 {publicTransportResult.busSummary.withinScopeCount}개 중 거리순 {publicTransportResult.busSummary.returnedCount}개를 표시합니다.</p>
           ) : null}
         </div>
-
-        <section className="subpanel">
-          <div className="subpanel-header">
-            <h3>버스정류장</h3>
-            <p className="subpanel-source">{publicTransportResult.transportRegion === "gyeonggi" ? "경기버스정보 기반정보" : "서울시 공식 파일"} {publicTransportResult.busSourceDate ? `(${publicTransportResult.busSourceDate} 기준)` : "기준"} / 조사 범위 내 정류장 · 직선거리순 (왼쪽 → 오른쪽)
-              {stopNote && <span className="transport-missing-note">{stopNote}</span>}
-            </p>
-          </div>
-          <div className="table-wrap">
-            <table className="data-table public-transport-table bus-stop-table">
-              <thead>
-                <tr>
-                  {[...BUS_STOP_COLUMNS, ...BUS_STOP_COLUMNS].map((column, index) => <th key={index} scope="col">{column}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {busStops.length ? pairedStops.map(([left, right], index) => (
-                  <tr key={index}>
-                    {left.map((cell, column) => <td key={`left-${column}`}>{cell}</td>)}
-                    {right ? right.map((cell, column) => <td key={`right-${column}`}>{cell}</td>) : <td colSpan={3} aria-label="추가 정류장 없음" />}
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={6} className="empty-cell">
-                      {publicTransportResult.loading ? "조회 중입니다." : publicTransportResult.searched ? (publicTransportResult.busError || (!publicTransportResult.busSummary && publicTransportResult.error) || "조사 범위 안에서 표시할 버스정류장이 없습니다.") : "조회 전입니다. 서울·경기 주소지를 입력한 뒤 교통시설 조회를 눌러 주세요."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
 
         <section className="subpanel">
           <div className="subpanel-header">

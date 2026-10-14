@@ -64,30 +64,32 @@ export default function SurveyMapPanel({ mapCollapsed, mapContainerRef, mapExpan
               <p>버스 종류는 API 상세조회에서 확인된 경우만 표시합니다. 미조회·미제공 값은 추정하지 않습니다. 라벨이 겹치면 지도를 확대해 주세요.</p>
             </div>
           ) : null}
-          <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
+          <div className="survey-map-surface">
+            <div id="scope-map" ref={mapContainerRef} className="map-view" aria-label="조사 범위 지도" />
+            <div id="selected-bus-stop-info" aria-live="polite">
+              {selectedBusDetails && <section className="bus-stop-detail bus-stop-map-popup" aria-label="선택한 버스정류장 정보" onKeyDown={event => {
+                if (event.key === "Escape") { event.stopPropagation(); setSelectedBusStop(null); }
+              }}>
+                <div className="bus-stop-detail-heading">
+                  <h4>{selectedBusDetails.name}({selectedBusDetails.number})</h4>
+                  <button type="button" className="ghost" onClick={() => setSelectedBusStop(null)} aria-label="버스정류장 정보 닫기">닫기</button>
+                </div>
+                <dl>
+                  <dt>경유버스:</dt><dd>{selectedBusDetails.routes}</dd>
+                  <dt>정차노선수:</dt><dd>{selectedBusDetails.routeCount}</dd>
+                  <dt>사업지와 거리:</dt><dd>{selectedBusDetails.distance}</dd>
+                </dl>
+                <p>사업지 기준 직선거리 · 실시간 운행정보 아님</p>
+                {selectedBusDetails.note && <p className="bus-stop-missing-note">{selectedBusDetails.note}</p>}
+              </section>}
+            </div>
+          </div>
           {showSurveyPointsOnMap && selectedSurveyMapPoint && <section className="bus-stop-detail" aria-label="선택한 사전조사지점 정보">
             <div className="bus-stop-detail-heading"><h4>{selectedSurveyMapPoint.kind === "reference" ? "첨두분석 참고지점" : `${selectedSurveyMapPoint.rank}순위 추천지점`} · {selectedSurveyMapPoint.code}</h4>
               <button type="button" className="ghost" onClick={() => setSelectedSurveyMapPoint(null)}>닫기</button></div>
             <p>{selectedSurveyMapPoint.title}</p><p>{selectedSurveyMapPoint.note}</p>
             <p>자료연도/월: {selectedSurveyMapPoint.sourceYear || "미확인"}</p>
           </section>}
-          <div id="selected-bus-stop-info" aria-live="polite">
-            {selectedBusDetails ? (
-              <section className="bus-stop-detail" aria-label="선택한 버스정류장 정보">
-                <div className="bus-stop-detail-heading">
-                  <h4>{selectedBusDetails.name}</h4>
-                  <button type="button" className="ghost" onClick={() => setSelectedBusStop(null)} aria-label="버스정류장 정보 닫기">닫기</button>
-                </div>
-                <dl>
-                  <dt>정류장번호</dt><dd>{selectedBusDetails.number}</dd>
-                  <dt>경유 버스</dt><dd>{selectedBusDetails.routes}</dd>
-                  <dt>번호·종류</dt><dd>{selectedBusDetails.routeLabels.join(", ") || "노선 정보 미제공"}</dd>
-                  <dt>사업지와 거리</dt><dd>{selectedBusDetails.distance}</dd>
-                </dl>
-                <p>서울시 공식 파일{selectedBusDetails.sourceDate ? ` · ${selectedBusDetails.sourceDate} 기준` : ""} · 실시간 운행정보 아님</p>
-              </section>
-            ) : null}
-          </div>
           <p className="map-status" role="status">{mapStatus}</p>
         </div>
       </section>);
