@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { residualArea } from "../../../lib/researchIntegrity";
 import { kosisAreaM2, verifyKosisRows } from "../../../lib/kosisArea";
+import { DEFAULT_STATISTICS_YEAR } from "../../../lib/statisticsYear";
 
 export const runtime = "nodejs";
 
-const DEFAULT_STATISTICS_YEAR = "2024";
 const KOSIS_ENDPOINT = "https://kosis.kr/openapi/Param/statisticsParameterData.do";
 const KOSIS_META_ENDPOINT = "https://kosis.kr/openapi/statisticsData.do";
 const KOSIS_STAT_HTML = "https://kosis.kr/statHtml/statHtml.do";

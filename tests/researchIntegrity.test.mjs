@@ -7,6 +7,7 @@ import { nullableArea, residualArea, areaStats, createRequestGate, validSurveyCe
 import { isInsideScope, summarizeProjects } from "../lib/tiaScope.js";
 import { geocodeProject } from "../lib/projectGeocode.js";
 import { kosisAreaM2 } from '../lib/kosisArea.js';
+import { DEFAULT_STATISTICS_YEAR } from '../lib/statisticsYear.js';
 import { mergeStoredAndLive } from '../lib/tiaCoverage.js';
 
 test("missing area is not zero and incomplete/negative residual is not invented", () => {
@@ -30,7 +31,7 @@ test("partial report retains source total without normalizing known rows to 100 
 
 const statsSource = readFileSync(new URL("../app/api/local-statistics/route.js", import.meta.url), "utf8")
   .replace(/^import .*;\r?$/gm, "").replace(/^export /gm, "");
-const statsContext = vm.createContext({ residualArea, kosisAreaM2 });
+const statsContext = vm.createContext({ residualArea, kosisAreaM2, DEFAULT_STATISTICS_YEAR });
 vm.runInContext(statsSource, statsContext);
 
 test("actual KOSIS mapping preserves missing land categories and does not inflate other", () => {

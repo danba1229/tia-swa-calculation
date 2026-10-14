@@ -15,6 +15,7 @@ import TrafficPeakAnalysis from "./TrafficPeakAnalysis";
 import { createSiteMapMarker } from "../lib/siteMapMarker";
 import useSiteLocation from "./useSiteLocation";
 import { resolvedSurveyAddress } from "../lib/siteGeocode";
+import { DEFAULT_STATISTICS_YEAR, STATISTICS_YEAR_OPTIONS, restoreStatisticsYearSelection } from "../lib/statisticsYear";
 import AddressAutocomplete from "./AddressAutocomplete";
 import { createSubwayRows } from "../lib/subwayTable";
 import { readDraft } from "../lib/draftStorage";
@@ -76,8 +77,6 @@ const MANUAL_RESEARCH_PLACEHOLDER = "수동 조사필요";
 const DEFAULT_SCOPE_WIDTH = "2300";
 const DEFAULT_SCOPE_HEIGHT = "3200";
 const ROAD_SAMPLE_INTERVAL_METERS = 180;
-const DEFAULT_STATISTICS_YEAR = "2024";
-const STATISTICS_YEAR_OPTIONS = ["2025", "2024", "2023", "2022", "2021"];
 const DEVELOPMENT_PROJECT_TYPES = ["전체", "건축물", "개발사업"];
 const DEVELOPMENT_STATUS_FILTERS = ["전체", "반영", "반영검토", "참고", "제외후보"];
 const STEP_NAV_ITEMS = [
@@ -203,6 +202,7 @@ function createBlankState() {
     roads: ROAD_CLASSES.map((roadClass) => createRoadRow({ roadClass })),
     surveyPoints: [createSurveyRow()],
     statisticsYear: DEFAULT_STATISTICS_YEAR,
+    statisticsYearMode: "auto",
     statisticsVerification: null,
     reportStatus: "",
     landuseBaseYear: "",
@@ -553,6 +553,8 @@ function pieBackground(slices) {
 
 function mergeLoadedState(parsed) {
   const base = createBlankState();
+  const yearSelection = restoreStatisticsYearSelection(parsed);
+  const yearChanged = yearSelection.statisticsYear !== String(parsed.statisticsYear || "").trim();
   const loadedBasics = { ...base.basics, ...(parsed.basics || {}) };
   const legacyStatistics = Boolean(parsed.statisticsDataKey) && parsed.researchSchemaVersion !== 2;
   const legacyDevelopment = parsed.developmentResult?.results?.some((result) => typeof result.withinScope !== "boolean");
@@ -564,9 +566,9 @@ function mergeLoadedState(parsed) {
       rectWidth: String(loadedBasics.rectWidth || "").trim() || DEFAULT_SCOPE_WIDTH,
       rectHeight: String(loadedBasics.rectHeight || "").trim() || DEFAULT_SCOPE_HEIGHT,
     },
-    statisticsYear: String(parsed.statisticsYear || "").trim() || DEFAULT_STATISTICS_YEAR,
-    statisticsVerification: parsed.statisticsVerification || null,
-    reportStatus: parsed.reportStatus || "",
+    ...yearSelection,
+    statisticsVerification: yearChanged ? null : parsed.statisticsVerification || null,
+    reportStatus: yearChanged ? "" : parsed.reportStatus || "",
     landuseBaseYear: parsed.landuseBaseYear || "",
     zoningBaseYear: parsed.zoningBaseYear || "",
     landuseAreas: { ...base.landuseAreas, ...(parsed.landuseAreas || {}) },
@@ -1105,7 +1107,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       };
 
       if (field === "siteAddress") {
-        const sourcePatch = buildLocalStatisticsSources(value, current.statisticsYear || DEFAULT_STATISTICS_YEAR);
+        next.statisticsYear = current.statisticsYearMode === "manual" ? current.statisticsYear : DEFAULT_STATISTICS_YEAR;
+        const sourcePatch = buildLocalStatisticsSources(value, next.statisticsYear);
         if (sourcePatch.landuseSource && shouldUpdateLocalStatisticsSource(current.landuseSource)) {
           next.landuseSource = sourcePatch.landuseSource;
         }
@@ -1190,6 +1193,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     setForm((current) => ({
       ...current,
       statisticsYear: nextYear,
+      statisticsYearMode: "manual",
       statisticsDataKey: "",
       statisticsEvidence: null,
       statisticsVerification: null,
@@ -1723,6 +1727,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       ],
       surveyPoints: [createSurveyRow()],
       statisticsYear: DEFAULT_STATISTICS_YEAR,
+      statisticsYearMode: "auto",
       statisticsVerification: null,
       reportStatus: "",
       landuseBaseYear: "",
@@ -1782,6 +1787,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         }),
       ],
       statisticsYear: DEFAULT_STATISTICS_YEAR,
+      statisticsYearMode: "auto",
       statisticsVerification: null,
       reportStatus: "",
       landuseBaseYear: "",
