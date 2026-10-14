@@ -5,7 +5,7 @@ import seoulTopisPoints from "../app/seoul-topis-points.json";
 import { BUS_ROUTE_COLUMNS, BUS_ROUTE_NOTE, createBusRouteTableRows, createBusStopTableRows } from "../lib/seoulBusTable";
 import { nullableArea, areaStats, createRequestGate, validSurveyCenter } from "../lib/researchIntegrity";
 import { summarizeProjects } from "../lib/tiaScope";
-import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails } from "../lib/busMapOverlays";
+import { createBusStopLayer, clearBusStopOverlays, busStopMapDetails, busStopKey, visibleBusStops } from "../lib/busMapOverlays";
 import { loadBusDetails, markPendingBusDetails } from "../lib/busDetailLoader";
 import { busRefreshStatusText } from "../lib/seoulBusRefreshStatus";
 import SubwayResults from "./SubwayResults";
@@ -780,9 +780,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   useEffect(() => {
     clearBusStopOverlays(mapRuntimeRef);
-    setSelectedBusStop(null);
     const runtime = mapRuntimeRef.current;
-    if (!showBusStopsOnMap || !busStops.length || !runtime.map || !runtime.busScope || !window.kakao?.maps) return;
+    if (!showBusStopsOnMap || !busStops.length || !runtime.map || !runtime.busScope || !window.kakao?.maps) {
+      setSelectedBusStop(null);
+      return;
+    }
+    setSelectedBusStop(current => current ? visibleBusStops(busStops, runtime.busScope).find(stop => busStopKey(stop) === busStopKey(current)) || null : null);
     runtime.busStopLayer = createBusStopLayer({
       map: runtime.map, maps: window.kakao.maps, stops: busStops, bounds: runtime.busScope,
       onSelect: setSelectedBusStop,

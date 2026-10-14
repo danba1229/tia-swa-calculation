@@ -20,11 +20,11 @@ test("only in-scope stops with actual coordinates are shown; distinct opposite-s
 test("details preserve ARS leading zeros, distinguish missing distance from zero and deduplicate routes", () => {
   assert.equal(busStopMapDetails(stop).number, "01001");
   assert.equal(busStopMapDetails({ ...stop, arsId: 1001 }).number, "01001");
-  assert.equal(busStopMapDetails({ ...stop, arsId: "00000" }).number, "미제공");
-  assert.equal(busStopMapDetails({ ...stop, distanceMeters: null }).distance, "거리 미확인");
-  assert.equal(busStopMapDetails({ ...stop, distanceMeters: 0 }).distance, "0 m (직선거리)");
-  assert.equal(busStopMapDetails({ ...stop, routes: [{ routeName: "470" }, { routeName: "470" }] }).routes, "470");
-  assert.match(busStopMapDetails({ ...stop, routes: [] }).routes, /미제공/);
+  assert.equal(busStopMapDetails({ ...stop, arsId: "00000" }).number, "수동확인필요");
+  assert.equal(busStopMapDetails({ ...stop, distanceMeters: null }).distance, "수동확인필요");
+  assert.equal(busStopMapDetails({ ...stop, distanceMeters: 0 }).distance, "0m");
+  assert.equal(busStopMapDetails({ ...stop, routes: [{ routeName: "470" }, { routeName: "470" }] }).routes, "470(수동확인필요)");
+  assert.match(busStopMapDetails({ ...stop, routes: [] }).routes, /수동확인필요/);
 });
 
 class Element {
@@ -102,7 +102,7 @@ test("route types are displayed only when supplied, never inferred from route nu
     { routeName: "N37", routeType: "수동 확인 필요" },
     { routeName: "서초08" },
   ] });
-  assert.deepEqual(details.routeLabels, ["470 (간선)", "N37 (종류 미제공)", "서초08 (종류 미제공)"]);
+  assert.deepEqual(details.routeLabels, ["470(간선)", "N37(수동확인필요)", "서초08(수동확인필요)"]);
 });
 
 test("route labels are opt-in, use safe text and are removed with their markers", () => {
@@ -115,7 +115,7 @@ test("route labels are opt-in, use safe text and are removed with their markers"
   const label = f.overlays[1].content.children[2];
   assert.equal(label.className, "bus-route-map-label");
   assert.equal(label.children[0].textContent, "서초구청");
-  assert.match(label.children[1].textContent, /470 \(종류 미제공\)/);
+  assert.match(label.children[1].textContent, /470\(수동확인필요\)/);
   assert.equal(label.children[1].innerHTML, undefined);
   labeled.destroy();
   assert.equal(f.overlays.filter((overlay) => overlay.map).length, 0);
@@ -146,4 +146,20 @@ test("bus and bicycle exports contain only the chosen step's data", () => {
   assert.match(bus, /subway/);
   assert.doesNotMatch(bike, /subway/);
   assert.doesNotMatch(bus, /bike source/);
+});
+
+
+test("stop route counts deduplicate IDs, keep different IDs and never treat failed lookup as zero", () => {
+  const routes = [{ busRouteId: "1", routeName: "470" },
+    { busRouteId: "1", routeName: "470", routeType: "간선" },
+    { busRouteId: "2", routeName: "470", routeType: "마을" }];
+  const details = busStopMapDetails({ ...stop, routes });
+  assert.equal(details.routeCount, 2);
+  assert.deepEqual(details.routeLabels, ["470(간선)", "470(마을)"]);
+  assert.equal(busStopMapDetails({ ...stop, routes: [] }).routeCount, 0);
+  assert.equal(busStopMapDetails({ ...stop, routes: undefined }).routeCount, "수동확인필요");
+  const failed = busStopMapDetails({ ...stop, routes: [], routeError: "공식 파일에 연결된 노선 없음" });
+  assert.equal(failed.routeCount, "수동확인필요");
+  assert.equal(failed.note, "공식 파일에 연결된 노선 없음");
+  assert.equal(busStopMapDetails({ ...stop, distanceMeters: -1 }).distance, "수동확인필요");
 });

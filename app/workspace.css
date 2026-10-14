@@ -183,6 +183,16 @@ body:has(.research-workspace) { background: #f5f7fb; }
 .research-workspace .map-view { min-height: 340px; height: min(48dvh, 560px); border-radius: 8px; border-color: #dce4ee; background-color: #f0f4f9; position: relative; }
 .research-workspace .map-view:empty::before { content: "사업지 주변 지도"; position: absolute; top: 43%; left: 16px; right: 16px; text-align: center; font-size: 19px; font-weight: 700; color: #536b8c; }
 .research-workspace .map-view:empty::after { content: "주소와 범위를 입력하고 조사를 시작하세요"; position: absolute; top: calc(43% + 36px); left: 16px; right: 16px; text-align: center; font-size: 12px; color: #5e7089; }
+.survey-map-surface { position: relative; isolation: isolate; margin-top: 10px; }
+.survey-map-surface .map-view { margin-top: 0; }
+.survey-map-surface #selected-bus-stop-info { position: absolute; z-index: 10; left: 10px; right: 10px; bottom: 10px; max-height: calc(100% - 20px); overflow: auto; pointer-events: none; }
+.bus-stop-map-popup { pointer-events: auto; width: 370px; max-width: 100%; box-sizing: border-box; margin: 0; background: #fff; border-color: #dce4ee; box-shadow: 0 4px 18px #172b4d26; }
+.bus-stop-map-popup .bus-stop-detail-heading { align-items: flex-start; }
+.bus-stop-map-popup .bus-stop-detail-heading button { flex-shrink: 0; padding: 4px 8px; }
+.bus-stop-map-popup dd { line-height: 1.6; }
+.bus-stop-map-popup .bus-stop-missing-note { margin-top: 6px; }
+.research-workspace.map-expanded .survey-map-surface { flex: 1 0 120px; min-height: 120px; display: flex; }
+.research-workspace.map-expanded .project-map-card .survey-map-surface .map-view { height: auto; align-self: stretch; }
 .research-workspace .map-status { margin-top: 12px; font-size: 12px; }
 .research-workspace.map-collapsed .workspace-content { grid-template-columns: minmax(0, 1fr); }
 .research-workspace.map-collapsed .workspace-content > .project-panel { display: none; }

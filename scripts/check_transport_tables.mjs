@@ -41,16 +41,8 @@ try {
   await page.getByRole('combobox', { name: '주소지', exact: true }).fill('서울특별시 서초구 남부순환로 2584');
   await page.getByRole('navigation', { name: '조사 항목' }).getByRole('button').nth(5).click();
   await page.getByRole('button', { name: '교통시설 조회', exact: true }).click();
-  const stopTable = page.locator('.bus-stop-table');
-  await stopTable.getByText('서초구청(22863)', { exact: true }).waitFor();
   await page.waitForFunction(() => [...document.querySelectorAll('button')].some(button => button.textContent === '교통시설 조회' && !button.disabled));
-  assert.deepEqual(await stopTable.locator('th').allTextContents(), ['정류장명(정류장번호)', '거리', '정차노선수', '정류장명(정류장번호)', '거리', '정차노선수']);
-  assert.equal(await stopTable.locator('tbody tr').count(), 2);
-  assert.deepEqual(await stopTable.locator('tbody tr').first().locator('td').allTextContents(), ['서초구청(22863)', '10m', '수동확인필요', '서울역(00123)', '20m', '3']);
-  assert.equal(await stopTable.locator('tbody tr').last().locator('td[colspan="3"]').count(), 1);
-  const busSection = page.locator('.subpanel').filter({ has: page.getByRole('heading', { name: '버스정류장', exact: true }) });
-  assert.match(await busSection.locator('.subpanel-header').innerText(), /공식 파일에 연결된 노선 없음/);
-  assert.doesNotMatch(await stopTable.innerText(), /위도|경도|공식 파일|37\.4/);
+  assert.equal(await page.locator('.bus-stop-table').count(), 0);
   const routesSection = page.locator('.subpanel').filter({ has: page.getByRole('heading', { name: '버스노선표', exact: true }) });
   const routeCells = await routesSection.locator('tbody tr').nth(1).locator('td').allTextContents();
   assert.deepEqual(routeCells.slice(4, 6), ['04:30', '23:10']);
@@ -92,12 +84,12 @@ try {
   for (const row of renderedRows) assert.ok(copied.includes(row.join('\t')));
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
-    await stopTable.scrollIntoViewIfNeeded();
+    await routesSection.scrollIntoViewIfNeeded();
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
     await page.screenshot({ path: `.preview-test-results/transport-tables-${width}.png`, fullPage: true });
   }
   assert.deepEqual(errors, []);
-  const result = { passed: true, nineRouteColumns: true, uniqueSortedRoutes: true, csvAndClipboardMatchScreen: true, pairedStops: true, oddStopPadding: true, missingReasonsInHeaders: true, timesOnly: true, oneStopPerCsvRow: true, mobileNoPageOverflow: true, fixtures: true };
+  const result = { passed: true, nineRouteColumns: true, uniqueSortedRoutes: true, csvAndClipboardMatchScreen: true, stopTableRemoved: true,  timesOnly: true, oneStopPerCsvRow: true, mobileNoPageOverflow: true, fixtures: true };
   await writeFile('.preview-test-results/transport-tables-validation.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result, null, 2));
 } finally { await context.close(); await browser.close(); }
