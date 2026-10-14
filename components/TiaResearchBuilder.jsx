@@ -14,6 +14,7 @@ import TrafficAccidentStep from "./TrafficAccidentStep";
 import TrafficPeakAnalysis from "./TrafficPeakAnalysis";
 import { createSiteMapMarker } from "../lib/siteMapMarker";
 import useSiteLocation from "./useSiteLocation";
+import { resolvedSurveyAddress } from "../lib/siteGeocode";
 import AddressAutocomplete from "./AddressAutocomplete";
 import { createSubwayRows } from "../lib/subwayTable";
 import { readDraft } from "../lib/draftStorage";
@@ -600,6 +601,8 @@ function mergeLoadedState(parsed) {
 export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [form, setForm] = useState(createBlankState);
   const siteLocation = useSiteLocation(form.basics.siteAddress);
+  const surveyAddress = resolvedSurveyAddress(form.basics.siteAddress, siteLocation);
+  const surveyRegion = detectSurveyRegion(surveyAddress);
   useEffect(() => {
     setForm(current => {
       if (current.basics.siteAddress.trim() !== siteLocation.address) return current;
@@ -730,8 +733,8 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
   const landuseStats = computeLanduseStats(form);
   const zoningStats = computeZoningStats(form);
-  const surveyRecommendations = buildSurveyRecommendations(form.basics.siteAddress);
-  const autoSurveyPoints = buildAutoSurveyPoints(form.basics.siteAddress, topisCandidates, gyeonggiCandidates, surveyRecommendations);
+  const surveyRecommendations = surveyAddress ? buildSurveyRecommendations(surveyAddress) : [];
+  const autoSurveyPoints = buildAutoSurveyPoints(surveyAddress, topisCandidates, gyeonggiCandidates, surveyRecommendations);
   const selectedSurveyPoint = selectSurveyPoint(autoSurveyPoints);
   const roadNameSignature = form.roads.map((row) => safe(row.name)).filter(Boolean).join("|");
   const landuseSlices = landuseStats.consistent ? buildPieSlices(landuseStats.entries, landuseStats.total) : [];
@@ -793,13 +796,13 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
     async function loadTopisCandidates() {
       setTopisCandidates([]);
-      if (detectSurveyRegion(form.basics.siteAddress) !== "seoul") {
+      if (surveyRegion !== "seoul") {
         setTopisCandidates([]);
         setTopisStatus("");
         return;
       }
 
-      if (safe(form.basics.siteAddress).length < 8) {
+      if (surveyAddress.length < 8) {
         setTopisCandidates([]);
         setTopisStatus("서울 사업지 주소를 조금 더 구체적으로 입력하면 최근접 TOPIS 지점을 계산합니다.");
         return;
@@ -815,15 +818,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         setTopisStatus("서울 TOPIS 지점 좌표를 확인하는 중입니다.");
         await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
 
-        const sourceLat = Number(form.basics.centerLat);
-        const sourceLng = Number(form.basics.centerLng);
-        let origin = null;
-
-        if (validSurveyCenter(form.basics.centerLat, form.basics.centerLng)) {
-          origin = { y: String(sourceLat), x: String(sourceLng) };
-        } else {
-          origin = await geocodeAddress(form.basics.siteAddress);
-        }
+        const origin = { y: siteLocation.lat, x: siteLocation.lng };
 
         const geocoder = new window.kakao.maps.services.Geocoder();
         const stored = JSON.parse(window.localStorage.getItem(TOPIS_POINT_CACHE_KEY) || "{}");
@@ -891,20 +886,20 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     return () => {
       cancelled = true;
     };
-  }, [form.basics.siteAddress, form.basics.centerLat, form.basics.centerLng, kakaoJsKey]);
+  }, [surveyAddress, surveyRegion, siteLocation.lat, siteLocation.lng, kakaoJsKey]);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadGyeonggiCandidates() {
       setGyeonggiCandidates([]);
-      if (detectSurveyRegion(form.basics.siteAddress) !== "gyeonggi") {
+      if (surveyRegion !== "gyeonggi") {
         setGyeonggiCandidates([]);
         setGyeonggiStatus("");
         return;
       }
 
-      if (safe(form.basics.siteAddress).length < 8) {
+      if (surveyAddress.length < 8) {
         setGyeonggiCandidates([]);
         setGyeonggiStatus("경기도 사업지 주소를 조금 더 구체적으로 입력하면 가까운 GITS 지점번호 후보를 계산합니다.");
         return;
@@ -929,7 +924,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            address: form.basics.siteAddress,
+            address: surveyAddress,
             roadNames: form.roads.map((row) => safe(row.name)).filter(Boolean),
           }),
         });
@@ -949,15 +944,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
         await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
 
-        const sourceLat = Number(form.basics.centerLat);
-        const sourceLng = Number(form.basics.centerLng);
-        let origin = null;
-
-        if (validSurveyCenter(form.basics.centerLat, form.basics.centerLng)) {
-          origin = { y: String(sourceLat), x: String(sourceLng) };
-        } else {
-          origin = await geocodeAddress(form.basics.siteAddress);
-        }
+        const origin = { y: siteLocation.lat, x: siteLocation.lng };
 
         const stored = JSON.parse(window.localStorage.getItem(GYEONGGI_POINT_CACHE_KEY) || "{}");
         const enriched = [];
@@ -971,7 +958,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
             continue;
           }
 
-          const location = await resolveGyeonggiPointLocation(point, form.basics.siteAddress).catch(() => null);
+          const location = await resolveGyeonggiPointLocation(point, surveyAddress).catch(() => null);
           if (!location) {
             enriched.push({ ...point, locationResolved: false });
             continue;
@@ -1036,9 +1023,9 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     return () => {
       cancelled = true;
     };
-  }, [form.basics.siteAddress, form.basics.centerLat, form.basics.centerLng, kakaoJsKey, roadNameSignature]);
+  }, [surveyAddress, surveyRegion, siteLocation.lat, siteLocation.lng, kakaoJsKey, roadNameSignature]);
 
-  const peakMapKey = peakMapPoint?.address === form.basics.siteAddress && detectSurveyRegion(form.basics.siteAddress) === "gyeonggi"
+  const peakMapKey = peakMapPoint?.address === form.basics.siteAddress && surveyRegion === "gyeonggi"
     ? JSON.stringify([peakMapPoint.address, peakMapPoint.point.code, peakMapPoint.point.name, peakMapPoint.month]) : "";
   useEffect(() => {
     setReferencePosition(null);
@@ -1063,12 +1050,12 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }, [peakMapKey, kakaoJsKey]);
   const mappedReference = referencePosition?.key === peakMapKey && peakMapKey
     ? { ...peakMapPoint.point, ...referencePosition, sourceYear: peakMapPoint.month } : null;
-  const surveyPoints = surveyMapPoints(detectSurveyRegion(form.basics.siteAddress), topisCandidates, gyeonggiCandidates, mappedReference);
+  const surveyPoints = surveyMapPoints(surveyRegion, topisCandidates, gyeonggiCandidates, mappedReference);
   useEffect(() => {
     setSelectedSurveyMapPoint(null);
     syncSurveyCandidateOverlays({
       mapRuntimeRef,
-      address: form.basics.siteAddress,
+      address: surveyAddress,
       topisCandidates,
       gyeonggiCandidates,
       centerLat: form.basics.centerLat,
@@ -1082,6 +1069,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }, [
     topisCandidates,
     gyeonggiCandidates,
+    surveyAddress,
     form.basics.siteAddress,
     form.basics.centerLat,
     form.basics.centerLng,
@@ -1971,7 +1959,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       </section>
 
-      <SurveyPointsStep {...{ detectSurveyRegion, buildPriorityResult, buildPriorityNote, runAll: !!autoRequest, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus }} onPeakPointChange={setPeakMapPoint} />
+      <SurveyPointsStep {...{ region: surveyRegion, surveyAddress, siteLocation, buildPriorityResult, buildPriorityNote, runAll: !!autoRequest, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus }} onPeakPointChange={setPeakMapPoint} />
 
       <LanduseStep {...{ rankClass, DEFAULT_STATISTICS_YEAR, STATISTICS_YEAR_OPTIONS, addRow, createZoningRow, exportStep3Excel, form, formatNumber, formatOptionalNumber, formatPercent, formatSquareKilometers, landuseReportRows, landuseSlices, landuseStats, pieBackground, refreshLocalStatisticsOnly, removeRow, setForm, shouldShowStep, updateLanduseArea, updateListItem, updateStatisticsYear, verification, zoningReportRows, zoningSlices, zoningStats }} />
 
