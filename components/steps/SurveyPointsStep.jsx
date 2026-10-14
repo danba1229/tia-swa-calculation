@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 
-export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResult, buildPriorityNote, runAll, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus, onPeakPointChange }) {
+export default function SurveyPointsStep({ region, surveyAddress, siteLocation, buildPriorityResult, buildPriorityNote, runAll, TrafficPeakAnalysis, autoSurveyPoints, form, formatDistance, gyeonggiCandidates, gyeonggiStatus, selectedSurveyPoint, shouldShowStep, surveyRecommendations, topisCandidates, topisStatus, onPeakPointChange }) {
   const [peakChoice, setPeakChoice] = useState(null);
-  const region = detectSurveyRegion(form.basics.siteAddress);
   const peakCandidate = gyeonggiCandidates.find((candidate) => peakChoice?.address === form.basics.siteAddress
     && peakChoice.code === candidate.pointCode && peakChoice.route === candidate.routeCode) || gyeonggiCandidates[0];
   return (<section className={`panel step-section survey-analysis-step ${shouldShowStep(2) ? "" : "is-hidden"}`}>
@@ -16,13 +15,13 @@ export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResu
           <a className="survey-candidates-link" href="#nearby-survey-points">가까운 지점 보기</a>
         </div>
 
-        <TrafficPeakAnalysis key={`${form.basics.siteAddress}:${region === "gyeonggi" ? `${peakCandidate?.routeCode || ""}:${peakCandidate?.pointCode || ""}` : ""}`} address={form.basics.siteAddress}
+        {!surveyAddress ? <p role="status">{siteLocation.status === "ready" ? "검색 결과의 행정구역 주소를 확인하지 못했습니다. 주소를 다시 확인해 주세요." : siteLocation.message}</p> : <TrafficPeakAnalysis key={`${form.basics.siteAddress}:${region}:${region === "gyeonggi" ? `${peakCandidate?.routeCode || ""}:${peakCandidate?.pointCode || ""}` : ""}`} address={form.basics.siteAddress}
           region={region} candidates={region === "gyeonggi" ? gyeonggiCandidates : topisCandidates}
-          selectedCandidate={region === "gyeonggi" ? peakCandidate : null} active={shouldShowStep(2) || runAll} onMapPointChange={onPeakPointChange} />
+          selectedCandidate={region === "gyeonggi" ? peakCandidate : null} active={shouldShowStep(2) || runAll} onMapPointChange={onPeakPointChange} />}
 
         <section id="nearby-survey-points" className="survey-candidates-compact" aria-label="가까운 사전조사지점">
         <h3>가까운 사전조사지점</h3>
-        {detectSurveyRegion(form.basics.siteAddress) === "seoul" ? (
+        {region === "seoul" ? (
           <div className="survey-recommendation-block">
             <div className="output-header">
               <h3>서울 TOPIS 최근접 3지점</h3>
@@ -48,7 +47,7 @@ export default function SurveyPointsStep({ detectSurveyRegion, buildPriorityResu
           </div>
         ) : null}
 
-        {detectSurveyRegion(form.basics.siteAddress) === "gyeonggi" ? (
+        {region === "gyeonggi" ? (
           <div className="survey-recommendation-block">
             <div className="output-header">
               <h3>경기 GITS 최근접 3지점</h3>

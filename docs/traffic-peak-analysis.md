@@ -136,6 +136,29 @@ No LLM or NotebookLM is involved in numeric extraction or calculation.
 
 ## Verification
 
+### Survey region from the resolved address (2026-10-14)
+
+STEP 2 chooses TOPIS/GITS from the current successful geocode's structured
+`matchedAddress`, while preserving the address typed by the user. For example,
+`서초구 남부순환로 2584` resolves to `서울 서초구 남부순환로 2584` and selects
+Seoul even when the input omits the province. The resolved address also drives
+recommendation sources, survey map overlays and the GITS candidate API request.
+Candidate distance calculations reuse that geocode's coordinates.
+
+Pending, failed, empty or stale address results cannot retain the previous
+survey region or start peak analysis. A successful response without a structured
+matched address asks the user to check the address instead of guessing from
+the input or a status message. Other research steps retain their existing logic.
+
+This does not change the sequential geocoding of the 139 TOPIS points on a cold
+browser cache; first-time recommendations can still take about a minute.
+
+`npm run build` passes lint, all 287 tests and the production build.
+`scripts/check_survey_address_ui.mjs` verifies the local build through the real
+public geocoding API and Kakao SDK, isolating unrelated API calls. It checks
+province-less Seoul input, three recommendations/map markers, a switch to
+Gyeonggi, and clearing candidates/analysis after a failed or empty address.
+
 `node --test tests/trafficPeak.test.mjs` covers dates, cross-year/month boundaries,
 duplicates, null vs zero, missing directions, ties, holidays and workbook schema.
 Live workbook checks and hosted workflow/production checks are separate evidence.

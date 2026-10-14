@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createSiteGeocoder, currentSiteLocation } from '../lib/siteGeocode.js';
+import { createSiteGeocoder, currentSiteLocation, resolvedSurveyAddress } from '../lib/siteGeocode.js';
 
 function harness() {
   const timers = new Set(), calls = [], states = [];
@@ -65,4 +65,38 @@ test('new address immediately hides old coordinates before the next effect runs'
   assert.equal(currentSiteLocation('B', state).status, 'loading');
   assert.equal(currentSiteLocation('B', state).lat, '');
   assert.equal(currentSiteLocation('', state).status, 'idle');
+});
+
+test('province-less input keeps its original text and exposes the matched address for survey selection', async () => {
+  const h = harness();
+  const address = '서초구 남부순환로 2584';
+  h.lookup(address); const pending = h.start();
+  assert.equal(resolvedSurveyAddress(address, h.states.at(-1)), '');
+  h.reply(0, { ...success(37.483625, 127.032683), matchedAddress: '서울 서초구 남부순환로 2584' });
+  await pending;
+  assert.equal(h.states.at(-1).address, address);
+  assert.equal(h.states.at(-1).matchedAddress, '서울 서초구 남부순환로 2584');
+  assert.equal(resolvedSurveyAddress(address, h.states.at(-1)), '서울 서초구 남부순환로 2584');
+  assert.equal(resolvedSurveyAddress('수원시 팔달구 효원로 241', h.states.at(-1)), '');
+});
+
+test('survey selection uses structured matched address, never input province or status message', () => {
+  const state = { address: '서울이라는 이름의 장소', matchedAddress: '경기 수원시 팔달구 효원로 241',
+    status: 'ready', lat: '37.263454', lng: '127.028662', message: '주소 확인: 서울' };
+  assert.equal(resolvedSurveyAddress(state.address, state), state.matchedAddress);
+  for (const change of [{ status: 'loading' }, { status: 'error' }, { lat: '' }, { matchedAddress: '' }, { matchedAddress: undefined }]) {
+    assert.equal(resolvedSurveyAddress(state.address, { ...state, ...change }), '');
+  }
+  assert.equal(currentSiteLocation('새 주소', state).matchedAddress, '');
+});
+
+test('failed replacement and stale responses cannot retain a previously matched survey region', async () => {
+  const h = harness();
+  h.lookup('서초구 남부순환로 2584'); const first = h.start();
+  h.reply(0, { ...success(37.483625, 127.032683), matchedAddress: '서울 서초구 남부순환로 2584' }); await first;
+  h.lookup('없는 주소'); const failure = h.start();
+  assert.equal(h.states.at(-1).matchedAddress, '');
+  h.reply(1, { success: false, message: '검색 결과 없음' }); await failure;
+  assert.equal(resolvedSurveyAddress('없는 주소', h.states.at(-1)), '');
+  assert.equal(h.states.at(-1).matchedAddress, '');
 });
