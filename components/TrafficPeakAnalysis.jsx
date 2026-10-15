@@ -10,6 +10,7 @@ const hourLabel = (h) => `${String(h).padStart(2, "0")}:00~${String(h + 1).padSt
 const dateLabel = (date) => `${Number(date.slice(5, 7))}/${Number(date.slice(8))}`;
 
 export default function TrafficPeakAnalysis({ region, candidates = [], selectedCandidate = null, address, active, onMapPointChange }) {
+  const [ggSource, setGgSource] = useState("official");
   const [catalog, setCatalog] = useState(null);
   const [month, setMonth] = useState("");
   const [week, setWeek] = useState("");
@@ -24,19 +25,20 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
   const [pointSearch, setPointSearch] = useState("");
   const isGyeonggi = region === "gyeonggi";
   const supported = region === "seoul" || isGyeonggi;
-  const endpoint = isGyeonggi ? "/api/traffic-volume/gyeonggi" : "/api/traffic-volume";
-  const providerName = isGyeonggi ? "경기데이터드림 상시교통량(일반국도 시간대별)" : "서울 TOPIS 지점별 일자별 교통량";
+  const isOfficial = isGyeonggi && ggSource === "official";
+  const endpoint = isGyeonggi ? `/api/traffic-volume/gyeonggi${isOfficial ? "/official" : ""}` : "/api/traffic-volume";
+  const providerName = isGyeonggi ? (isOfficial ? "경기도 교통정보센터 상시교통량(일반국도 시간대별)" : "경기데이터드림 상시교통량(일반국도 시간대별)") : "서울 TOPIS 지점별 일자별 교통량";
   const metadata = catalog?.months.find((m) => m.month === month);
   const points = metadata?.points || [];
   const link = gyeonggiPointLink(selectedCandidate, points, month);
   const preferred = !isGyeonggi ? candidates.find((c) => points.some((p) => p.code === c.code))?.code || "" : "";
   const station = isGyeonggi && !reference ? link.station : points.some((p) => p.code === chosenStation) ? chosenStation : preferred;
   const point = points.find((p) => p.code === station);
-  const identity = peakAnalysisIdentity({ provider: region, address, candidate: selectedCandidate, station, month, reference });
+  const identity = peakAnalysisIdentity({ provider: `${region}:${isGyeonggi ? ggSource : "topis"}`, address, candidate: selectedCandidate, station, month, reference });
   const listedPoints = isGyeonggi && reference ? points.filter((p) => p.code === station || `${p.code} ${p.name}`.toLowerCase().includes(pointSearch.trim().toLowerCase())) : points;
   const weeks = month ? monthWeeks(month) : [];
 
-  useEffect(() => { setCatalog(null); }, [address, endpoint]);
+  useEffect(() => { setCatalog(null); setResult(null); setMonth(""); setWeek(""); }, [address, endpoint]);
 
   useEffect(() => {
     onMapPointChange?.(isGyeonggi && point ? { address, point, month } : null);
@@ -68,8 +70,8 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
   useEffect(() => {
     if (!month) { setWeek(""); return; }
     const rows = monthWeeks(month);
-    setWeek((old) => rows.some((w) => w[0] === old) ? old : (rows.find((w) => w.every((d) => d.startsWith(month))) || rows[0])[0]);
-  }, [month]);
+    setWeek((old) => rows.some((w) => w[0] === old) ? old : rows.some(w => w[0] === catalog?.suggestedWeek) ? catalog.suggestedWeek : (rows.find((w) => w.every((d) => d.startsWith(month))) || rows[0])[0]);
+  }, [month, catalog?.suggestedWeek]);
 
   useEffect(() => {
     setResult(null);
@@ -112,7 +114,8 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
     <div className={styles.heading}><div><p className="eyebrow">WEEKLY TRAFFIC · {isGyeonggi ? "GYEONGGI" : "TOPIS"}</p><h3>첨두일·첨두시간 분석</h3></div>
       <div className={styles.actions}><button type="button" className="secondary-button" onClick={() => setRefresh((n) => n + 1)}>저장자료 새로고침</button>
         <button type="button" className="secondary-button" disabled={!visible} onClick={downloadCsv}>분석표 CSV</button></div></div>
-    <p className={styles.help}>{isGyeonggi ? "경기데이터드림의 실제 수록 월을 표시합니다. 최초 조회 시 전체 페이지를 수집하며, 이후 24시간 동안 저장자료를 재사용합니다. 지점번호·노선·지역·자료연도가 일치할 때만 자동 연결합니다." : "월별 공식 엑셀을 사용합니다. 달력에서 한 주를 선택하세요. 월 경계의 주는 인접 월의 저장자료도 함께 조회합니다."}</p>
+    {isGyeonggi && <label>공식자료 출처<select aria-label="경기 교통량 출처" value={ggSource} onChange={e => { setGgSource(e.target.value); setResult(null); }}><option value="official">경기도 교통정보센터 · 최신 공개연도</option><option value="legacy">경기데이터드림 · 기존 저장자료</option></select></label>}
+    <p className={styles.help}>{isOfficial ? "공개 연도와 지점 목록은 매일 확인합니다. 선택 주간은 20시간이 지난 뒤 조회 시 갱신하며 실패하면 이전 검증자료를 유지합니다. 처음 선택한 주간은 공식 조회에 시간이 걸릴 수 있습니다. 관측값이 있는 날짜만 분석하며, 권장 주간도 결측 여부를 별도로 확인합니다." : isGyeonggi ? "경기데이터드림의 실제 수록 월을 표시합니다. 최초 조회 시 전체 페이지를 수집하며, 이후 20시간 동안 저장자료를 재사용하고 매일 정기 갱신합니다. 지점번호·노선·지역·자료연도가 일치할 때만 자동 연결합니다." : "월별 공식 엑셀을 사용합니다. 달력에서 한 주를 선택하세요. 월 경계의 주는 인접 월의 저장자료도 함께 조회합니다."}</p>
     {isGyeonggi && <div className={styles.connection} aria-label="경기 사전조사지점 첨두분석 연결">
       <h4>사전조사지점 연결</h4>
       <p>GITS 추천지점: <strong>{selectedCandidate ? `${selectedCandidate.pointCode} · ${selectedCandidate.routeName}` : "없음"}</strong>
@@ -150,8 +153,8 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
           <option value="both">양방향 합계</option><option value="in">{isGyeonggi ? "원자료 방향 " : "유입 "}{point?.directions.in || (isGyeonggi ? "1" : "")}</option><option value="out">{isGyeonggi ? "원자료 방향 " : "유출 "}{point?.directions.out || (isGyeonggi ? "2" : "")}</option>
         </select></label>
         <p className={styles.help}>{isGyeonggi ? "지점번호·노선·지역을 확인해 사업지와 관련된 상시조사지점을 선택하세요. 방향은 원자료의 1/2 코드와 명칭을 그대로 표시합니다." : "인근 후보는 거리 기준입니다. 사업지 접근도로와의 관련성을 확인한 후 분석 지점을 확정하세요."}</p>
-        {metadata && <a href={`${endpoint}?source=${month}`}>선택 월 원자료 {isGyeonggi ? "JSON" : "엑셀"} 다운로드</a>}
-        <a href={isGyeonggi ? "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=5YXX2DGXASTB4S54AEEP32699329&infSeq=1" : "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily"} target="_blank" rel="noreferrer">{isGyeonggi ? "경기데이터드림 공식 자료" : "TOPIS 공식 자료실"}</a>
+        {metadata && (!isOfficial || station) && <a href={`${endpoint}?source=${month}${isOfficial ? `&station=${station}` : ""}`}>{isOfficial ? "선택 지점·월" : "선택 월"} 원자료 {isGyeonggi ? "JSON" : "엑셀"} 다운로드</a>}
+        <a href={isOfficial ? "https://gits.gg.go.kr/gtdb/web/trafficDb/trafficVolume/alwaysTrafficVolumeByTime.do" : isGyeonggi ? "https://data.gg.go.kr/portal/data/service/selectServicePage.do?infId=5YXX2DGXASTB4S54AEEP32699329&infSeq=1" : "https://topis.seoul.go.kr/refRoom/openRefRoom_2.do?tab=trafficvolDaily"} target="_blank" rel="noreferrer">{isOfficial ? "경기도 교통정보센터 공식 자료" : isGyeonggi ? "경기데이터드림 공식 자료" : "TOPIS 공식 자료실"}</a>
         {visible && <div className={styles.summary} aria-label="주간 교통량 분석 요약" aria-live="polite">
           <span><small>분석 주간</small><strong>{trafficDateLabel(visible.weekStart)} ~ {trafficDateLabel(visible.weekEnd)}</strong></span>
           <span><small>첨두일 · 일교통량 최대</small><strong>{visible.peakDays.length ? visible.peakDays.map(trafficDateLabel).join(", ") : visible.complete ? "최대일 구분 없음" : "선정 보류"}</strong><small>{visible.dailyMax !== null ? `${number(visible.dailyMax)}대/일` : "7일 완전자료 필요"}</small></span>
@@ -161,6 +164,7 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
     <div aria-live="polite">
       {(loading || catalogLoading) && <p className={styles.message}>{isGyeonggi ? "경기도 교통량을 조회 중입니다. 최초 전체 수집은 시간이 걸릴 수 있습니다." : "저장된 교통량으로 주간 분석 중입니다."}</p>}
       {error && <p className={styles.warning} role="alert">{error}</p>}
+      {isOfficial && catalog?.checkedAt && <p className={styles.help}>공식 목록 확인: {new Date(catalog.checkedAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })} · 공개된 마지막 날짜: {catalog.latestDate}</p>}
       {catalog?.warning && <p className={styles.warning}>{catalog.warning}</p>}
       {catalog && !catalog.months.length && <p className={styles.warning}>아직 수집된 월별 원자료가 없습니다. 수집이 완료된 뒤 조회해 주세요. 0으로 대체하지 않습니다.</p>}
       {visible && <>
