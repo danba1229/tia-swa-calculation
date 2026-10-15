@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { residualArea } from "../../../lib/researchIntegrity";
 import { kosisAreaM2, verifyKosisRows } from "../../../lib/kosisArea";
 import { DEFAULT_STATISTICS_YEAR } from "../../../lib/statisticsYear";
+import { geocodeAddress } from "../../../lib/kakao";
 
 export const runtime = "nodejs";
 
@@ -528,11 +529,18 @@ function makeExtractionSummary({ target, year, landuse, zoning }) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const address = safe(body.address);
+    let address = safe(body.address);
     const year = normalizeYear(body.year || body.base_year);
     if (!address) return NextResponse.json({ error: "주소지가 비어 있습니다." }, { status: 400 });
 
-    const target = resolveAdminArea(address);
+    let target = resolveAdminArea(address);
+    if (!target.province || !target.preferred) {
+      const match = await geocodeAddress(address);
+      if (match.success && match.matchedAddress) {
+        address = match.matchedAddress;
+        target = resolveAdminArea(address);
+      }
+    }
     if (!target.province || !target.preferred) {
       return NextResponse.json({ error: "주소에서 지자체 단위를 찾지 못했습니다." }, { status: 400 });
     }

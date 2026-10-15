@@ -14,7 +14,7 @@ import TrafficAccidentStep from "./TrafficAccidentStep";
 import TrafficPeakAnalysis from "./TrafficPeakAnalysis";
 import { createSiteMapMarker } from "../lib/siteMapMarker";
 import useSiteLocation from "./useSiteLocation";
-import { resolvedSurveyAddress } from "../lib/siteGeocode";
+import { resolvedSurveyAddress, resolveInvestigationSite } from "../lib/siteGeocode";
 import { DEFAULT_STATISTICS_YEAR, STATISTICS_YEAR_OPTIONS, restoreStatisticsYearSelection } from "../lib/statisticsYear";
 import AddressAutocomplete from "./AddressAutocomplete";
 import { createSubwayRows } from "../lib/subwayTable";
@@ -746,7 +746,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const verification = form.statisticsVerification;
   const developmentSearch = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
   const developmentResult = { ...createBlankDevelopmentResult(), ...(form.developmentResult || {}) };
-  const developmentAdmin = deriveDevelopmentAdmin(form.basics.siteAddress);
+  const developmentAdmin = deriveDevelopmentAdmin(surveyAddress || form.basics.siteAddress);
   const developmentResults = Array.isArray(developmentResult.results) ? developmentResult.results : [];
   const displayedDevelopmentResults = developmentResults.filter((result) => {
     const statusMatches = developmentSearch.statusFilter === "전체" || result.reflectionStatus === developmentSearch.statusFilter;
@@ -1226,11 +1226,11 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     }));
   }
 
-  function getDevelopmentPayload() {
+  function getDevelopmentPayload(address = surveyAddress || form.basics.siteAddress) {
     const search = { ...createBlankDevelopmentSearch(), ...(form.developmentSearch || {}) };
-    const admin = deriveDevelopmentAdmin(form.basics.siteAddress);
+    const admin = deriveDevelopmentAdmin(address);
     return {
-      siteAddress: safe(form.basics.siteAddress),
+      siteAddress: safe(address),
       radiusMeters: getDevelopmentRadiusMeters(form.basics),
       ...getScopeDimensions(form.basics),
       startYear: toNumber(search.startYear) || "",
@@ -1242,7 +1242,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   async function searchDevelopmentPlans(...args) {
-    return createDevelopmentSearch({ createBlankDevelopmentResult, createBlankDevelopmentSearch, formatNumber, getDevelopmentPayload, requestGateRef, setForm, setStatusText, summarizeProjects })(...args);
+    return createDevelopmentSearch({ createBlankDevelopmentResult, createBlankDevelopmentSearch, formatNumber, getDevelopmentPayload, resolveSite, requestGateRef, setForm, setStatusText, summarizeProjects })(...args);
   }
 
   function formatDevelopmentDistance(result) {
@@ -1335,6 +1335,10 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     setStatusText("주변지역 개발계획 문장 초안을 클립보드에 복사했습니다.");
   }
 
+  async function resolveSite(request) {
+    return resolveInvestigationSite(form.basics.siteAddress, siteLocation, { signal: request?.signal });
+  }
+
   async function resolveScopeCenter(centerOverride = null, request = null) {
     const overrideLat = Number(centerOverride?.lat);
     const overrideLng = Number(centerOverride?.lng);
@@ -1384,7 +1388,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   }
 
   async function searchPublicTransportFacilities(...args) {
-    return createTransportSearch({ computeRectangleBounds, createBlankPublicTransportResult, detectSurveyRegion, form, formatNumber, getScopeDimensions, loadBusDetails, markPendingBusDetails, requestGateRef, resolveScopeCenter, safe, setForm, setStatusText, toNumber })(...args);
+    return createTransportSearch({ computeRectangleBounds, createBlankPublicTransportResult, detectSurveyRegion, form, formatNumber, getScopeDimensions, loadBusDetails, markPendingBusDetails, requestGateRef, resolveScopeCenter, resolveSite, safe, setForm, setStatusText, toNumber })(...args);
   }
 
   function formatFacilityDistance(station) {
@@ -1510,7 +1514,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     return createStatisticsClient({ DEFAULT_STATISTICS_YEAR, ZONING_DEFAULTS, createBlankLanduseAreas, createZoningRow, form })(...args);
   }
 
-  async function refreshLocalStatisticsOnly() {
+  async function refreshLocalStatisticsOnly(options = {}) {
     const request = requestGateRef.current.start("statistics");
     const address = safe(form.basics.siteAddress);
     if (!address) {
@@ -1538,7 +1542,14 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       },
     }));
 
-    const result = await fetchLocalStatistics(address, request);
+    let result;
+    try {
+      const site = options.site || await resolveSite(request);
+      if (!request.current()) return;
+      result = await fetchLocalStatistics(site.address, request);
+    } catch (error) {
+      result = { patch: { reportStatus: "FAILED", statisticsVerification: { status: "FAILED", message: error.message } }, message: error.message };
+    }
     if (!request.current()) return;
     setForm((current) => request.current() ? ({
       ...current,
@@ -1590,14 +1601,22 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
       setStatusText("가로·세로 조사 범위는 1~100,000m로 입력해 주세요.");
       return;
     }
-    void refreshLocalStatisticsOnly();
-    void searchDevelopmentPlans();
-    void searchPublicTransportFacilities({ auto: true });
-    void renderScopeMap();
-    setAutoRequest({ id: Date.now(), address: safe(form.basics.siteAddress) });
+    const request = requestGateRef.current.start("investigation");
+    setStatusText("주소와 행정구역을 확인하고 있습니다.");
+    try {
+      const site = await resolveSite(request);
+      if (!request.current()) return;
+      void refreshLocalStatisticsOnly({ site });
+      void searchDevelopmentPlans({ site });
+      void searchPublicTransportFacilities({ auto: true, site });
+      void renderScopeMap({ site });
+      setAutoRequest({ id: Date.now(), address: safe(form.basics.siteAddress) });
+    } catch (error) {
+      if (request.current()) setStatusText(error.message || "주소를 확인하지 못했습니다.");
+    }
   }
 
-  async function renderScopeMap() {
+  async function renderScopeMap(options = {}) {
     setMapPhase('loading');
     const request = requestGateRef.current.start("map");
     const address = safe(form.basics.siteAddress);
@@ -1629,7 +1648,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       await loadKakaoSdk(kakaoJsKey, mapRuntimeRef);
       if (!request.current()) return;
-      const { lat, lng } = await resolveScopeCenter(null, request);
+      const { lat, lng } = await resolveScopeCenter(options.site?.center, request);
       if (!request.current()) return;
       const kakao = window.kakao;
       const boundsData = computeRectangleBounds(lat, lng, width, height);

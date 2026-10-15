@@ -2,10 +2,12 @@
 
 import { BUS_ROUTE_NOTE } from "../../lib/seoulBusTable";
 import { transportMissingNote } from "../../lib/transportTableDisplay";
+import { busGapSummary } from "../../lib/client/transportEnrichment";
 
 export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, busRefreshStatusText, busRouteTableRows, busStops, copyPublicTransportTables, downloadPublicTransportCsv, form, formatNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }) {
   const routeRows = busRouteTableRows(busStops);
-  const routeNote = transportMissingNote(routeRows, busStops.flatMap(stop => [stop.routeError, ...(stop.routes || []).flatMap(route => [route.detailError, route.endpointTimeError, route.supplementError])]));
+  const gaps = busGapSummary(busStops, publicTransportResult.busSummary);
+  const routeNote = transportMissingNote(routeRows, busStops.flatMap(stop => [stop.routeError, ...(stop.routes || []).flatMap(route => [route.detailError, route.supplementError])]));
   return (<section className={`panel step-section ${shouldShowStep(5) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
@@ -55,8 +57,8 @@ export default function PublicTransportStep({ BUS_ROUTE_COLUMNS, SubwayResults, 
           {publicTransportResult.busRouteError && <p role="alert">{publicTransportResult.busRouteError}</p>}
           <p className="hint">지도에서 버스정류장 아이콘을 누르면 정류장명·경유버스·정차노선수·사업지와 거리를 확인할 수 있습니다. 지도는 상단의 조사 시작으로 표시합니다.</p>
           <p className="hint">누락 항목 재시도는 성공 자료를 유지합니다. 버스노선표의 첫차·막차는 노선 기점 기준입니다. API 미제공 값은 수동 확인이 필요합니다. API 재조회 대기 중이면 최대 5분 뒤 다시 시도하세요.</p>
-          {publicTransportResult.busSummary?.partial ? (
-            <p className="verification-source">버스 정보 일부 조회 실패: 경유노선 {publicTransportResult.busSummary.failedStationRoutes || 0}개 정류장, 노선 상세 {publicTransportResult.busSummary.failedRouteDetails || 0}건, 기종점 첫·막차 {publicTransportResult.busSummary.failedStationTimes || 0}건. 조회된 결과는 유지하며 누락 항목은 수동 확인이 필요합니다.</p>
+          {gaps.partial ? (
+            <p className="verification-source">추가 확인: 경유노선 미확인 {gaps.failedStationRoutes}개 정류장 · 노선 상세 조회 미완료 {gaps.failedRouteDetails}개 노선 · 기점 첫·막차 미제공 {gaps.failedStationTimes}개 노선 · 배차간격 일부 미제공 {gaps.missingIntervals}개 노선. 노선 수는 중복을 제거한 기준입니다.</p>
           ) : null}
           {publicTransportResult.busSummary?.truncated ? (
             <p className="verification-source">범위 안 정류장 {publicTransportResult.busSummary.withinScopeCount}개 중 거리순 {publicTransportResult.busSummary.returnedCount}개를 표시합니다.</p>

@@ -36,6 +36,8 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
   const listedPoints = isGyeonggi && reference ? points.filter((p) => p.code === station || `${p.code} ${p.name}`.toLowerCase().includes(pointSearch.trim().toLowerCase())) : points;
   const weeks = month ? monthWeeks(month) : [];
 
+  useEffect(() => { setCatalog(null); }, [address, endpoint]);
+
   useEffect(() => {
     onMapPointChange?.(isGyeonggi && point ? { address, point, month } : null);
     return () => onMapPointChange?.(null);
@@ -45,7 +47,6 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
     if (!active || !supported || !address.trim()) return;
     const abort = new AbortController();
     setError("");
-    setCatalog(null);
     setCatalogLoading(true);
     fetch(endpoint, { signal: abort.signal }).then(async (r) => {
       const data = await r.json();
@@ -57,6 +58,12 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
       .finally(() => { if (!abort.signal.aborted) setCatalogLoading(false); });
     return () => abort.abort();
   }, [active, supported, endpoint, address, refresh]);
+
+  useEffect(() => {
+    if (!active || !catalog?.refreshing) return;
+    const timer = setTimeout(() => setRefresh(value => value + 1), 15000);
+    return () => clearTimeout(timer);
+  }, [active, catalog]);
 
   useEffect(() => {
     if (!month) { setWeek(""); return; }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { defaultSyncPeriod, syncTiaBusinessPeriod } from "../../../../lib/tiaBusinessSync";
 import { isTiaDatabaseConfigured } from "../../../../lib/tiaDatabase";
 
+export const maxDuration = 180;
+
 function authorize(request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return process.env.NODE_ENV !== "production";
@@ -14,7 +16,7 @@ export async function GET(request) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
     if (!isTiaDatabaseConfigured()) {
-      return NextResponse.json({ success: false, message: "DATABASE_URL이 설정되지 않았습니다." }, { status: 503 });
+      return NextResponse.json({ success: false, message: "TIA 또는 공통 조사자료 DB 연결 설정이 없습니다." }, { status: 503 });
     }
 
     const { searchParams } = new URL(request.url);

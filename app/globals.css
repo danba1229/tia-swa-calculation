@@ -168,6 +168,7 @@ h3 {
 }
 
 .site-center-dot {
+  pointer-events: none;
   display: block;
   width: 18px;
   height: 18px;
@@ -177,6 +178,10 @@ h3 {
   background: #bc4b24;
   box-shadow: 0 0 0 2px #833617, 0 2px 6px #0004;
 }
+
+/* Kakao wraps CustomOverlay content in its own hit-testable div. */
+#scope-map div:has(> .site-center-dot),
+#scope-map div:has(> .bus-stop-marker) { pointer-events: none; }
 
 .step-nav-panel {
   display: grid;

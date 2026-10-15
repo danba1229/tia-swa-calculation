@@ -137,7 +137,7 @@ test("rectangle excludes a point inside circumscribed circle but outside map wid
 const routeSource = readFileSync(new URL("../app/api/tia/search/route.js", import.meta.url), "utf8")
   .replace(/^import .*;\r?$/gm, "").replace(/^export /gm, "");
 
-function tiaHandler(projects, lookup = async (address) => ({ success: true, latitude: 37.5, longitude: 127, matchedAddress: address })) {
+function tiaHandler(projects, lookup = async (address) => ({ success: true, latitude: 37.5, longitude: 127, matchedAddress: address }), dependencies = {}) {
   const context = vm.createContext({
     createHash, isInsideScope, summarizeProjects, console, mergeStoredAndLive,
     NextResponse: { json: (data, options) => new Response(JSON.stringify(data), options) },
@@ -150,6 +150,7 @@ function tiaHandler(projects, lookup = async (address) => ({ success: true, lati
     haversineDistanceMeters: () => 0,
     judgeReflection: (p, d) => ({ reflectionStatus: d === null ? "제외후보" : "반영", reflectionReason: "test" }),
     fetchTiaProjects: async () => ({ rawCount: projects.length, projects, errors: [], sources: [], sourceCounts: {} }),
+    ...dependencies,
   });
   vm.runInContext(routeSource, context);
   return (body) => context.POST(new Request("http://localhost/api/tia/search", { method: "POST", body: JSON.stringify({ siteAddress: "site", width: 2300, height: 3200, ...body }) }));
@@ -255,11 +256,12 @@ test("table rows and Excel serializer preserve null while displaying real zero",
   assert.deepEqual(Array.from(sheet[7]), ["구성비_%", 0, null]);
 });
 
-test("main investigation starts independent tasks without waiting for map SDK", () => {
+test("main investigation resolves the address then starts independent tasks without waiting for map SDK", async () => {
   const source = getFunction("startInvestigation");
   const calls = [];
-  vm.runInNewContext(source + "\nstartInvestigation();", {
-    form: { basics: { siteAddress: "site" } }, safe: String,
+  await vm.runInNewContext(source + "\nstartInvestigation();", {
+    form: { basics: { siteAddress: "site" } }, safe: String, requestGateRef: { current: createRequestGate() },
+    setStatusText() {}, resolveSite: async () => ({ address: "서울 서초구", center: { lat: 37.5, lng: 127 } }),
     getScopeDimensions: () => ({ width: 2300, height: 3200 }),
     refreshLocalStatisticsOnly: () => calls.push("stats"),
     searchDevelopmentPlans: () => calls.push("development"),
@@ -278,14 +280,33 @@ test("actual statistics callback does not apply an old response after input canc
     form: { basics: { siteAddress: "old-address" }, statisticsYear: "2024" },
     requestGateRef: { current: gate }, safe: String, DEFAULT_STATISTICS_YEAR: "2024",
     setStatusText: () => {}, setForm: (updater) => { state = updater(state); },
+    resolveSite: async () => ({ address: "서울 서초구" }),
     fetchLocalStatistics: () => new Promise((done) => { resolve = done; }),
   });
   vm.runInContext(getFunction("refreshLocalStatisticsOnly"), context);
   const pending = context.refreshLocalStatisticsOnly();
+  await new Promise(setImmediate);
+  assert.equal(typeof resolve, 'function');
   gate.cancel();
   state = { basics: { siteAddress: "new-address" } };
   resolve({ patch: { landuseAreas: { 전: "123" } }, message: "old response" });
   await pending;
   assert.equal(state.landuseAreas, undefined);
   assert.equal(state.basics.siteAddress, "new-address");
+});
+
+
+test("TIA geocode cursor remains stable while the candidate cache is being populated", async () => {
+  const projects = Array.from({ length: 25 }, (_, i) => ({ id: String(i), location: "" }));
+  let reads = 0; const jobs = [];
+  const handler = tiaHandler(projects, undefined, {
+    isTiaDatabaseConfigured: () => true, hasCompleteTiaCoverage: async () => false,
+    searchStoredTiaProjects: async () => reads++ ? [{ id: "new-db-row", location: "" }] : [],
+    after: job => jobs.push(job), upsertTiaProjects: async () => {},
+  });
+  const first = await (await handler({})).json();
+  assert.equal(jobs.length, 1);
+  const next = await handler({ offset: first.pagination.nextOffset, datasetId: first.pagination.datasetId });
+  assert.equal(next.status, 200);
+  assert.equal((await next.json()).results.length, 5);
 });

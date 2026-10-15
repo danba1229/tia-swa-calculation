@@ -188,7 +188,7 @@ test("actual component callback preserves base results even if the detail loader
     form: state, requestGateRef: { current: createRequestGate() }, safe: value=>value || "", toNumber: Number,
     detectSurveyRegion: ()=>"seoul", setStatusText: ()=>{}, setForm: callback=>{ state=callback(state); },
     createBlankPublicTransportResult: overrides=>({ busStops: [], ...overrides }),
-    resolveScopeCenter: async ()=>scope.center, computeRectangleBounds: ()=>scope.bounds, formatNumber: String,
+    resolveSite: undefined, resolveScopeCenter: async ()=>scope.center, computeRectangleBounds: ()=>scope.bounds, formatNumber: String,
     markPendingBusDetails, loadBusDetails: async ()=>{ throw new Error("unexpected failure"); },
     transportScopeKey, needsGyeonggiRouteDetail, needsRetryBusDetail, busGapSummary, loadSubwayDetails: async () => {},
     fetch: async url=>({ ok: true, json: async ()=>url.endsWith("seoul-bus")
