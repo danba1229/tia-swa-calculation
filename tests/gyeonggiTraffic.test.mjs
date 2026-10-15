@@ -73,7 +73,7 @@ test("HTML blocks, auth failure, network errors do not leak key", async () => {
 
 async function testRoute({ snapshot, failure } = {}) {
   let source = readFileSync(new URL("../app/api/traffic-volume/gyeonggi/route.js", import.meta.url), "utf8");
-  source = source.replace('import { NextResponse } from "next/server";', 'const NextResponse = Response;');
+  source = source.replace('import { NextResponse, after } from "next/server";', 'const NextResponse = Response; const after = () => {};');
   source = source.replace('import { getGgTrafficSnapshot } from "../../../../lib/gyeonggiTrafficStore.js";',
     `async function getGgTrafficSnapshot() { ${failure ? 'throw new Error("secret-test-url");' : `return {snapshot:${JSON.stringify(snapshot)}, stale:false};`} }`);
   for (const name of ["gyeonggiTraffic", "trafficPeak"]) source = source.replace(`"../../../../lib/${name}.js"`, JSON.stringify(new URL(`../lib/${name}.js`, import.meta.url).href));
@@ -100,4 +100,17 @@ test("actual GG route rejects invalid parameters before touching storage and san
   }
   const failed = await GET(new Request("https://example.test/"));
   assert.equal(failed.status, 503); assert.ok(!(await failed.text()).includes("secret-test-url"));
+});
+
+test('GG page collection is bounded to three concurrent requests and retains source order', async () => {
+  let active = 0, peak = 0;
+  const result = await collectGgTraffic({ key: 'fixture', pageSize: 1, fetchImpl: async url => {
+    active++; peak = Math.max(peak, active);
+    const index = Number(url.searchParams.get('pIndex'));
+    await new Promise(resolve => setTimeout(resolve, (9 - index) % 3));
+    active--;
+    return api([row({ DE: String(index).padStart(2, '0') })], 8);
+  } });
+  assert.equal(peak, 3);
+  assert.deepEqual(result.rawRows.map(r => r.DE), ['01','02','03','04','05','06','07','08']);
 });

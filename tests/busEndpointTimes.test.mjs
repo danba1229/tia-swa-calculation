@@ -16,10 +16,10 @@ test('Seoul terminal requires a unique exact endpoint match, not the last route 
 });
 
 test('GBIS origin times and general/Saturday/holiday intervals reach screen/export without stop fallback', () => {
-  const route = mapGbisRoute({ routeId: '200000001', routeName: '1', startStationName: 'A', endStationName: 'B',
+  const route = mapGbisRoute({ routeId: '200000001', routeName: '1', routeTypeName: '일반', startStationName: 'A', endStationName: 'B',
     upFirstTime: '05:00', upLastTime: '23:00', downFirstTime: '06:00', downLastTime: '24:00',
     peekAlloc: 10, nPeekAlloc: 15, satPeekAlloc: 20, satNPeekAlloc: 25, sunPeekAlloc: 30, sunNPeekAlloc: 35, wePeekAlloc: 40, weNPeekAlloc: 45 });
-  const stations = applyBusDetailUpdates([{ routes: [{ busRouteId: route.busRouteId }] }],
+  const stations = applyBusDetailUpdates([{ routes: [{ busRouteId: route.busRouteId, routeName: '1' }] }],
     [{ busRouteId: route.busRouteId, detail: route, stationTimes: [], stationTimeError: '미제공' }]);
   assert.equal(stations[0].routes[0].detailStatus, 'SUCCESS');
   assert.equal(busGapSummary(stations).partial, false);

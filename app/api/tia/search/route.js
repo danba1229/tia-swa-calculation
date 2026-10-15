@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { geocodeAddress, lookupKakaoAddress } from "../../../../lib/kakao";
 import { geocodeProject } from "../../../../lib/projectGeocode";
 import { fetchTiaProjects } from "../../../../lib/tiaApi";
-import { isTiaDatabaseConfigured, searchStoredTiaProjects, hasCompleteTiaCoverage } from "../../../../lib/tiaDatabase";
+import { isTiaDatabaseConfigured, searchStoredTiaProjects, hasCompleteTiaCoverage, upsertTiaProjects } from "../../../../lib/tiaDatabase";
 import { mergeStoredAndLive } from "../../../../lib/tiaCoverage";
 import { buildLocalNoticeSearches } from "../../../../lib/localNoticeSearch";
 import { haversineDistanceMeters } from "../../../../lib/distance";
@@ -29,7 +29,8 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "가로·세로 조사 범위는 1~100,000m로 입력해 주세요." }, { status: 400 });
     }
     const offset = Number(body?.offset ?? 0);
-    if (!Number.isSafeInteger(offset) || offset < 0) {
+    const sourcePage = Number(body?.sourcePage ?? 1);
+    if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(sourcePage) || sourcePage < 1 || sourcePage > 100000) {
       return NextResponse.json({ success: false, message: "잘못된 조회 위치입니다." }, { status: 400 });
     }
 
@@ -55,26 +56,37 @@ export async function POST(request) {
     let coverageComplete = false;
     if (dbConfigured) {
       try {
-        storedProjects = await searchStoredTiaProjects(searchCriteria);
-        coverageComplete = await hasCompleteTiaCoverage(searchCriteria);
+        if (sourcePage === 1) storedProjects = await searchStoredTiaProjects(searchCriteria);
+        // Do not change source selection midway through an active collection.
+        coverageComplete = sourcePage === 1 && await hasCompleteTiaCoverage(searchCriteria);
       } catch (error) {
         dbWarning = error.message || "DB 조회 실패";
         console.warn("[tia/search] DB fallback:", error);
       }
     }
-    const cacheKey = JSON.stringify([searchCriteria, coverageComplete]);
+    const cacheKey = JSON.stringify([searchCriteria, coverageComplete, sourcePage]);
     const cached = snapshots.get(cacheKey);
     let fallbackResponse;
     try {
       fallbackResponse = cached && cached.expiresAt > Date.now() ? cached.response
-        : await fetchTiaProjects(searchCriteria, { excludeSources: coverageComplete ? ['TIA_SYSTEM_API'] : [] });
+        : await fetchTiaProjects(searchCriteria, { systemPage: sourcePage,
+          excludeSources: [...(coverageComplete ? ['TIA_SYSTEM_API'] : []), ...(sourcePage > 1 ? ['TIA_PROJECT_API'] : [])] });
     } catch {
       if (!storedProjects.length) throw new Error('주변사업 원자료를 조회하지 못했습니다. 잠시 후 다시 조회해 주세요.');
       fallbackResponse = { rawCount: 0, projects: [], requestUrls: [], errors: ['실시간 보완조회 실패: 저장된 일부 후보만 표시합니다.'], sources: [], sourceCounts: {}, sourceDiagnostics: [] };
     }
     if (fallbackResponse && cached?.response !== fallbackResponse) {
       if (snapshots.size >= 20) snapshots.delete(snapshots.keys().next().value);
-      snapshots.set(cacheKey, { response: fallbackResponse, expiresAt: Date.now() + 600000 });
+      snapshots.set(cacheKey, { response: fallbackResponse, storedProjects, expiresAt: Date.now() + 600000 });
+    }
+    if (cached?.response === fallbackResponse && cached.storedProjects) storedProjects = cached.storedProjects;
+    const sourcePagination = fallbackResponse.sourceDiagnostics?.find(source => source.source === 'TIA_SYSTEM_API')?.pageInfo || null;
+    if (body.sourceSignature && sourcePagination?.signature !== body.sourceSignature) {
+      return NextResponse.json({ success: false, message: '수집 중 사업 원자료가 변경됐습니다. 다시 검색해 주세요.' }, { status: 409 });
+    }
+    if (dbConfigured && offset === 0 && fallbackResponse.projects.length) {
+      const projects = fallbackResponse.projects;
+      after(async () => { try { await upsertTiaProjects(projects); } catch { console.warn('[tia/search] candidate cache write failed'); } });
     }
     const merged = mergeStoredAndLive(storedProjects, fallbackResponse.projects);
     const tiaResponse = { ...fallbackResponse, projects: merged, rawCount: merged.length,
@@ -84,7 +96,7 @@ export async function POST(request) {
     const dataMode = storedProjects.length ? "DB_AND_LIVE" : "LIVE_API";
     const noticeSearches = buildLocalNoticeSearches(searchCriteria);
     const sourceWarnings = [...(tiaResponse.errors || [])];
-    if (tiaResponse.sourceDiagnostics?.some((source) => source.pageInfo?.complete === false)) {
+    if (tiaResponse.sourceDiagnostics?.some((source) => source.pageInfo?.complete === false && !source.pageInfo?.nextPage)) {
       sourceWarnings.push("공공 API의 전체 페이지를 수집하지 못했습니다. 수집된 후보에 한한 결과입니다.");
     }
 
@@ -161,6 +173,7 @@ export async function POST(request) {
       dataMode,
       dbConfigured,
       coverageComplete,
+      sourcePagination,
       noticeSearches,
       debug: {
         requestUrls: tiaResponse.requestUrls,
