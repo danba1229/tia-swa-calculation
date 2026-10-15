@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import XLSX from 'xlsx';
-import { parseSinTimetable, parseSinStations, parseKorailTimetable, selectKorailTimetable, operatorSubwayTimetable } from '../lib/operatorSubway.js';
+import { parseSinTimetable, parseSinStations, parseKorailTimetable, selectKorailTimetable, operatorSubwayTimetable, sinTimetable, korailTimetable } from '../lib/operatorSubway.js';
+import { createPersistentTransportCache } from '../lib/transportCache.js';
 import { parseGitsPage, parseGitsForm, latestWholeWeek, getGitsRange } from '../lib/gitsTraffic.js';
 import { parseGgTraffic } from '../lib/gyeonggiTraffic.js';
 import { buildWeekAnalysis } from '../lib/trafficPeak.js';
@@ -138,4 +139,36 @@ test('retained subway rows keep their original source and check date after a fai
   assert.equal(result.scheduleSlots[0].sourceUrl, previous.sourceUrl);
   assert.equal(result.scheduleSlots[0].checkedAt, previous.checkedAt);
   assert.equal(result.scheduleSlots[0].retained, true);
+});
+
+test('operator timetables reuse daily requests until the monthly fifth-day KST boundary', async () => {
+  let now = Date.parse('2026-10-15T00:00:00Z'), loads = 0;
+  const entries = new Map();
+  const store = {
+    read: async key => entries.get(key), claim: async () => true,
+    save: async (key, _token, value, expires) => { entries.set(key, { value, expires, updated: now }); return true; },
+    fail: async () => {},
+  };
+  const cache = createPersistentTransportCache({ store, now: () => now });
+  const board = fixture('korail-board.json'), bytes = korailBytes();
+  const fetchImpl = async url => {
+    loads++;
+    if (String(url).includes('userBoard')) return new Response(board);
+    if (String(url).endsWith('.xlsx')) return new Response(bytes);
+    throw new Error('Unexpected fetch');
+  };
+  const deps = { cache, fetchImpl };
+  const first = await korailTimetable(deps);
+  assert.equal(loads, 2);
+  assert.equal(new Date([...entries.values()][0].expires).toISOString(), '2026-11-04T19:00:00.000Z');
+  now += 86400000;
+  assert.equal((await korailTimetable(deps)).sourceSha256, first.sourceSha256);
+  assert.equal(loads, 2, 'next daily job must not download the workbook again');
+  now = Date.parse('2026-11-04T18:59:59Z');
+  await korailTimetable(deps); assert.equal(loads, 2);
+  now = Date.parse('2026-11-04T20:00:00Z');
+  await korailTimetable(deps); assert.equal(loads, 4, 'monthly scheduled job downloads the new source');
+  let sinOptions;
+  await sinTimetable({ code: 'SB005', name: '양재' }, { cache: async (_key, _loader, options) => { sinOptions = options; return {}; } });
+  assert.equal(sinOptions.ttl, undefined, 'Shinbundang uses the same monthly cache policy');
 });
