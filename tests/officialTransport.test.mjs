@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import XLSX from 'xlsx';
 import { parseSinTimetable, parseSinStations, parseKorailTimetable, selectKorailTimetable, operatorSubwayTimetable, sinTimetable, korailTimetable } from '../lib/operatorSubway.js';
+import { isCurrentTransportMonth } from '../lib/transportRefreshPolicy.js';
 import { createPersistentTransportCache } from '../lib/transportCache.js';
 import { parseGitsPage, parseGitsForm, latestWholeWeek, getGitsRange } from '../lib/gitsTraffic.js';
 import { parseGgTraffic } from '../lib/gyeonggiTraffic.js';
@@ -63,7 +64,7 @@ test('operator rows precede APIs, retain true check date, and stale operator dat
   const deps = { operator: async () => data, cache: async (key, loader, options) => { calls.push([key, options.ttl]); return loader(); }, tago: () => assert.fail('unneeded API'), seoul: () => assert.fail('unneeded API') };
   const first = await getSubwaySchedule(station, ['02:U', '02:D'], deps);
   assert.equal(first.status, 'SUCCESS'); assert.equal(first.slots[0].checkedAt, data.checkedAt);
-  assert.equal(calls[0][1], 20 * 3600000);
+  assert.equal(calls[0][1], undefined, 'subway summary cache uses the monthly policy');
   data.cacheInfo.stale = true;
   const stale = await getSubwaySchedule(station, ['02:U'], deps);
   assert.equal(stale.status, 'PARTIAL'); assert.match(stale.error, /이전 저장/);
@@ -95,11 +96,12 @@ test('GITS range rejects invalid requests before network and cannot replace comp
   await assert.rejects(getGitsRange({ station: '0134-00', route: '1', start: '2025-01-01', end: '2025-12-31' }), /조건/);
   let options;
   await getGitsRange({ station: '0134-00', route: '1', start: '2025-12-22', end: '2025-12-28' }, { cache: async (_key, _load, opts) => { options = opts; return {}; } });
+  assert.equal(options.ttl, undefined, 'GITS periods use the monthly policy');
   assert.equal(options.complete({ invalidDailyRows: 0, missingValues: 0, records: Array(7) }), false);
   assert.equal(options.complete({ invalidDailyRows: 0, missingValues: 0, records: Array(14) }), true);
 });
-test('saved successful subway slots become retryable after 20 hours', () => {
-  const checkedAt = '2026-10-15T00:00:00Z', now = Date.parse(checkedAt) + 20 * 3600000;
+test('saved successful subway slots become retryable at the monthly KST boundary', () => {
+  const checkedAt = '2026-10-15T00:00:00Z', now = Date.parse('2026-11-04T19:00:00Z');
   const keys = ['01:U', '01:D', '02:U', '02:D', '03:U', '03:D'];
   const station = { scheduleSlots: keys.map(key => ({ key, status: 'SUCCESS', checkedAt })) };
   assert.deepEqual(pendingSubwaySlots(station, now - 1), []);
@@ -163,7 +165,7 @@ test('operator timetables reuse daily requests until the monthly fifth-day KST b
   assert.equal(new Date([...entries.values()][0].expires).toISOString(), '2026-11-04T19:00:00.000Z');
   now += 86400000;
   assert.equal((await korailTimetable(deps)).sourceSha256, first.sourceSha256);
-  assert.equal(loads, 2, 'next daily job must not download the workbook again');
+  assert.equal(loads, 2, 'next-day query must not download the workbook again');
   now = Date.parse('2026-11-04T18:59:59Z');
   await korailTimetable(deps); assert.equal(loads, 2);
   now = Date.parse('2026-11-04T20:00:00Z');
@@ -171,4 +173,21 @@ test('operator timetables reuse daily requests until the monthly fifth-day KST b
   let sinOptions;
   await sinTimetable({ code: 'SB005', name: '양재' }, { cache: async (_key, _loader, options) => { sinOptions = options; return {}; } });
   assert.equal(sinOptions.ttl, undefined, 'Shinbundang uses the same monthly cache policy');
+});
+
+test('traffic snapshots remain current across days but expire exactly at the monthly boundary', () => {
+  const collected = Date.parse('2026-10-15T00:00:00Z');
+  assert.equal(isCurrentTransportMonth(collected, Date.parse('2026-10-31T00:00:00Z')), true);
+  assert.equal(isCurrentTransportMonth(collected, Date.parse('2026-11-04T18:59:59Z')), true);
+  assert.equal(isCurrentTransportMonth(collected, Date.parse('2026-11-04T19:00:00Z')), false);
+  const refreshed = Date.parse('2026-11-04T20:30:00Z');
+  assert.equal(isCurrentTransportMonth(refreshed, Date.parse('2026-11-05T00:00:00Z')), true);
+  assert.equal(isCurrentTransportMonth(NaN), false);
+});
+test('official transport and Gyeonggi jobs run monthly in KST without changing other jobs', () => {
+  const config = JSON.parse(fs.readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  const jobs = Object.fromEntries(config.crons.map(job => [job.path, job.schedule]));
+  assert.equal(jobs['/api/cron/official-transport-sync'], '0 20 4 * *');
+  assert.equal(jobs['/api/cron/gyeonggi-traffic-sync'], '30 20 4 * *');
+  assert.equal(jobs['/api/cron/tia-sync'], '0 18 * * *');
 });

@@ -115,7 +115,7 @@ export default function TrafficPeakAnalysis({ region, candidates = [], selectedC
       <div className={styles.actions}><button type="button" className="secondary-button" onClick={() => setRefresh((n) => n + 1)}>저장자료 새로고침</button>
         <button type="button" className="secondary-button" disabled={!visible} onClick={downloadCsv}>분석표 CSV</button></div></div>
     {isGyeonggi && <label>공식자료 출처<select aria-label="경기 교통량 출처" value={ggSource} onChange={e => { setGgSource(e.target.value); setResult(null); }}><option value="official">경기도 교통정보센터 · 최신 공개연도</option><option value="legacy">경기데이터드림 · 기존 저장자료</option></select></label>}
-    <p className={styles.help}>{isOfficial ? "공개 연도와 지점 목록은 매일 확인합니다. 선택 주간은 20시간이 지난 뒤 조회 시 갱신하며 실패하면 이전 검증자료를 유지합니다. 처음 선택한 주간은 공식 조회에 시간이 걸릴 수 있습니다. 관측값이 있는 날짜만 분석하며, 권장 주간도 결측 여부를 별도로 확인합니다." : isGyeonggi ? "경기데이터드림의 실제 수록 월을 표시합니다. 최초 조회 시 전체 페이지를 수집하며, 이후 20시간 동안 저장자료를 재사용하고 매일 정기 갱신합니다. 지점번호·노선·지역·자료연도가 일치할 때만 자동 연결합니다." : "월별 공식 엑셀을 사용합니다. 달력에서 한 주를 선택하세요. 월 경계의 주는 인접 월의 저장자료도 함께 조회합니다."}</p>
+    <p className={styles.help}>{isOfficial ? "공개 연도와 지점 목록은 월 1회(매월 5일) 확인합니다. 선택 주간은 월간 갱신일 이후 첫 조회에 갱신하며 실패하면 이전 검증자료를 유지합니다. 처음 선택한 주간은 공식 조회에 시간이 걸릴 수 있습니다. 관측값이 있는 날짜만 분석하며, 권장 주간도 결측 여부를 별도로 확인합니다." : isGyeonggi ? "경기데이터드림의 실제 수록 월을 표시합니다. 최초 조회 시 전체 페이지를 수집하며, 이후 다음 월간 갱신일(매월 5일)까지 저장자료를 재사용합니다. 지점번호·노선·지역·자료연도가 일치할 때만 자동 연결합니다." : "월별 공식 엑셀을 사용합니다. 달력에서 한 주를 선택하세요. 월 경계의 주는 인접 월의 저장자료도 함께 조회합니다."}</p>
     {isGyeonggi && <div className={styles.connection} aria-label="경기 사전조사지점 첨두분석 연결">
       <h4>사전조사지점 연결</h4>
       <p>GITS 추천지점: <strong>{selectedCandidate ? `${selectedCandidate.pointCode} · ${selectedCandidate.routeName}` : "없음"}</strong>
