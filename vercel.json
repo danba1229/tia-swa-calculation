@@ -1,6 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
+    "app/api/subway/details/route.js": {
+      "maxDuration": 60,
+      "regions": ["icn1"]
+    },
     "app/api/traffic-volume/gyeonggi/route.js": {
       "maxDuration": 180,
       "regions": ["icn1"]
