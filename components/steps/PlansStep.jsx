@@ -1,6 +1,9 @@
 "use client";
+import { useState } from 'react';
+import PlanRecommendations from '../PlanRecommendations';
 
-export default function PlansStep({ addRow, createConstructionPlanRow, createTrafficPlanRow, form, removeRow, shouldShowStep, updateListItem }) {
+export default function PlansStep({ addRow, createConstructionPlanRow, createTrafficPlanRow, form, removeRow, shouldShowStep, updateListItem, autoRequest, onPhase }) {
+  const [year, setYear] = useState(new Date().getFullYear());
   return (<section className={`panel step-section ${shouldShowStep(7) ? "" : "is-hidden"}`}>
         <div className="panel-header">
           <div>
@@ -8,6 +11,11 @@ export default function PlansStep({ addRow, createConstructionPlanRow, createTra
             <h2>교통관련 계획</h2>
           </div>
         </div>
+
+        <label className="plan-year">계획 검토연도 (통계 수록연도와 별개)
+          <input type="number" min="2000" max="2100" value={year} onChange={e => setYear(Number(e.target.value))} />
+        </label>
+        <PlanRecommendations key={`${form.basics.siteAddress}:${year}`} address={form.basics.siteAddress} year={year} autoRequest={autoRequest} onPhase={onPhase} />
 
         <div className="subpanel-grid">
           <section className="subpanel">

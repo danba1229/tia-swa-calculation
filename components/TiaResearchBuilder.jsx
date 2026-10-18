@@ -624,6 +624,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
   const [mapPhase, setMapPhase] = useState('idle');
   const [accidentPhase, setAccidentPhase] = useState('idle');
   const [signPhase, setSignPhase] = useState('idle');
+  const [planPhase, setPlanPhase] = useState('idle');
   const [signRefresh, setSignRefresh] = useState(0);
   const [autoRequest, setAutoRequest] = useState(null);
   const [accidentSeed, setAccidentSeed] = useState(null);
@@ -1853,7 +1854,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     <main className={`app-shell research-workspace${activeStep === 9 ? " signs-workspace" : ""}${embedded ? " embedded-shell" : ""}${mapCollapsed ? " map-collapsed" : ""}${mapExpanded ? " map-expanded" : ""}`}>
       <a className="workspace-skip" href="#workspace-results">조사 결과로 건너뛰기</a>
       <StepNavigation items={STEP_NAV_ITEMS} activeStep={activeStep} setActiveStep={step => { if (step === 9) setMapExpanded(false); setActiveStep(step); }}
-        states={{ ...investigationStates({ mapPhase, verification, development: developmentResult, transport: publicTransportResult, accident: accidentPhase, pointCount: topisCandidates.length + gyeonggiCandidates.length }), 9: signPhase }}>
+        states={{ ...investigationStates({ mapPhase, verification, development: developmentResult, transport: publicTransportResult, accident: accidentPhase, pointCount: topisCandidates.length + gyeonggiCandidates.length }), 7: planPhase, 9: signPhase }}>
         <DraftStatus status={draftStatus} restore={drafts => {
           requestGateRef.current.cancel();
           setAutoRequest(null);
@@ -1997,7 +1998,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
 
       <BikeStep {...{ bikeStations, copyPublicTransportTables, downloadPublicTransportCsv, form, formatFacilityDistance, formatNumber, formatOptionalNumber, getScopeDimensions, publicTransportResult, searchPublicTransportFacilities, shouldShowStep }} />
 
-      <PlansStep {...{ addRow, createConstructionPlanRow, createTrafficPlanRow, form, removeRow, shouldShowStep, updateListItem }} />
+      <PlansStep {...{ addRow, createConstructionPlanRow, createTrafficPlanRow, form, removeRow, shouldShowStep, updateListItem, autoRequest }} onPhase={setPlanPhase} />
 
       <TrafficAccidentStep key={accidentReset} siteLocation={siteLocation} visible={shouldShowStep(8)} autoRequest={autoRequest} onPhase={setAccidentPhase} seed={accidentSeed} />
 
