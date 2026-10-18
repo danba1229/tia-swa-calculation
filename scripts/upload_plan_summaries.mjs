@@ -3,7 +3,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { get, head, put } from '@vercel/blob';
+import { BlobNotFoundError, get, head, put } from '@vercel/blob';
 import { summaryBlobPath, verifiedSummaryBytes, WORD_TYPE } from '../lib/planDownload.js';
 
 async function main() {
@@ -26,7 +26,7 @@ async function main() {
     const pathname = summaryBlobPath(plan);
     let metadata;
     try { metadata = await head(pathname); }
-    catch (error) { if (error.name !== 'BlobNotFoundError') throw error; }
+    catch (error) { if (!(error instanceof BlobNotFoundError)) throw error; }
     if (!metadata) await put(pathname, bytes, { access: 'private', addRandomSuffix: false, allowOverwrite: false, contentType: WORD_TYPE });
     const result = await get(pathname, { access: 'private', useCache: false });
     if (!result || result.statusCode !== 200) throw new Error(`Readback failed: ${plan.planId}`);
@@ -36,6 +36,6 @@ async function main() {
 }
 main().catch(error => {
   // Never print provider response bodies, URLs or credentials.
-  console.error(JSON.stringify({ failed: true, errorClass: error.name, message: /^(Usage:|Audit mismatch:|Hash mismatch:|Readback failed:)/.test(error.message) ? error.message : 'Private summary upload failed. Check storage configuration.' }));
+  console.error(JSON.stringify({ failed: true, errorClass: error.constructor?.name || error.name, message: /^(Usage:|Audit mismatch:|Hash mismatch:|Readback failed:)/.test(error.message) ? error.message : 'Private summary upload failed. Check storage configuration.' }));
   process.exitCode = 1;
 });
