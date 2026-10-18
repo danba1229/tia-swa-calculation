@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { recommendPlans, planAdminFromGeocode } from '../lib/planRecommendations.js';
-import { isPlanUserApproved, selectSummary, summaryBlobPath, verifiedSummaryBytes } from '../lib/planDownload.js';
+import { selectSummary, summaryBlobPath, verifiedSummaryBytes } from '../lib/planDownload.js';
 import { createPlanDownloadHandler } from '../lib/planDownloadHandler.js';
 import { createSession, readSession } from '../lib/indicatorAuth.js';
 const registry = JSON.parse(readFileSync(new URL('../data/plans/registry.json', import.meta.url), 'utf8'));
@@ -63,15 +63,6 @@ test('public recommendation JSON has no private IDs or storage paths', () => {
   const text=JSON.stringify(rows('1165010800'));
   assert.doesNotMatch(text,/driveId|blob|sha256|[A-Z]:\\|access_token/i);
 });
-test('approval is separate from login, checks active record, and supports revocation', () => {
-  const session={userId:'u1',username:'kim'}; const record={...session,status:'ACTIVE'};
-  assert.equal(isPlanUserApproved(session,record,''),false);
-  assert.equal(isPlanUserApproved(session,record,'u1'),true);
-  assert.equal(isPlanUserApproved(session,{...record,status:'DISABLED'},'u1'),false);
-  assert.equal(isPlanUserApproved(session,{...record,userId:'u2'},'u1'),false);
-  assert.equal(isPlanUserApproved(null,record,'u1'),false);
-  assert.equal(isPlanUserApproved(session,record,'u2'),false);
-});
 test('existing session signature is required, tampered session is rejected', () => {
   const before=process.env.TIA_CALCULATOR_SESSION_SECRET;
   process.env.TIA_CALCULATOR_SESSION_SECRET='test-only-secret'.repeat(4);
@@ -93,22 +84,23 @@ test('download selects only registered immutable versions and verifies size/hash
   await assert.rejects(verifiedSummaryBytes(plan,stream('short')),/MISMATCH/);
   await assert.rejects(verifiedSummaryBytes(plan,stream('long'.repeat(500))),/MISMATCH/);
 });
-test('HTTP download denies before storage, serves exact bytes privately, and fails closed', async () => {
+test('anonymous HTTP download serves only registered summaries and fails closed', async () => {
   let reads=0;
   const request=new Request('https://app.test/api/plans/download?version=P-test');
   const config={registry:{plans:[plan]},log:()=>{},getBlob:async()=>{reads++;return {statusCode:200,stream:stream(bytes)};}};
-  for(const status of [401,403]) {
-    const response=await createPlanDownloadHandler({...config,access:async()=>({allowed:false,status,message:'denied'})})(request);
-    assert.equal(response.status,status);assert.equal(reads,0);assert.match(response.headers.get('cache-control'),/no-store/);
+  const handler=createPlanDownloadHandler(config);
+  for (const version of ['unknown', '../../.env', 'tia-indicator-v1/users/test.json', 'https://example.test/private.docx']) {
+    assert.equal((await handler(new Request(`https://app.test/?version=${encodeURIComponent(version)}`))).status,404);
+    assert.equal(reads,0);
   }
-  const handler=createPlanDownloadHandler({...config,access:async()=>({allowed:true})});
   const response=await handler(request);
-  assert.equal(response.status,200);assert.equal(response.headers.get('vary'),'Cookie');
+  assert.equal(response.status,200);assert.match(response.headers.get('cache-control'),/no-store/);
+  assert.equal(response.headers.get('set-cookie'),null);
   assert.match(response.headers.get('content-disposition'),/filename\*=UTF-8/);
   assert.deepEqual(Buffer.from(await response.arrayBuffer()),bytes);
   assert.equal((await handler(new Request('https://app.test/?version=unknown'))).status,404);
-  const corrupt=createPlanDownloadHandler({...config,access:async()=>({allowed:true}),getBlob:async()=>({statusCode:200,stream:stream('fake')})});
+  const corrupt=createPlanDownloadHandler({...config,getBlob:async()=>({statusCode:200,stream:stream('fake')})});
   assert.equal((await corrupt(request)).status,503);
-  const unavailable=createPlanDownloadHandler({...config,access:async()=>{throw Error('SECRET');}});
+  const unavailable=createPlanDownloadHandler({...config,getBlob:async()=>{throw Error('SECRET');}});
   assert.doesNotMatch(await (await unavailable(request)).text(),/SECRET/);
 });

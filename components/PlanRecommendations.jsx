@@ -7,7 +7,6 @@ export default function PlanRecommendations({ address, year, autoRequest, onPhas
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState([]);
-  const [access, setAccess] = useState(null);
   const [downloading, setDownloading] = useState('');
   const [showAll, setShowAll] = useState(false);
   const [query, setQuery] = useState('');
@@ -43,12 +42,6 @@ export default function PlanRecommendations({ address, year, autoRequest, onPhas
     return () => { active = false; controller.abort(); };
   }, [run, autoId, address, year, onPhase]);
 
-  async function checkAccess() {
-    try {
-      const response = await fetch('/api/plans/access', { cache: 'no-store' });
-      const data = await response.json(); if (mounted.current) setAccess(data);
-    } catch { if (mounted.current) setAccess({ allowed: false, message: '권한 확인에 실패했습니다.' }); }
-  }
   function choose(ids) {
     setSelected(ids);
     try { localStorage.setItem(`tia-plan-selection:${address}:${year}:${result.registryVersion}`, JSON.stringify(ids)); }
@@ -71,13 +64,9 @@ export default function PlanRecommendations({ address, year, autoRequest, onPhas
   return <section className="plan-recommendations" aria-label="주소 기반 계획 추천">
     <div className="plan-toolbar">
       <button type="button" disabled={busy || !address.trim()} onClick={() => setRun(n => n + 1)}>{busy ? '계획 확인 중…' : '계획 다시 찾기'}</button>
-      <a href="/indicator" target="_blank" rel="noopener noreferrer">계산기 계정 로그인</a>
-      <button type="button" className="secondary" onClick={checkAccess}>다운로드 권한 확인</button>
     </div>
     <p>상단 주소 기준으로 계획을 추천합니다. 개별 사업의 반경 내 포함 여부·착공·준공·교통수요 반영을 확정하지 않습니다.</p>
-    <p>Word는 별도 승인 사용자만 다운로드할 수 있습니다. 원문은 공식 출처에서 확인하세요.</p>
-    <p>블로그 삽입 화면에서 로그인이 유지되지 않으면 <a href="/" target="_blank" rel="noopener noreferrer">TIA Support를 새 창에서 열어</a> 다운로드해 주세요.</p>
-    {access && <p role="status">{access.message}</p>}
+    <p>Word 요약본은 로그인 없이 누구나 다운로드할 수 있습니다. 원문은 공식 출처에서 확인하세요.</p>
     {error && <p role="alert" className="plan-warning">{error}</p>}
     {!result && !busy && !error && <p>상단 ‘조사 시작’ 또는 ‘계획 다시 찾기’를 눌러 주세요.</p>}
     {result && <>
@@ -96,7 +85,7 @@ export default function PlanRecommendations({ address, year, autoRequest, onPhas
         <td><span className="plan-badge">{plan.relevanceLabel}</span><p>{plan.reason}</p><details><summary>범위·근거 보기</summary><p>{plan.scopeText}</p><p>{plan.pageEvidence}</p><p>{plan.approvalEvidence}</p></details></td>
         <td><span className="plan-badge">{plan.status}</span><p>{plan.note}</p><small>확인일 {plan.checkedAt}</small></td>
         <td>{plan.sources.map((source, i) => <a className="plan-source" key={`${source.url}-${i}`} href={source.url} target="_blank" rel="noopener noreferrer">{source.kind} ↗</a>)}
-          {plan.hasSummary ? <button type="button" className="secondary" disabled={!!downloading || !access?.allowed} onClick={() => download(plan)}>{downloading === plan.versionId ? '다운로드 중…' : 'Word 요약본'}</button> : <small>Word 요약본 없음</small>}
+          {plan.hasSummary ? <button type="button" className="secondary" disabled={!!downloading} onClick={() => download(plan)}>{downloading === plan.versionId ? '다운로드 중…' : 'Word 요약본'}</button> : <small>Word 요약본 없음</small>}
         </td>
       </tr>)}</tbody></table></div>
       {!rows.length && <p>조건에 맞는 등록 계획이 없습니다.</p>}
