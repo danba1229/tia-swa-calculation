@@ -1,0 +1,2646 @@
+{
+  "schemaVersion": 1,
+  "registryVersion": "2026-10-17",
+  "researchCount": 73,
+  "summaryCount": 27,
+  "plans": [
+    {
+      "planId": "A01",
+      "researchId": "A01",
+      "versionId": "A01-809fab3ef4d2",
+      "title": "제9차 국가교통안전기본계획",
+      "period": [
+        2022,
+        2026
+      ],
+      "periodText": "계획기간 2022~2026년, 목표연도 2026년, 현황분석 기준연도 2021년.",
+      "scopeText": "국가 전반의 교통안전 및 시·도, 시·군·구 지역계획 연계 대상. 별도 행정경계·면적은 해당 개요에 미제시.",
+      "contentScope": "육상·해상·항공 교통안전 목표, 사고 감소대책, 안전시설·문화, 부문별 추진전략 및 기관별 투자·협력계획.",
+      "pageEvidence": "원문 PDF 5~6쪽 / 인쇄면 1~2쪽",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제9차(2022~2026)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:36:51.508Z",
+      "sources": [
+        {
+          "url": "https://itskorea.kr/downloadFile.do?fileId=FILE_000000000045623&fileSn=1",
+          "kind": "국토교통부 원문 ITS협회 게시본",
+          "sha256": "e2ca529b823b93610e987651cdcd0c12b16c08a0118047f2e424ec7edbea04ac",
+          "fileName": "A01_제9차국가교통안전기본계획_2022-2026_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "A01_제9차국가교통안전기본계획_2022-2026_전문-요약본.docx",
+        "sha256": "809fab3ef4d2a6c58c21d6919996158ad915f6ef2e6eda9a0c6c1bc836ef03c0",
+        "bytes": 41770,
+        "driveId": "1eEkJQHsi09vnx-cfwOpHs-bX1K03ReyP"
+      }
+    },
+    {
+      "planId": "A03",
+      "researchId": "A03",
+      "versionId": "A03-01f6e67da4bc",
+      "title": "제4차 교통약자 이동편의 증진계획",
+      "period": [
+        2022,
+        2026
+      ],
+      "periodText": "계획기간 2022~2026년.",
+      "scopeText": "전국 특별시·광역시·시·군(광역시 안의 군 제외), 계획 수립 당시 161개 지방자치단체.",
+      "contentScope": "교통약자 이동편의시설 설치·관리, 보행환경 개선, 저상버스·특별교통수단 확대 및 재원조달·연구개발.",
+      "pageEvidence": "원문 PDF 3~4쪽 / 인쇄면 1~2쪽",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제4차(2022~2026)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:36:57.051Z",
+      "sources": [
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B10",
+          "kind": "공공기관 아카이브 전문",
+          "sha256": "67652e29cc8ca82c17bf8d038f006fbc45a975e167d60f4965f14bb2343adf0c",
+          "fileName": "A03_제4차교통약자이동편의증진계획_2022-2026.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "A03_제4차교통약자이동편의증진계획_2022-2026-요약본.docx",
+        "sha256": "01f6e67da4bc04fae945fcc46661fbc289c534860b3f9c70203c8f959557147d",
+        "bytes": 41609,
+        "driveId": "10mbK6NvpMry3W5qQ6Obwm9g9NxG4qO5R"
+      }
+    },
+    {
+      "planId": "A05",
+      "researchId": "A05",
+      "versionId": "A05-d1d3cd7ed1cf",
+      "title": "지능형교통체계 기본계획 2030",
+      "period": [
+        null,
+        2030
+      ],
+      "periodText": "기준연도 2020년, 단기 목표연도 2025년, 중장기 목표연도 2030년.",
+      "scopeText": "도로·철도·항공·해운 교통시설이 포함된 전 국토 및 영해·영공.",
+      "contentScope": "ITS 목표와 기본방향, 서비스 분야별 구축·운영전략, 추진체계, 연구개발·산업화·표준화 및 제도 개선.",
+      "pageEvidence": "원문 PDF 6쪽 / 인쇄면 2쪽",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "ITS 기본계획2030(2021~2030), 고시2021-1170",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:02.510Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/I0204/m_45/dtl.jsp?gubun=4&idx=17082&lcmspage=96&psize=10",
+          "kind": "공식 전문",
+          "sha256": "597e6249051cacaca5d0ee7b2fb655bfc550254cec681a52273f464a57615a95",
+          "fileName": "A05_지능형교통체계ITS기본계획2030_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "A05_지능형교통체계ITS기본계획2030_전문-요약본.docx",
+        "sha256": "d1d3cd7ed1cff1d77642ce2aa58495d3b620f4cd15f01c87cf4da3b75d3f71a5",
+        "bytes": 41612,
+        "driveId": "1Dl56VNSy9mbmZfzHqCa0w7PsTVk29OUS"
+      }
+    },
+    {
+      "planId": "A07",
+      "researchId": "A07",
+      "versionId": "A07-fdb4c9e655dc",
+      "title": "제2차 지속가능 국가교통물류발전 기본계획",
+      "period": [
+        2021,
+        2030
+      ],
+      "periodText": "계획기간 2021~2030년.",
+      "scopeText": "전국.",
+      "contentScope": "교통수단·교통시설·교통운영시스템 전반. 온실가스·에너지 관리와 친환경 교통물류체계의 중장기 목표·전략.",
+      "pageEvidence": "원문 PDF 4쪽 / 인쇄면 1쪽",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제2차(2021~2030), 국토교통부고시2021-1406, 2021-12-31",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:07.627Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/BORD0201/m_69/DTL.jsp?id=N01_B&mode=view&idx=247700",
+          "kind": "공식 전문",
+          "sha256": "fc724044eb21f7f018a05249dd9b5172535b79a62f884986b52fce5f1c8bb999",
+          "fileName": "A07_제2차지속가능국가교통물류발전기본계획_2021-2030_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "A07_제2차지속가능국가교통물류발전기본계획_2021-2030_전문-요약본.docx",
+        "sha256": "fdb4c9e655dcdaaf7c2c3d6d279e16eed9dbedfcf452de1b9fad7b3bb1c866ab",
+        "bytes": 41652,
+        "driveId": "1gQ6DPOt4-tVQfXYPmFunvAEL9WIqas0o"
+      }
+    },
+    {
+      "planId": "A08",
+      "researchId": "A08",
+      "versionId": "A08-99ffa71b7706",
+      "title": "제2차 간선급행버스체계 종합계획",
+      "period": [
+        2026,
+        2030
+      ],
+      "periodText": "계획기간 2026~2030년(5년).",
+      "scopeText": "수도권·부산울산권·대구권·광주권·대전권·전주권의 6개 대도시권 및 도시교통정비지역.",
+      "contentScope": "기존계획 성과와 여건 검토, BRT 노선 확충, 시설·운영 개선 및 연계·환승체계 강화.",
+      "pageEvidence": "원문 PDF 5쪽(인쇄면 1쪽), 64~76쪽",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제2차 BRT 종합계획(2026~2030), 국토부고시2026-406(2026-07-29); 대광위고시2026-7(2026-08-04) 별도 보존",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:12.984Z",
+      "sources": [
+        {
+          "url": "https://itskorea.kr/boardDetail.do?idx=22704&type=8",
+          "kind": "공식 전문 (ITS Korea 국토부 자료 재게시)",
+          "sha256": "90eec02e5dc937208db84c270359c3f9a43da1cb980ac18eb1c5a378b82d6391",
+          "fileName": "A08_제2차BRT종합계획_2026-2030_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "A08_제2차BRT종합계획_2026-2030_전문-요약본.docx",
+        "sha256": "99ffa71b7706d068bf66410283fcce8e37e29b3fb55414da255f2893e658881b",
+        "bytes": 41903,
+        "driveId": "1RdCXf_prGoxXDuxdgjPyNxyzXCPfcg5B"
+      }
+    },
+    {
+      "planId": "A09",
+      "researchId": "A09",
+      "versionId": "A09-3b84282c0d27",
+      "title": "제4차 환승센터 및 복합환승센터 구축 기본계획",
+      "period": [
+        2026,
+        2030
+      ],
+      "periodText": "계획기간 2026~2030년.",
+      "scopeText": "전국 수도권·지방권의 환승거점. 권역 내 광역통행을 처리하는 철도역사, 개통 예정지점 및 지역거점도시 등을 대상.",
+      "contentScope": "기존계획 성과와 여건 분석, 환승센터·복합환승센터 구축 방향, 구축대상사업 및 정책과제.",
+      "pageEvidence": "원문 PDF 3쪽(인쇄면 1쪽), 29~31쪽(인쇄면 27~29쪽)",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제4차(2026~2030), 국토교통부고시2026-456, 2026-08-31",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:18.045Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/BORD0201/m_69/DTL.jsp?id=N01_B&mode=view&idx=269419",
+          "kind": "공식 전문",
+          "sha256": "b1d2bd2ee953cf7c1e74cd6c51afc721accd515bd8a4cdb6ce5ffc7b26e92960",
+          "fileName": "A09_제4차환승센터및복합환승센터구축기본계획_2026-2030.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "A09_제4차환승센터및복합환승센터구축기본계획_2026-2030-요약본.docx",
+        "sha256": "3b84282c0d27222bb6ad947a2c5d861c2c15271759f0678dd489ddd2b63fd374",
+        "bytes": 41752,
+        "driveId": "1GcMLB_kbdPVjN-YQJYjXhLLZZxCsEWtW"
+      }
+    },
+    {
+      "planId": "A13",
+      "researchId": "A13",
+      "versionId": "A13-8f3282734498",
+      "title": "제4차 강원도 종합계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "계획기간 2021~2040년.",
+      "scopeText": "2018년 말 행정구역 기준 강원도 18개 시·군 전역. 수도권·충북·경북·북한 강원도는 연계 검토대상.",
+      "contentScope": "지역현황·여건변화, 2040 비전·전략, 부문별 계획, 시·군별 발전방향 및 집행·관리계획.",
+      "pageEvidence": "원문 PDF 23쪽 / 인쇄면 5쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "51",
+          "42"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제4차 강원도 종합계획(2021~2040), 공식 보고서 확인",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:29.871Z",
+      "sources": [
+        {
+          "url": "https://state.gwd.go.kr/page/gwprovin/download/gangwon2021-2040.pdf",
+          "kind": "공식 보고서",
+          "sha256": "d85dd74aa4ccfb03bb8ae234714339e3c0123370f131b3579af6f6dafde61675",
+          "fileName": "A13_제4차강원도종합계획_2021-2040_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "A13_제4차강원도종합계획_2021-2040_전문-요약본.docx",
+        "sha256": "8f3282734498f39da40553274aa543980b4bfae3472ba9a787d3f5835de768c8",
+        "bytes": 41760,
+        "driveId": "1CY8uSm1fS1WUu5LQY-G3Chxt0wNt3Np0"
+      }
+    },
+    {
+      "planId": "A14",
+      "researchId": "A14",
+      "versionId": "A14-0c317f176b3e",
+      "title": "제2차 경기도 도시철도망 구축계획 공개용 계획안",
+      "period": [
+        2026,
+        2035
+      ],
+      "periodText": "계획기간 2026~2035년, 분석 기준연도 2020년. 수요분석의 2031년 개통 가정은 실제 개통 확정연도가 아님.",
+      "scopeText": "계획 검토대상은 경기도 전역이며, 분석 직접 영향권은 수도권(서울·인천·경기), 간접 영향권은 전국.",
+      "contentScope": "교통여건·관련계획, 노선 선정, 차량·시설 대안, 경제성·재무성, 건설 우선순위·재원 및 환승·공사 중 교통대책.",
+      "pageEvidence": "공개용 계획안 PDF 6~7쪽 / 인쇄면 2~3쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "41"
+        ]
+      },
+      "status": "참고",
+      "note": "승인본 대조 필요: 공개 보고서에 최종보고서/계획(안) 병기. 모란판교선 연장은 PDF 124쪽 3.94km, 163쪽 3.86km로 상이합니다.",
+      "approvalEvidence": "제2차 경기도 도시철도망 구축계획(2026~2035), 고시2025-729",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:35.074Z",
+      "sources": [
+        {
+          "url": "https://www.gg.go.kr/bbs/boardView.do?bIdx=214237326&bsIdx=564&menuId=1927",
+          "kind": "승인본 대조 필요 참고자료 (공개용 계획안, 확정본 아님)",
+          "sha256": "4e3e4d235e69093147c636888d261509bd04cbbd50a6fbb79a788743804e64b9",
+          "fileName": "참고자료_A14_제2차경기도도시철도망_공개용계획안_승인본대조필요.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "참고자료_A14_제2차경기도도시철도망_공개용계획안_승인본대조필요-요약본.docx",
+        "sha256": "0c317f176b3e9f37a13aff376eb2cf6d703c584241fa22f618b930d2293813ca",
+        "bytes": 42021,
+        "driveId": "1MviOU88TWWBMwsObbTWeMyHEL3lUV7pZ"
+      }
+    },
+    {
+      "planId": "P02",
+      "researchId": "P02",
+      "versionId": "P02-1ee258020925",
+      "title": "제2차 국가기간교통망계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "계획기간 2021~2040년.",
+      "scopeText": "전 국토 및 교통으로 연계된 한반도·동북아.",
+      "contentScope": "교통시설·교통수단·교통운영체계 전반을 대상으로 국가기간교통망의 중장기 방향을 제시.",
+      "pageEvidence": "수집본 PDF 3쪽",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "대조 필요",
+      "note": "고시 근거와 별도로 수집 보고서 표지의 계획안 표기 및 최종본 동일성 확인이 필요합니다.",
+      "approvalEvidence": "제2차(2021~2040), 국토교통부고시2021-1395, 2021-12-30",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:41.063Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/BORD0201/m_69/DTL.jsp?id=N01_B&mode=view&idx=247687",
+          "kind": "공식 최종본",
+          "sha256": "358f6de0751c9045270dfd766a6520cbf0cbeeb5d21f099b3eca3bcba5f4c87c",
+          "fileName": "P02_제2차국가기간교통망계획_2021-2040_최종.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P02_제2차국가기간교통망계획_2021-2040_최종-요약본.docx",
+        "sha256": "1ee2580209250f2d50301a041cf9aa888be9d53cd9e1b1955aeb9a84ecd80983",
+        "bytes": 41769,
+        "driveId": "1rkfPsv3OkkBveEiRKVq63aSB9DdyPY-4"
+      }
+    },
+    {
+      "planId": "P03",
+      "researchId": "P03",
+      "versionId": "P03-ab9a8f2a59ce",
+      "title": "제4차 수도권정비계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "계획기간 2021~2040년(20년).",
+      "scopeText": "서울특별시·인천광역시 및 경기도 전역.",
+      "contentScope": "인구·산업 배치, 권역별 정비, 인구집중유발시설·개발사업 관리, 광역교통시설, 환경보전 및 집행·관리.",
+      "pageEvidence": "원문 PDF 3~4쪽 / 인쇄면 1~2쪽",
+      "coverage": {
+        "kind": "metropolitan",
+        "prefixes": [
+          "11",
+          "28",
+          "41"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제4차(2021~2040), 고시2020-1119",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:46.170Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/I0204/m_45/dtl.jsp/dtl.jsp?idx=16680",
+          "kind": "공식 전문",
+          "sha256": "67980622e9ce41dd8517cff55d170297d1fd62d2409f3f22f02a73c2c2648fb7",
+          "fileName": "P03_제4차수도권정비계획_2021-2040_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P03_제4차수도권정비계획_2021-2040_전문-요약본.docx",
+        "sha256": "ab9a8f2a59ced6297b6cbe376d81853386381b04059d7ac147c05bb00bcecfac",
+        "bytes": 41681,
+        "driveId": "1eRZ62I7pYtV99X1cH7GQBxFoIC4wPlFL"
+      }
+    },
+    {
+      "planId": "P05",
+      "researchId": "P05",
+      "versionId": "P05-78029d14d8ba",
+      "title": "제2차 국가도로망종합계획",
+      "period": [
+        2021,
+        2030
+      ],
+      "periodText": "계획기간 2021~2030년.",
+      "scopeText": "전국. 국가간선도로망을 포함하여 도로정책 전반을 대상으로 함.",
+      "contentScope": "도로 현황·여건 전망, 국가간선도로망 구성·건설, 도로자산 활용, 환경·기술개발 및 재원·투자 우선순위.",
+      "pageEvidence": "원문 PDF 8쪽 / 인쇄면 4쪽",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제2차 국가도로망종합계획(2021~2030)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:51.359Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/policyData/m_34681/dtl.jsp?id=4579",
+          "kind": "고시본 전문",
+          "sha256": "2e8980232af415642e5c5093470a7a7c41ca96b9a36206e4aaf59a751d34243e",
+          "fileName": "P05_제2차국가도로망종합계획_2021-2030_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P05_제2차국가도로망종합계획_2021-2030_전문-요약본.docx",
+        "sha256": "78029d14d8baa7d891cd5039de45ed274954bcaec229e342c7bbad38d79ffa44",
+        "bytes": 41412,
+        "driveId": "1MBjvHpXxTla2JJS0H5EnmQGRMihoMNUd"
+      }
+    },
+    {
+      "planId": "P11",
+      "researchId": "P11",
+      "versionId": "P11-dec053fa68db",
+      "title": "제2차 대도시권 광역교통기본계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "계획기간 2021~2040년. 중간 목표연도 2025·2030·2035년, 최종 목표연도 2040년.",
+      "scopeText": "수도권·부산울산권·대구권·광주권·대전권의 5개 대도시권.",
+      "contentScope": "광역교통 현황·문제점과 장래 전망, 단계별 방향, 광역교통시설 확충·연계 및 효율적 운영·관리.",
+      "pageEvidence": "원문 PDF 6~7쪽 / 인쇄면 2~3쪽",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제2차(2021~2040), 2021-10-29 고시",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:37:56.684Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/mtc/USR/BORD0201/m_36981/DTL.jsp?id=mtc0301&idx=109&mode=view",
+          "kind": "공식 전문",
+          "sha256": "e13ef2d8bae2c2845bc6f759d4bd7db97cf89b2475ee31bb50c9bbda7cdce9c2",
+          "fileName": "P11_제2차대도시권광역교통기본계획_2021-2040_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P11_제2차대도시권광역교통기본계획_2021-2040_전문-요약본.docx",
+        "sha256": "dec053fa68dbc9c7dc06ea951225461a4d4273d5acdad6d1656f62922984d5bf",
+        "bytes": 41837,
+        "driveId": "1L7IEBguIFglUgRH_WupkpZFRRn0XBSrG"
+      }
+    },
+    {
+      "planId": "P13",
+      "researchId": "P13",
+      "versionId": "P13-1ba13b222b61",
+      "title": "제4차 대중교통기본계획",
+      "period": [
+        2022,
+        2026
+      ],
+      "periodText": "계획기간 2022~2026년.",
+      "scopeText": "전국의 지역 내·지역 간 대중교통수단 및 대중교통시설.",
+      "contentScope": "대중교통 공급·서비스 개선, 기존 성과와 현황·장래 전망, 정책목표 및 이용 촉진을 위한 추진과제.",
+      "pageEvidence": "원문 PDF 4~5쪽",
+      "coverage": {
+        "kind": "national",
+        "prefixes": []
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제4차(2022~2026), 국토교통부고시2022-138, 2022-03-28",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:39:31.285Z",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/BORD0201/m_69/DTL.jsp?id=N01_B&mode=view&idx=248656",
+          "kind": "공식 전문",
+          "sha256": "27abda3fac323cc2d4f948ce4bfd8f9725a434e1907f0e7218f6af08401b2a46",
+          "fileName": "P13_제4차대중교통기본계획_2022-2026_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P13_제4차대중교통기본계획_2022-2026_전문-요약본.docx",
+        "sha256": "1ba13b222b614d497bb6f4c2b67a62148bfa284215f487f88f39e8f06f13a478",
+        "bytes": 41567,
+        "driveId": "1MnqOWd8vXTFLtrZsJ_ml6uyS4F8CYOLq"
+      }
+    },
+    {
+      "planId": "P14",
+      "researchId": "P14",
+      "versionId": "P14-67faea3954a0",
+      "title": "경기도 종합계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "계획기간 2021~2040년, 기준연도 2020년, 목표연도 2040년.",
+      "scopeText": "경기도 31개 시·군.",
+      "contentScope": "경기도 비전·발전전략과 도시·지역개발, 교통인프라, 환경생태, 산업·경제 등 부문별 정책방향의 종합·조정.",
+      "pageEvidence": "원문 PDF 21~22쪽 / 인쇄면 3~4쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "41"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "2021~2040, 2025-06-19 확정 발표",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:39:36.504Z",
+      "sources": [
+        {
+          "url": "https://www.gg.go.kr/contents/contents.do?ciIdx=828&menuId=2003",
+          "kind": "공식 전문",
+          "sha256": "8e37ac548c2c256accbc51930b075f1878366c87b5b232a990c6b0b935621701",
+          "fileName": "P14_경기도종합계획_2021-2040_최종보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P14_경기도종합계획_2021-2040_최종보고서-요약본.docx",
+        "sha256": "67faea3954a0297943911e55a39450933c09afebe7c51e981b040f47ffc3445f",
+        "bytes": 41570,
+        "driveId": "1MnUzEfX3URpbHCvOT59JaEBOePvCkwvL"
+      }
+    },
+    {
+      "planId": "P15",
+      "researchId": "P15",
+      "versionId": "P15-0df7e4c48a49",
+      "title": "제4차 충청남도 종합계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "계획기간 2021~2040년, 자료활용 기준연도 2018년.",
+      "scopeText": "충청남도 전역 15개 시·군(8개 시·7개 군), 원문 기준 면적 8,229.2㎢.",
+      "contentScope": "지역여건·발전잠재력, 목표·추진전략, 교통·물류 등 부문별 계획, 시·군별 발전방향 및 집행·관리.",
+      "pageEvidence": "원문 PDF 27~29쪽 / 인쇄면 7~9쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "44"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제4차(2021~2040)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:39:42.370Z",
+      "sources": [
+        {
+          "url": "https://www.chungnam.go.kr/cnportal/main/contents.do?menuNo=5100125",
+          "kind": "공식 전문 (이미지형 PDF)",
+          "sha256": "fd812f5f65ce976a21ac42892bccf6efab5fa8fc428fd4976e99d15a79a48870",
+          "fileName": "P15_제4차충청남도종합계획_2021-2040_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P15_제4차충청남도종합계획_2021-2040_전문-요약본.docx",
+        "sha256": "0df7e4c48a491d3c44dea372f8229ad6c49cdcd6f2a8496ef4447c55faa586bb",
+        "bytes": 41763,
+        "driveId": "1QtIyX53kvutbOC3HOCa5_rauCBlFjjUD"
+      }
+    },
+    {
+      "planId": "P16",
+      "researchId": "P16",
+      "versionId": "P16-86f75a73ac3d",
+      "title": "제4차 경상남도 종합계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "계획기간 2021~2040년.",
+      "scopeText": "경상남도 18개 시·군. 필요시 광역적 연계지역까지 확대 검토.",
+      "contentScope": "미래비전·핵심가치, 공간구조, 중장기 부문별 계획, 지역자원·발전기반 및 전략산업·사업과 핵심과제.",
+      "pageEvidence": "원문 PDF 14쪽 / 인쇄면 14쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "48"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제4차(2021~2040)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:39:47.448Z",
+      "sources": [
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=A05",
+          "kind": "공공기관 아카이브 전문",
+          "sha256": "56d22994659079a2e5bba85181d7eb8a064d4b56f4926b28ebe2cf50cf137d04",
+          "fileName": "P16_제4차경상남도종합계획_2021-2040_전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P16_제4차경상남도종합계획_2021-2040_전문-요약본.docx",
+        "sha256": "86f75a73ac3d9e87e9d93997e5a38cedc192990964c3a76f49638731ff693a9b",
+        "bytes": 41514,
+        "driveId": "1y5_oYbkkj7ieDe2VVj9udF4J0zP1rPtM"
+      }
+    },
+    {
+      "planId": "P20",
+      "researchId": "P20",
+      "versionId": "P20-b6954fae8206",
+      "title": "2040 서울도시기본계획",
+      "period": [
+        null,
+        2040
+      ],
+      "periodText": "기준연도 2019년, 목표연도 2040년.",
+      "scopeText": "서울특별시 행정구역 전체 도시계획구역 605.96㎢. 여건·공간구조 분석은 주변 수도권을 포함한 서울대도시권.",
+      "contentScope": "미래상·공간목표, 부문별 전략, 공간구조·토지이용·도시관리 지침, 생활권 및 실행·모니터링·재정계획.",
+      "pageEvidence": "원문 PDF 12쪽 / 인쇄면 12쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "11"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "2040 서울도시기본계획, 2023-01-05 공고",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:39:53.737Z",
+      "sources": [
+        {
+          "url": "https://www.seocho.go.kr/site/seocho/ex/bbs/View.do?bcIdx=377276&cbIdx=270",
+          "kind": "공식 보고서",
+          "sha256": "8804e4e99a37f5d5d951c50a8fdd44d4d24ada847ef0c4a935ce0ba92f6cb6af",
+          "fileName": "P20_2040서울도시기본계획_보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P20_2040서울도시기본계획_보고서-요약본.docx",
+        "sha256": "b6954fae8206b9e15f67a67b5fd65cd7649a369e5dbbc2c5b48192487d0b6061",
+        "bytes": 41687,
+        "driveId": "1K53H51PforYzMP2lKVp6f3oHtg--r88y"
+      }
+    },
+    {
+      "planId": "P21",
+      "researchId": "P21",
+      "versionId": "P21-2f8a6a51f9cd",
+      "title": "2040 수원도시기본계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "기준연도 2021년, 목표연도 2040년. 2021~2040년을 5년 단위 4단계로 구분.",
+      "scopeText": "수원시 행정구역 전역, 원문 기준 면적 121.09㎢.",
+      "contentScope": "기초여건, 도시목표·지표, 공간구조·생활권·인구배분, 토지이용·기반시설 등 부문계획과 재정·단계별 집행.",
+      "pageEvidence": "원문 PDF 13~14쪽 / 인쇄면 5~6쪽",
+      "coverage": {
+        "kind": "municipal",
+        "prefixes": [
+          "4111"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "2040 수원도시기본계획, 공고2025-357",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:39:58.757Z",
+      "sources": [
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공공기관 아카이브 보고서",
+          "sha256": "7e2a71795b80be408c3e041dcbee5bdc591d00f01b9fadfff49bb4621d09eb5e",
+          "fileName": "P21_2040수원도시기본계획_보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P21_2040수원도시기본계획_보고서-요약본.docx",
+        "sha256": "2f8a6a51f9cd8fba68649638dcb2856eddfda7e26f44bfb35ca9c163c3d45db2",
+        "bytes": 41841,
+        "driveId": "16Wc-ZPaLFGQ09-0bFPfnbAksIKE4pZM-"
+      }
+    },
+    {
+      "planId": "P22",
+      "researchId": "P22",
+      "versionId": "P22-8b6c875f9afc",
+      "title": "2040 시흥도시기본계획",
+      "period": [
+        2021,
+        2040
+      ],
+      "periodText": "기준연도 2021년, 목표연도 2040년. 2021~2040년을 5년 단위 4단계로 구분.",
+      "scopeText": "시흥시 행정구역 및 시화호 주변 공유수면을 포함한 계획구역.",
+      "contentScope": "기초조사, 목표·지표, 공간구조·생활권·인구배분, 토지이용·기반시설·환경 등 부문별 계획 및 집행계획.",
+      "pageEvidence": "기존 수집본 PDF 13~14쪽 / 인쇄면 7~8쪽",
+      "coverage": {
+        "kind": "municipal",
+        "prefixes": [
+          "41390"
+        ]
+      },
+      "status": "변경 추진 중",
+      "note": "기존 승인본을 표시합니다. 2026년 변경 추진 내용을 확정본으로 반영하지 않았습니다.",
+      "approvalEvidence": "2040 시흥도시기본계획 확인된 승인본",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:40:11.370Z",
+      "sources": [
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공공기관 아카이브 보고서",
+          "sha256": "494196424d4d479abbad81c49910f36a0da2bbd11d88c930b7ad0034f46e288f",
+          "fileName": "P22_2040시흥도시기본계획_보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P22_2040시흥도시기본계획_보고서-요약본.docx",
+        "sha256": "8b6c875f9afcfaa509d34c64cee07174bdca78b0824ac240478a70a549b4f7f3",
+        "bytes": 41869,
+        "driveId": "1k_Fyh6dIUqH15Kj1isl9RvANeKAbwFr0"
+      }
+    },
+    {
+      "planId": "P23",
+      "researchId": "P23",
+      "versionId": "P23-ca97a88d44a1",
+      "title": "2040 파주도시기본계획",
+      "period": [
+        2022,
+        2040
+      ],
+      "periodText": "기준연도 2022년, 목표연도 2040년. 2022~2025·2026~2030·2031~2035·2036~2040년의 4단계.",
+      "scopeText": "파주시 행정구역 전역, 원문 기준 면적 673.96㎢.",
+      "contentScope": "도시여건·자원, 미래상·목표·지표, 공간구조·생활권·인구배분, 부문별 계획, 재정·단계별 집행 및 모니터링.",
+      "pageEvidence": "원문 PDF 19쪽 / 인쇄면 7쪽",
+      "coverage": {
+        "kind": "municipal",
+        "prefixes": [
+          "41480"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "2040 파주도시기본계획, 2026-06-05 승인열람공고; 2026.06 최종성과품 공식 PDF721쪽 확보",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:40:16.776Z",
+      "sources": [
+        {
+          "url": "https://www.paju.go.kr/www/www_02/city/city_02/city_02_04/city_02_04_03.jsp",
+          "kind": "공식 전문 (파주시청 직접 제공)",
+          "sha256": "3be93e700318d8aa5dc6810a7179a5940a384a728a73e4f68db53035627571c8",
+          "fileName": "P23_2040파주도시기본계획_2026-06_공식전문.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P23_2040파주도시기본계획_2026-06_공식전문-요약본.docx",
+        "sha256": "ca97a88d44a17bb03ac57f87287dd797ca860ff0213f2a4bd266cdbbf3eeeeab",
+        "bytes": 41720,
+        "driveId": "1FquiSt4rL4X2rk9hRcVOoGo6qx_3TiWW"
+      }
+    },
+    {
+      "planId": "P24",
+      "researchId": "P24",
+      "versionId": "P24-0f5a788dd72a",
+      "title": "2035 여주도시기본계획",
+      "period": [
+        null,
+        2035
+      ],
+      "periodText": "기준연도 2017년, 목표연도 2035년.",
+      "scopeText": "여주시 행정구역 전역(원문 기준 1읍·8면·3동), 면적 608.33㎢.",
+      "contentScope": "도시여건·상위계획 검토, 미래상·발전전략 및 토지이용·인구·기반시설 등 부문별 계획.",
+      "pageEvidence": "원문 PDF 14~15쪽 / 인쇄면 8~9쪽",
+      "coverage": {
+        "kind": "municipal",
+        "prefixes": [
+          "41670"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "2035 여주도시기본계획(2024 공식 보고서)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:40:24.708Z",
+      "sources": [
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공공기관 아카이브 보고서",
+          "sha256": "5f03af8e6c1d00ab4c8afc28ca22225edd07fcb5bf12e3848465861af9d7f00b",
+          "fileName": "P24_2035여주도시기본계획_보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P24_2035여주도시기본계획_보고서-요약본.docx",
+        "sha256": "0f5a788dd72a6ee0152bbd33fdcfebf78a45f67079557d0a8b2b81ac2810bcd3",
+        "bytes": 41665,
+        "driveId": "1YZW-xiPzzkQtRLjfYkAkn5yckZniWX-v"
+      }
+    },
+    {
+      "planId": "P29",
+      "researchId": "P29",
+      "versionId": "P29-ef79add2e604",
+      "title": "2035 강릉도시기본계획",
+      "period": [
+        2016,
+        2035
+      ],
+      "periodText": "기준연도 2015년, 목표연도 2035년. 2016~2035년을 5년 단위 4단계로 구분.",
+      "scopeText": "강릉시 행정구역 전역. 원문 계획구역 면적 1,047.050㎢(육지 1,040.380㎢·해면 6.670㎢).",
+      "contentScope": "도시현황·문제점·잠재력, 장기 발전방향·공간구조, 생활환경 개선, 부문별 계획 및 단계별 투자계획.",
+      "pageEvidence": "원문 PDF 29~30쪽 / 인쇄면 5~6쪽",
+      "coverage": {
+        "kind": "municipal",
+        "prefixes": [
+          "51150",
+          "42150"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "2035 강릉도시기본계획",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:40:30.076Z",
+      "sources": [
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공공기관 아카이브 보고서",
+          "sha256": "de563e568bd56c9b35660b4867d68120e19e73e24df6c8389990e8efeb2a0b08",
+          "fileName": "P29_2035강릉도시기본계획_보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P29_2035강릉도시기본계획_보고서-요약본.docx",
+        "sha256": "ef79add2e60419159ecefc486391a0894a42d2eb5007d4f0ba0cd61ee2161a8c",
+        "bytes": 41474,
+        "driveId": "1nXPUSo5LJE4lr859BtAA3C8vl26haoeh"
+      }
+    },
+    {
+      "planId": "P31",
+      "researchId": "P31",
+      "versionId": "P31-eed05d18a889",
+      "title": "제2차 서울특별시 도시철도망 구축계획 변경",
+      "period": [
+        2021,
+        2030
+      ],
+      "periodText": "계획기간 2021~2030년. 분석 기준연도 2016년(위례신사선 2023년), 중기 목표 2030년·장기 목표 2040년.",
+      "scopeText": "직접 영향권은 서울시 전역, 간접 영향권은 수도권(서울·인천·경기). 연계망을 고려하여 수원·포천·파주 등을 포함.",
+      "contentScope": "교통여건·노선 선정, 차량·시설 대안, 경제성·재무성, 건설 우선순위·재원, 환승·공사 중 교통 및 위례신사선 변경.",
+      "pageEvidence": "원문 PDF 54~55쪽 / 인쇄면 7~8쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "11"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "제2차 변경(2021~2030), 2026-02-13, 고시2026-77",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:40:35.843Z",
+      "sources": [
+        {
+          "url": "https://news.seoul.go.kr/traffic/archives/519066",
+          "kind": "변경 본보고서",
+          "sha256": "e5995b8d963c861e8defe0b51714a98d92c097adbcf5f4724b3b072adae9d704",
+          "fileName": "P31_서울도시철도망_제2차변경_2026승인_본보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P31_서울도시철도망_제2차변경_2026승인_본보고서-요약본.docx",
+        "sha256": "eed05d18a88945dd702674fc5ee8d540df2e40dbf0beefee446ceceac62191bf",
+        "bytes": 41905,
+        "driveId": "13_uJ4Xx-Wd-c4r3qlkOngPI7cTAXb9jH"
+      }
+    },
+    {
+      "planId": "P32",
+      "researchId": "P32",
+      "versionId": "P32-dfcc9d23085d",
+      "title": "제2차 서울특별시 도로건설 관리계획 공식요약본",
+      "period": [
+        2026,
+        2030
+      ],
+      "periodText": "기준연도 2025년, 계획·투자기간 2026~2030년, 목표연도 2030년, 장기 목표연도 2035년.",
+      "scopeText": "직접 영향권은 서울특별시 행정구역, 간접 영향권은 서울과 인접한 수도권.",
+      "contentScope": "도로건설·관리 목표, 개별 사업·기간·우선순위, 도로자산 활용, 비용·재원, 환경·경관 및 교통정보체계.",
+      "pageEvidence": "공식 요약본 PDF 16~17쪽 / 인쇄면 6~7쪽; 투자기간은 뒤의 사업표 근거 참조",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "11"
+        ]
+      },
+      "status": "전문 미확보",
+      "note": "공식 요약자료만 확보했습니다. 전문 3권 미확보. 투자기간 2026~2030, 목표 2030, 장기 목표 2035를 구분합니다.",
+      "approvalEvidence": "제2차 서울 도로건설·관리계획(2026~2035), 고시2026-54",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:40:41.061Z",
+      "sources": [
+        {
+          "url": "https://news.seoul.go.kr/safe/archives/503693",
+          "kind": "공식 요약보고서",
+          "sha256": "0337c606fd631b3fc85ade480f2c64e7c188398a3d91aa29e45d64ab4abcf5f4",
+          "fileName": "P32_서울_제2차도로건설관리계획_2026-2035_공식요약본.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P32_서울_제2차도로건설관리계획_2026-2035_공식요약본-요약본.docx",
+        "sha256": "dfcc9d23085d1cd1a85a958fdf61f0d9b50f9a00320b7c278079798c8e1c971f",
+        "bytes": 41830,
+        "driveId": "1s90lNWNcQ7_pqnPqNIfWhwdifUxRoTGo"
+      }
+    },
+    {
+      "planId": "P34",
+      "researchId": "P34",
+      "versionId": "P34-de7baab14320",
+      "title": "서울특별시 도시교통정비 중기계획",
+      "period": [
+        2022,
+        2026
+      ],
+      "periodText": "기준연도 2019년, 계획기간 2022~2026년(5년).",
+      "scopeText": "일차적 범위는 서울특별시, 이차적 범위는 인천광역시·성남시 등 서울특별시 교통권역 13개 지역.",
+      "contentScope": "광역교통·시설·대중교통·소통·주차 개선, 보행·자전거 통합과 친환경 교통, 부문별 세부과제·연차별 투자·재원.",
+      "pageEvidence": "제1권 총괄 PDF 19~20쪽 / 인쇄면 3~4쪽",
+      "coverage": {
+        "kind": "province",
+        "prefixes": [
+          "11"
+        ]
+      },
+      "status": "적용",
+      "note": "확인된 최신본 적용 / 후속 변경고시 미발견. 미발견은 변경이 없다는 확증이 아닙니다.",
+      "approvalEvidence": "서울특별시 도시교통정비 중기계획(2022~2026), 고시2022-488; 공식 보고서 제1·2권 확보",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:40:56.612Z",
+      "sources": [
+        {
+          "url": "https://news.seoul.go.kr/traffic/archives/509428",
+          "kind": "공식 보고서 제1권",
+          "sha256": "ebae20131af18fb09c2f18aa29b9b996c24806c5b115578dbf1ca0f6d1148e08",
+          "fileName": "P34_서울도시교통정비중기계획_2022-2026_제1권총괄.pdf"
+        },
+        {
+          "url": "https://news.seoul.go.kr/traffic/archives/509428",
+          "kind": "공식 보고서 제2권",
+          "sha256": "eac36db1ffb32597a064c3704154e6fe0a127985f3b254534619328e15648b9d",
+          "fileName": "P34_서울도시교통정비중기계획_2022-2026_제2권부문별계획.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P34_서울도시교통정비중기계획_2022-2026-요약본.docx",
+        "sha256": "de7baab143201e2d3a92d34b9f5307bec4c55ee40666c0a8ada525306bd7b55e",
+        "bytes": 42128,
+        "driveId": "1iZu7uto6HgJ69Dt3Ahsg3OKJ6XKWXY5U"
+      }
+    },
+    {
+      "planId": "P46-urban",
+      "researchId": "P46",
+      "versionId": "P46-urban-5ba6697d59ed",
+      "title": "2030 서울특별시 도시 주거환경정비기본계획 도시정비형 재개발사업 부문",
+      "period": [
+        null,
+        2030
+      ],
+      "periodText": "목표연도 2030년.",
+      "scopeText": "서울의 상업·준주거·준공업지역 등. 3도심·7광역중심·12지역중심·역세권 중 도시기능 회복·상권 활성화 필요지역.",
+      "contentScope": "기본계획 비전·목표, 정비예정구역, 도심녹지, 도시정비형 재개발 부문별 계획, 단계별 추진 및 정비유도지침.",
+      "pageEvidence": "원문 PDF 11~12쪽 / 인쇄면 3~4쪽",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": [
+          "11"
+        ]
+      },
+      "status": "구역 확인 필요",
+      "note": "서울 내 해당 용도·정비구역 여부를 별도로 확인해야 합니다.",
+      "approvalEvidence": "2030 주거환경정비사업 부문: 변경고시2025-348(2025-06-26). 2030 도시정비형 재개발사업 부문: 경미한 변경고시2026-27(2026-01-15)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:41:02.557Z",
+      "sources": [
+        {
+          "url": "https://commission.eseoul.go.kr/doc/archiveDocDetail.do?docTyCode=ADOC-0003&docId=2026030001&searchKeyword=2030&status=MenualDetail&searchType=searchAll",
+          "kind": "서울시 공식 2026 변경 본보고서 (이미지형 PDF)",
+          "sha256": "c0554de7aada219d5baa45ac21c928a0837dd42fda6ac67222dc583832cbcfbb",
+          "fileName": "P46_서울_도시정비형2030_2026변경_본보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P46_서울_도시정비형2030_2026변경_본보고서-요약본.docx",
+        "sha256": "5ba6697d59edd9c02b85ee28a5959440e7c9c1f3ff7aee022ca2809b9312d9d8",
+        "bytes": 41621,
+        "driveId": "1uQwjc2gHAarEqzQOf89se35J9pggkkiF"
+      }
+    },
+    {
+      "planId": "P46-residential",
+      "researchId": "P46",
+      "versionId": "P46-residential-08181d24f5e6",
+      "title": "2030 서울특별시 도시 주거환경정비기본계획 주거환경정비사업 부문",
+      "period": [
+        null,
+        2030
+      ],
+      "periodText": "목표연도 2030년.",
+      "scopeText": "서울특별시 내 주거지 약 313㎢.",
+      "contentScope": "2025 정비기본계획 평가를 바탕으로 2030 수립방향·비전, 지역특성별 정비유형·실행방안 및 운영제도 개선.",
+      "pageEvidence": "원문 PDF 19~20쪽 / 인쇄면 6~7쪽",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": [
+          "11"
+        ]
+      },
+      "status": "구역 확인 필요",
+      "note": "서울 내 해당 용도·정비구역 여부를 별도로 확인해야 합니다.",
+      "approvalEvidence": "2030 주거환경정비사업 부문: 변경고시2025-348(2025-06-26). 2030 도시정비형 재개발사업 부문: 경미한 변경고시2026-27(2026-01-15)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17T11:41:08.486Z",
+      "sources": [
+        {
+          "url": "https://news.seoul.go.kr/citybuild/archives/528131",
+          "kind": "변경 반영 본보고서",
+          "sha256": "df5abee32713260d5952c8dcb0f3b0cdc9e94fdbe775a7dddc8e4695fb310681",
+          "fileName": "P46_서울_주거환경정비2030_2025변경반영_본보고서.pdf"
+        }
+      ],
+      "summary": {
+        "fileName": "P46_서울_주거환경정비2030_2025변경반영_본보고서-요약본.docx",
+        "sha256": "08181d24f5e613db301ea4cf3e329596e32ada26e3301d2955e0ec19c2188b24",
+        "bytes": 41631,
+        "driveId": "1nldcBY-wJTeX-XQARp27pwrLY4-YJOUr"
+      }
+    },
+    {
+      "planId": "P01",
+      "researchId": "P01",
+      "versionId": "P01-research-20261017",
+      "title": "국토종합계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제5차 국토종합계획(2020~2040)",
+      "scopeText": "국가 공간",
+      "contentScope": "",
+      "pageEvidence": "성뒤 p69 / 에코밸리 p21 / 미아중심 HWP 추출문단11",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 수정계획(2026~2040)의 최종 고시번호·고시일·전문 확인\n기존 조사 근거: [재확인 2026-10-16] 일부 보고서의 '제5차 수정계획(2019)'는 공식 원계획 명칭과 불일치. 2026 업무계획상 예정만으로 수정계획 확정 처리 금지 공식 고시·정책자료를 추가 검색했으나 후속 최종고시를 확보하지 못함. 계획(안), 업무계획, 건의 및 예비타당성조사를 확정본으로 승격하지 않음. 발행기관에 최종 고시번호·고시일·첨부 전문 확인 필요. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제5차 국토종합계획(2020~2040)",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/policyData/m_34681/lst.jsp?p_category=901&psize=10&s_category=p_sec_9&search=%EA%B5%AD%ED%86%A0%EC%A2%85%ED%95%A9%EA%B3%84%ED%9A%8D&srch_usr_titl=Y",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.molit.go.kr/2026plan/sub1_local.html",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.krihs.re.kr/menu.es?mid=a70305000000",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P04",
+      "researchId": "P04",
+      "versionId": "P04-research-20261017",
+      "title": "수도권 광역도시계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "2020년 수도권 광역도시계획(2009 변경·정정), 공고2009-392·400",
+      "scopeText": "광역 공간",
+      "contentScope": "",
+      "pageEvidence": "시흥거모 p60",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 국토교통부 공식 게시문: 국토해양부공고2009-392(2009-05-07) 변경완료 공고와 공고2009-400(2009-05-08) 오자 정정공고 확인. 최초 수립본이 아니라 2009 변경·정정본을 기준으로 지정.\n남은 확인 사항: 2009-400 정정 첨부의 변경 내용 대조·전문 확보. 목표2020 경과. 2040 후속본 승인 여부는 별도 확인 대상으로 유지.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "2020년 수도권 광역도시계획(2009 변경·정정), 공고2009-392·400",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/I0204/m_45/dtl.jsp?idx=4747&lcmspage=25&psize=10",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.molit.go.kr/USR/I0204/m_45/dtl.jsp?gubun=5&idx=4743&lcmspage=30&old_search_dept_nm=&psize=10&search=&search_dept_id=&search_dept_nm=&search_regdate_e=&search_regdate_s=&srch_usr_ctnt=&srch_usr_nm=&srch_usr_num=&srch_usr_titl=&srch_usr_year=",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.2050cnc.go.kr/base/board/read?boardManagementNo=11&boardNo=5422&menuLevel=2&menuNo=10&page=1",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P06",
+      "researchId": "P06",
+      "versionId": "P06-research-20261017",
+      "title": "국가철도망 구축계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제4차 국가철도망 구축계획(2021~2030)",
+      "scopeText": "국가 철도",
+      "contentScope": "",
+      "pageEvidence": "여주점봉 p70 / 에코밸리 p22",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 제5차(2026~2035)의 최종 승인·고시 확인\n기존 조사 근거: [재확인 2026-10-16] 제5차 건의·용역·예정 보도와 확정고시 구분 공식 고시·정책자료를 추가 검색했으나 후속 최종고시를 확보하지 못함. 계획(안), 업무계획, 건의 및 예비타당성조사를 확정본으로 승격하지 않음. 발행기관에 최종 고시번호·고시일·첨부 전문 확인 필요. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제4차 국가철도망 구축계획(2021~2030)",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/I0204/m_45/dtl.jsp?idx=16937&lcmspage=1&psize=10",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.ggc.go.kr/site/cmt/xb/lwmkr/lawmakerpressrelease/296882",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.seongnam.go.kr/tr010400",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P07",
+      "researchId": "P07",
+      "versionId": "P07-research-20261017",
+      "title": "중기교통시설투자계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제5차 중기교통시설투자계획(2021~2025)",
+      "scopeText": "국가 교통 실행",
+      "contentScope": "",
+      "pageEvidence": "사천 p84 / 에코밸리 p24",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 제6차 확정고시·전문 확인. 기존본을 2026년 현행 계획으로 단정하지 않음\n기존 조사 근거: [재확인 2026-10-16] 2026~2030본은 차수만 계산해 생성하지 않음 공식 고시·정책자료를 추가 검색했으나 후속 최종고시를 확보하지 못함. 계획(안), 업무계획, 건의 및 예비타당성조사를 확정본으로 승격하지 않음. 발행기관에 최종 고시번호·고시일·첨부 전문 확인 필요. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제5차 중기교통시설투자계획(2021~2025)",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/policyTarget/m_24066/dtl.jsp?idx=554",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P08",
+      "researchId": "P08",
+      "versionId": "P08-research-20261017",
+      "title": "고속도로 건설계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제2차 고속도로 건설계획(2021~2025), 국토교통부고시2022-60",
+      "scopeText": "국가 도로 실행",
+      "contentScope": "",
+      "pageEvidence": "여주점봉 p114",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 국토교통부 공식 행정규칙 게시문에서 도로법 제6조에 따른 국토교통부고시2022-60, 2022-02-04 및 대상기간2021~2025 확인. 첨부 고시 PDF 게시 확인, 이번 조사에서 파일 저장은 하지 않음.\n남은 확인 사항: 고시 첨부 전문 확보 및 세부 노선 인용 대조. 기간2021~2025 경과. 제3차 최종고시는 별도 확인 대상으로 유지.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제2차 고속도로 건설계획(2021~2025), 국토교통부고시2022-60",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/I0204/m_45/dtl.jsp?gubun=&idx=17346&lcmspage=136&old_search_dept_nm=&psize=10&search=&search_dept_id=&search_dept_nm=&search_regdate_e=&search_regdate_s=&srch_usr_ctnt=N&srch_usr_nm=N&srch_usr_num=&srch_usr_titl=N&srch_usr_year=",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.codil.or.kr/filebank/original/RK/OTKCRK230365/OTKCRK230365.pdf",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P09",
+      "researchId": "P09",
+      "versionId": "P09-research-20261017",
+      "title": "국도·국지도 건설계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제5차 국도·국지도 건설계획(2021~2025), 2021년 확정본 기준",
+      "scopeText": "국가 도로 실행",
+      "contentScope": "",
+      "pageEvidence": "여주점봉 p82 / 파주A18 p25",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 국토부 정책정보4581에 제5차(2021~2025) 고시문 전문과 210930_관보고시(전자관보).pdf 게시 확인. 국토부 보도자료(2021-09-29, CODIL 보존)는 2021-09-28 최종 확정 명시. 홍천군 공식 환경영향평가 요약문은 고시2021-1106·2021-09-30으로 인용하나 관보 직접 대조는 남김. 행정규칙17043의 2021-000은 확정번호로 사용하지 않음.\n남은 확인 사항: 관보 원문의 고시번호·일자 직접 대조 및 전문 확보. 2025-10-30 국도15호선 고흥~봉래 반영 변경 발표 발견: 해당 변경고시·첨부 반영 여부 추가 대조. 제6차 확정 여부는 별도. 기간 경과.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제5차 국도·국지도 건설계획(2021~2025), 2021년 확정본 기준",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/USR/policyData/m_34681/dtl.jsp/dtl.jsp?id=4581",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.codil.or.kr/filebank/files/202110/helpdesk/BBS_202110050918420540.pdf?atchFileId=FILE_000000000009162&fileSn=0",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.molit.go.kr/USR/NEWS/dtl.jsp?id=95091352&lcmspage=35",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://council.chungnam.go.kr/kr/bbs/download.do?bbs_id=buReport&uid=124D68A87568E902D1966FF28188070F",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P10",
+      "researchId": "P10",
+      "versionId": "P10-research-20261017",
+      "title": "고속 및 일반국도 등 도로관리계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제2차 고속 및 일반국도 등 도로관리계획(2021~2025)",
+      "scopeText": "국가 도로 유지관리",
+      "contentScope": "",
+      "pageEvidence": "여주점봉 p80",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 제3차(2026~2030)의 확정고시·전문 확인. 도로건설계획과 구별\n기존 조사 근거: [재확인 2026-10-16] '도로관리계획'과 '도로건설계획' 구별 공식 고시·정책자료를 추가 검색했으나 후속 최종고시를 확보하지 못함. 계획(안), 업무계획, 건의 및 예비타당성조사를 확정본으로 승격하지 않음. 발행기관에 최종 고시번호·고시일·첨부 전문 확인 필요. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제2차 고속 및 일반국도 등 도로관리계획(2021~2025)",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.codil.or.kr/filebank/original/RK/OTKCRK230365/OTKCRK230365.pdf",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P12",
+      "researchId": "P12",
+      "versionId": "P12-research-20261017",
+      "title": "대도시권 광역교통시행계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제4차 대도시권 광역교통시행계획(2021~2025)",
+      "scopeText": "광역 교통 실행",
+      "contentScope": "",
+      "pageEvidence": "본문 간접인용 여부 자동검색 근거 참조",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 제5차(2026~2030)의 확정고시·전문 확인. 기존본의 현행 효력은 단정하지 않음\n기존 조사 근거: [재확인 2026-10-16] 홈페이지 제4차 표시만으로 제5차 미수립을 단정하지 않음 공식 고시·정책자료를 추가 검색했으나 후속 최종고시를 확보하지 못함. 계획(안), 업무계획, 건의 및 예비타당성조사를 확정본으로 승격하지 않음. 발행기관에 최종 고시번호·고시일·첨부 전문 확인 필요. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제4차 대도시권 광역교통시행계획(2021~2025)",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.molit.go.kr/mtc/intro.do",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.molit.go.kr/2026plan/sub1_local.html",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P17",
+      "researchId": "P17",
+      "versionId": "P17-research-20261017",
+      "title": "경기도 도로건설계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제4차 경기도 도로건설계획(2026~2030), 고시2026-5023",
+      "scopeText": "도 도로 실행",
+      "contentScope": "",
+      "pageEvidence": "여주점봉 p88 / 이천아미 p77~79",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 시·군 도로부서 열람 또는 전자파일 확보. 노선도·설명자료는 전문이 아님\n기존 조사 근거: [재확인 2026-10-17] 고시2026-5023 기존 원문 보존. 도 공식 안내와 Aside에서 보고서는 해당 시·군 도로부서에서 열람 가능함을 확인. 도 보도자료의 25개 노선 위치도1쪽, 화성시 설명자료3쪽(고시문·위치도 포함)을 추가 확보. 전문 보고서로 분류하지 않음. 담당 경기도 도로정책과 031-8030-3863. 국가지원지방도와 도 자체 지방도 사업 구별. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제4차 경기도 도로건설계획(2026~2030), 고시2026-5023",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.gg.go.kr/contents/contents.do?ciIdx=1491&menuId=3397",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.gg.go.kr/bbs/boardView.do?bIdx=228643040&bcIdx=601&bsIdx=469&menuId=1547&page=2",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://gnews.gg.go.kr/briefing/brief_gongbo_view.do?BS_CODE=S017&number=69752",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.hscity.go.kr/www/user/bbs/BD_selectBbs.do?q_bbsCode=1175&q_bbscttSn=20260326160708747",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://web1.gg.go.kr/contents/contents.do?ciIdx=1491&menuId=3397",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P18",
+      "researchId": "P18",
+      "versionId": "P18-research-20261017",
+      "title": "충청남도 도로건설·관리계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 제2차 도로정비기본(2011~2020) (확정 근거 확인 필요)",
+      "scopeText": "도 도로 실행",
+      "contentScope": "",
+      "pageEvidence": "천안화덕 p42",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 제2차 도로정비기본계획(2011~2020) 관련 충남 백서·도로계획 수립현황을 확인했으나 해당 기존본의 승인·고시번호와 원문은 확보하지 못함. 수립·활용 사실만으로 확정 상태를 올리지 않음.\n남은 확인 사항: 제2차 충남 도로정비기본계획(2011~2020)의 고시번호·일자·원문 우선 확인. 후속본은 별도 확인 대상으로 유지. 기간 경과.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 제2차 도로정비기본(2011~2020) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.chungnam.go.kr/downloadUtil.do?filename=2014_whitebook.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.codil.or.kr/filebank/original/RK/OTKCRK220821/OTKCRK220821.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://council.chungnam.go.kr/kr/bbs/download.do?bbs_id=buReport&uid=124D68A87568E902D1966FF28188070F",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P19",
+      "researchId": "P19",
+      "versionId": "P19-research-20261017",
+      "title": "경상남도 도로건설·관리계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "경상남도 도로건설·관리계획(2021~2025), 고시 이력 확인본",
+      "scopeText": "도 도로 실행",
+      "contentScope": "",
+      "pageEvidence": "사천선인 p88",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 2026~2030 수립 추진본의 최종고시·전문 확인\n기존 조사 근거: [재확인 2026-10-16] 2026~2030 최종고시 확보 필요 도 공식자료·고시 추가검색에서 2026~2030 후속 확정고시를 확보하지 못함. 기존 기간경과본을 2026 현행본으로 단정하지 않으며 도 도로계획 담당부서 확인 필요. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "경상남도 도로건설·관리계획(2021~2025), 고시 이력 확인본",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.hc.go.kr/_res/portal/data/pdf/h09773/2026_13.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P25",
+      "researchId": "P25",
+      "versionId": "P25-research-20261017",
+      "title": "이천 도시기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "2030 이천도시기본계획, 2019-03-06 승인본",
+      "scopeText": "시·군 공간",
+      "contentScope": "",
+      "pageEvidence": "이천아미 p74 / 송정 p72",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 2030 일부변경 및 2040 계획의 최종 승인 확인. 시의회 의견채택·공청회는 승인과 구별\n기존 조사 근거: [표기정리 2026-10-17 / 조사기준 2026-10-16] 경기도 2019-03-07 보도자료는 전일 최종승인을 명시. 시의회 의안8-977의 원안채택·집행부 송부는 도시기본계획 승인과 다름. 2026.1.8 공청회 및 2040 수립 절차를 확정본으로 사용하지 않음. 2026-10-16 조사 기준 후속 최종 승인 확인 필요로 기존 승인판을 적용하며, 일반적인 후속 변경고시 미발견 항목과 별도 분류. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "2030 이천도시기본계획, 2019-03-06 승인본",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://gnews.gg.go.kr/briefing/brief_gongbo_view.do?BS_CODE=S017&number=39779",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://council.icheon.go.kr/content/bill/billStats.html?daesu=9&edate=2026-07-07&page=1&pg=vv&proc_code=b1&sdate=1996-03-01&thid=4309&tit_code=i1",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.icheon.go.kr/search/front/Search.jsp?qt=%EB%8F%84%EC%8B%9C%EA%B8%B0%EB%B3%B8%EA%B3%84%ED%9A%8D",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1023691729",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P26",
+      "researchId": "P26",
+      "versionId": "P26-research-20261017",
+      "title": "천안 도시기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2035(2021.5) (확정 근거 확인 필요)",
+      "scopeText": "시·군 공간",
+      "contentScope": "",
+      "pageEvidence": "천안화덕 p48 / 에코밸리 p27",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 천안시의회2023-01-17 회의록에서 2035 도시기본계획 승인사항을 반영했다는 공식 간접 언급 확인. 2021-05-06 승인일은 언론 보도에서 확인했으나 승인공문·공고 원문 직접 대조는 못함.\n남은 확인 사항: 충남도 2035 천안도시기본계획 승인공문 또는 천안시 공람공고 원문 확보. 승인일·승인번호·인용본 동일성 대조 후 적용 전환. 2040 후속본은 별도.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2035(2021.5) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.cheonancouncil.go.kr/caster/xc_realdoc.xdo?m_chasu=2&m_code=101000&m_ymd=2023-01-17",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.cheonancouncil.go.kr/cms/mntsViewer.do?schMntsId=4959",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1023691729",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P27",
+      "researchId": "P27",
+      "versionId": "P27-research-20261017",
+      "title": "사천 도시기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2030(2016) (확정 근거 확인 필요)",
+      "scopeText": "시·군 공간",
+      "contentScope": "",
+      "pageEvidence": "사천선인 p94",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: AURUM 법정계획 아카이브의 2030 사천도시기본계획(2011~2030)과 PDF 연결 확인. 파일 열람 실패로 수립 경위의 승인일·승인번호를 확인하지 못함.\n남은 확인 사항: 2030 사천 기존본의 경상남도 승인공문·사천시 공람공고 또는 보고서 승인 경위 확인. 기존 인용2016년본과 동일성 대조. 2040 후속본은 별도.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2030(2016) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.aurum.re.kr/Legal/PlanFileDownLoad.aspx?num=1946",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://clik.nanet.go.kr/minutes/viewer.do?DOCID=CLIKC1417632126934519&collection=minutes",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1023691729",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P28",
+      "researchId": "P28",
+      "versionId": "P28-research-20261017",
+      "title": "고양 도시기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "2035 고양도시기본계획, 2021-12-28 승인본",
+      "scopeText": "시·군 공간",
+      "contentScope": "",
+      "pageEvidence": "고양창릉 p38",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 2040 계획의 2026-03-31 승인 신청 이후 최종 승인·공고 확인\n기존 조사 근거: [재확인 2026-10-16] 2026-04-29 발표/4월30일 게시자료의 승인 신청과 최종승인을 구분. 2040 계획(안)의 수치를 확정본으로 적용하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "2035 고양도시기본계획, 2021-12-28 승인본",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.goyang.go.kr/news/user/bbs/BD_selectBbs.do?q_bbsCode=1090&q_bbscttSn=20211230161849559&q_clCode=-1&q_estnColumn1=All",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.goyang.go.kr/news/user/bbs/BD_selectBbs.do?q_bbsCode=1090&q_bbscttSn=20260430195530457&q_clCode=-1&q_estnColumn1=All",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1023691729",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P30",
+      "researchId": "P30",
+      "versionId": "P30-research-20261017",
+      "title": "포천 도시기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "2035 포천도시기본계획, 2022-11-23 승인본",
+      "scopeText": "시·군 공간",
+      "contentScope": "",
+      "pageEvidence": "포천 교통계획 참고2장",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 2040 계획 수립용역 이후 최종 승인·공고 확인\n기존 조사 근거: [재확인 2026-10-16] 경기도 승인 발표 본문 확인. 포천 공고2026-2640(2026-09-28)은 용역 제안서 평가결과로 검색 색인에서 확인, 직접 본문 접근은403. 용역 공고를 승인고시로 취급하지 않음. 기존 인용은 교통계획 참고문헌. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "2035 포천도시기본계획, 2022-11-23 승인본",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://gnews.gg.go.kr/briefing/brief_gongbo_view.do?BS_CODE=s017&number=55209",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.pocheon.go.kr/www/selectEminwonView.do?key=3712&notAncmtMgtNo=68186&notAncmtSeCode=01",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=B02",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://law.go.kr/lsLinkCommonInfo.do?lsJoLnkSeq=1023691729",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P33",
+      "researchId": "P33",
+      "versionId": "P33-research-20261017",
+      "title": "서울 도시교통정비 기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2014.12 수립 (확정 근거 확인 필요)",
+      "scopeText": "시 교통 기본",
+      "contentScope": "",
+      "pageEvidence": "금천 p79 / 교대 p91 / 미아중심 HWP 추출문단330",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 서울시 교통정책과 공식 페이지(2015-01-12 수정)에서 도시교통정비 기본계획5개 분권 공개 및 법정계획 설명 확인. 요약보고서195쪽 열람 가능. 2014-12-09 시의회 회의록에 확정고시 결재문서 언급이 있으나 고시 원문·번호를 직접 확인하지 못함.\n남은 확인 사항: 2014 확정고시 원문·번호·일자와 보고서 대상기간 직접 대조. 공개5개 분권의 파일 저장·인용본 동일성 확인. 후속본은 별도.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2014.12 수립 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://news.seoul.go.kr/traffic/archives/20800",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://news.seoul.go.kr/traffic/files/2015/01/54b35b6a3116a1.83096930.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/expcInfoP.do?expcSeq=315301&mode=2",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P35",
+      "researchId": "P35",
+      "versionId": "P35-research-20261017",
+      "title": "파주 도시교통정비 기본·중기계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "파주 도시교통정비 중기계획(2021~2025), 고시2022-170",
+      "scopeText": "시 교통",
+      "contentScope": "",
+      "pageEvidence": "파주A18 p24 / 운정7차 p84",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 기본계획은 별도 확정 근거 확인 필요. 2026년 이후 중기계획 확정고시·전문 확인\n기존 조사 근거: [재확인 2026-10-16] 기존 인용 중기2016~2020보다 후행하는 고시를 확인했으나 그 기간도 종료됨. 이 고시는 기본계획의 신규 수립고시가 아님. 2026년 적용 가능한 후속 중기·기본 확정본은 별도 확보 필요. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "파주 도시교통정비 중기계획(2021~2025), 고시2022-170",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.paju.go.kr/user/board/BD_board.view.do?bbsCd=1022&q_ctgCd=4063&seq=20220614180325333",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/expcInfoP.do?expcSeq=315301&mode=2",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P36",
+      "researchId": "P36",
+      "versionId": "P36-research-20261017",
+      "title": "이천 도시교통정비 기본·중기계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 구 기본·중기; 중기2021.11 (확정 근거 확인 필요)",
+      "scopeText": "시 교통",
+      "contentScope": "",
+      "pageEvidence": "이천아미 p83 / 송정 p53",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 기존 기본·중기계획 및 2021.11 인용본의 승인·고시를 검색했으나 해당 원문을 특정하지 못함. 2026년 이후 공람안은 기존본 확정 근거로 사용하지 않음.\n남은 확인 사항: 기존 기본·중기계획의 확정본·기간 확인. 기본2026~2045·중기2026~2030 공람안의 최종고시 확인\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 구 기본·중기; 중기2021.11 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.icheon.go.kr/news/board/post/view.do?bcIdx=785&idx=315482&mid=0301000000",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.icheon.go.kr/search/front/Search.jsp?qt=%EB%8F%84%EC%8B%9C%EA%B8%B0%EB%B3%B8%EA%B3%84%ED%9A%8D",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/expcInfoP.do?expcSeq=315301&mode=2",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P37",
+      "researchId": "P37",
+      "versionId": "P37-research-20261017",
+      "title": "천안 도시교통정비 기본·중기계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2015.8(기본2015~2031) (확정 근거 확인 필요)",
+      "scopeText": "시 교통",
+      "contentScope": "",
+      "pageEvidence": "천안화덕 p52 / 에코밸리 p30",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 2015-09-11 최종 확정고시를 알리는 당시 언론 보도 확인. 천안시 고시 원문·번호와 기본·중기 각각의 기간을 직접 대조하지 못해 확인 필요 유지.\n남은 확인 사항: 2015-09-11 전후 천안시보·고시에서 통합수립 확정 원문 확보. 기본2015~2031 인용기간 및 중기 대상기간 대조.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2015.8(기본2015~2031) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.law.go.kr/expcInfoP.do?expcSeq=315301&mode=2",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P38",
+      "researchId": "P38",
+      "versionId": "P38-research-20261017",
+      "title": "수원 도시교통정비 기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2017~2030(2018) (확정 근거 확인 필요)",
+      "scopeText": "시 교통",
+      "contentScope": "",
+      "pageEvidence": "수원당수 p47",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 수원시 공식2017년 수립 추진 발표는 확인했으나 추진·용역 발표만으로 2018 기존본 확정 여부를 입증하지 못함.\n남은 확인 사항: 기본2017~2030 인용본 확정 원문과 후속본 확인. 중기계획 용역과 구별\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2017~2030(2018) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.suwon.go.kr/web/board/BD_board.view.do?bbsCd=1043&seq=20170222173156512",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://council.suwon.go.kr/viewer/minutes.do?uid=13684",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/expcInfoP.do?expcSeq=315301&mode=2",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P39",
+      "researchId": "P39",
+      "versionId": "P39-research-20261017",
+      "title": "강릉 도시교통정비 기본·중기계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2018.8 기본·중기 (확정 근거 확인 필요)",
+      "scopeText": "시 교통",
+      "contentScope": "",
+      "pageEvidence": "홍제동 p53·56",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 2018.8 강릉 기본·중기 인용본을 기준으로 승인·고시를 검색했으나 정확한 고시 원문과 대상기간을 특정하지 못함.\n남은 확인 사항: 기본·중기계획의 확정 원문·대상기간 확인. 인용 연도·목표연도 불일치 확인\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2018.8 기본·중기 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.gn.go.kr/DATA/download/www/6595/11-8.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://gangneung.go.kr/DATA/download/www/6854/11-8.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/expcInfoP.do?expcSeq=315301&mode=2",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P40",
+      "researchId": "P40",
+      "versionId": "P40-research-20261017",
+      "title": "여주 도로건설·관리계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2015~2020 / 2020수립본 (확정 근거 확인 필요)",
+      "scopeText": "시 도로",
+      "contentScope": "",
+      "pageEvidence": "황학 p64 / 점봉 p111",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 여주 도로건설·관리계획의 2015~2020 및 2020 수립 표기를 기준으로 검색했으나 해당 확정고시를 특정하지 못함. 다른 지자체 도로고시는 제외.\n남은 확인 사항: 2015~2020 및 2020 수립 인용본의 확정 원문·대상기간과 후속고시 확인. 기간 경과 유의\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2015~2020 / 2020수립본 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P41",
+      "researchId": "P41",
+      "versionId": "P41-research-20261017",
+      "title": "이천 도로건설·관리계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 도로정비기본계획 변경(2015) (확정 근거 확인 필요)",
+      "scopeText": "시 도로",
+      "contentScope": "",
+      "pageEvidence": "송정동공동주택 p79",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 이천 도로정비기본계획 변경2015 인용본의 확정고시를 검색했으나 계획명·대상기간이 일치하는 원문을 특정하지 못함.\n남은 확인 사항: 2015 변경 인용본의 확정 원문·대상기간과 후속고시 확인\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 도로정비기본계획 변경(2015) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P42",
+      "researchId": "P42",
+      "versionId": "P42-research-20261017",
+      "title": "파주 도로정비·건설관리계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "파주 도로건설·관리계획, 고시2023-10(2023-01-16), 대상기간 미확인",
+      "scopeText": "시 도로",
+      "contentScope": "",
+      "pageEvidence": "파주A18 p23",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 고시 첨부 전문에서 대상기간 확인. 2026 후속 용역의 최종고시 확인\n기존 조사 근거: [재확인 2026-10-16] 2023 고시번호·일자·수립 사실은 게시본문 확인. 첨부PDF 및 미리보기 접근 오류로 계획기간은 미확인, 2021~2025 등으로 추정 기입하지 않음. 2026년 수립용역 공고와 확정고시 구분. 고시 당시 도로계획팀031-940-4654(현재 담당은 재확인). / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "파주 도로건설·관리계획, 고시2023-10(2023-01-16), 대상기간 미확인",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.paju.go.kr/user/board/BD_board.view.do?bbsCd=1022&q_ctgCd=4063&seq=20230116144945734",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://dong.paju.go.kr/dong/user/board/BD_board.view.do?bbsCd=1022&q_ctgCd=4063&seq=20260316182244755",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1026751397",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P43",
+      "researchId": "P43",
+      "versionId": "P43-research-20261017",
+      "title": "여주 지방대중교통계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2013 / 제3차(2017~2021),2018수립 (확정 근거 확인 필요)",
+      "scopeText": "시 대중교통",
+      "contentScope": "",
+      "pageEvidence": "여주본두리 p55 / 황학 p75",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 여주 제3차 지방대중교통계획2017~2021 및 2018 수립 표기의 고시를 검색했으나 확정 원문을 특정하지 못함. 제5차 용역자료는 근거로 사용하지 않음.\n남은 확인 사항: 제3차 인용본 및 제4차 확정 원문 확인. 제5차 용역의 최종 확정 확인. 인용기간 경과\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2013 / 제3차(2017~2021),2018수립 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.g2b.go.kr/pn/pnp/pnpe/UntyAtchFile/downloadFile.do?bidPbancNo=R26BK01360603&bidPbancOrd=000&fileSeq=2&fileType=&prcmBsneSeCd=05",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.codil.or.kr/filebank/original/RK/OTKCRK240381/OTKCRK240381.pdf",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P44",
+      "researchId": "P44",
+      "versionId": "P44-research-20261017",
+      "title": "서울 대중교통계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 보고서 표기2007~2021 (확정 근거 확인 필요)",
+      "scopeText": "시 대중교통",
+      "contentScope": "",
+      "pageEvidence": "노량진 p112",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 기존 보고서의 2007~2021 표기는 대상기간·차수가 불명확함. 제3차2017~2021 자료와의 혼동 가능성이 있으나 원문 대조 없이 연도를 수정하거나 확정 처리하지 않음.\n남은 확인 사항: 원 보고서 인용 문서의 제목·차수·2007 표기부터 대조. 정확한 문서 특정 후 해당 서울시 확정고시 확인. 다른 차수로 임의 대체하지 않음.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 보고서 표기2007~2021 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.codil.or.kr/filebank/original/RK/OTKCRK240381/OTKCRK240381.pdf",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P45",
+      "researchId": "P45",
+      "versionId": "P45-research-20261017",
+      "title": "서울생활권계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "2030 서울생활권계획 확인본",
+      "scopeText": "도시기본계획 후속·중간 공간",
+      "contentScope": "",
+      "pageEvidence": "서울일반114p자료 p113 / 한강철교 p141·143 / 미아중심 HWP 추출문단663",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "남은 확인 사항: 2040 권역별 재정비의 최종 발표·확정 여부 및 사업지 해당 생활권 확인\n기존 조사 근거: [재확인 2026-10-16] 권역·지역생활권 및 법제화 과도기 구분; 국가계획과 동일 위계 아님 서울시 공개자료·업무계획 추가검색에서 후속 확정/변경고시를 확보하지 못함. 2040 공간계획과 교통계획, 신규 용역과 최종 승인본을 구분해야 함. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "2030 서울생활권계획 확인본",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://urban.seoul.go.kr/view/html/PMNU3010000001",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P47",
+      "researchId": "P47",
+      "versionId": "P47-research-20261017",
+      "title": "2040 금천구 도시종합관리계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "2040 금천구 도시종합관리계획, 공식 공개 요약본·2021-02-08 수립 발표 기준",
+      "scopeText": "자치구 전략",
+      "contentScope": "",
+      "pageEvidence": "가산 p89",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[표기정리 2026-10-17 / 조사기준 2026-10-17] 공식 근거: 금천구2021-02-08 수립 발표 및 공식 공개 요약본. 사용자 확인에 따라 공식 수립본 적용(비법정 참고)으로 분류. 법정 도시관리계획 결정·승인고시와 구분.\n남은 확인 사항: 최종성과품·수립결재와 기존2020 인용본 동일성 대조. 동일명 후속 개정은 별도 확인. 발표일을 개정일로 해석하지 않음.\n이번 변경은 분류 정리이며 신규 조사나 법정 승인 확인이 아님. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "2040 금천구 도시종합관리계획, 공식 공개 요약본·2021-02-08 수립 발표 기준",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.geumcheon.go.kr/portal/selectBbsNttView.do?bbsNo=8&id=&integrDeptCode=&key=297&nttNo=215248&pageIndex=267&searchCnd=all&searchCtgry=&searchDeptCode=&searchKrwd=",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://geumcheon.go.kr/portal/selectBbsNttView.do?bbsNo=64&id=&integrDeptCode=&key=862&nttNo=216242&pageIndex=1&searchCnd=all&searchCtgry=&searchDeptCode=&searchKrwd=",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.geumcheon.go.kr/portal/selectBbsNttView.do?bbsNo=64&key=862&nttNo=216242",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://urban.seoul.go.kr/view/html/PMNU3010000001",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P48",
+      "researchId": "P48",
+      "versionId": "P48-research-20261017",
+      "title": "2045 동작구 종합도시발전계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "2045 동작구 종합도시발전계획, 공식 게시자료·2018-04-09 실행결재 기준",
+      "scopeText": "자치구 전략",
+      "contentScope": "",
+      "pageEvidence": "한강철교 p145(OCR)",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[표기정리 2026-10-17 / 조사기준 2026-10-17] 공식 근거: 동작구 공식 게시자료 및 도시계획과-4011(2018-04-09,구청장방침제93호) 실행계획·성과관리 결재. 사용자 확인에 따라 공식 수립본 적용(비법정 참고)으로 분류. 실행결재를 원 종합계획 승인고시로 취급하지 않음.\n남은 확인 사항: 2017.12 인용본의 표지·발간연도·최종성과품 동일성 대조. 원 계획 수립결재와 실행결재 구분. 후속 개정은 별도 확인.\n이번 변경은 분류 정리이며 신규 조사나 법정 승인 확인이 아님. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "2045 동작구 종합도시발전계획, 공식 게시자료·2018-04-09 실행결재 기준",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://opengov.seoul.go.kr/og/com/download.php?dname=%EA%B2%B0%EC%9E%AC%EB%AC%B8%EC%84%9C%EB%B3%B8%EB%AC%B8.pdf&uri=%2Ffiles%2Fdcdata%2F100035%2F20180409%2FF0000064547657.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.dongjak.go.kr/portal/bbs/B0000081/view.do?menuNo=200111&nttId=10045521&pageIndex=1",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.2050cnc.go.kr/storage/board/base/2025/07/03/BOARD_ATTACH_1751510113416.pdf",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://urban.seoul.go.kr/view/html/PMNU3010000001",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P49",
+      "researchId": "P49",
+      "versionId": "P49-research-20261017",
+      "title": "성북구 교통정비 중기계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2001.5 (확정 근거 확인 필요)",
+      "scopeText": "자치구 교통",
+      "contentScope": "",
+      "pageEvidence": "하월곡 p60",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 성북구 교통정비 중기계획2001.5 인용본의 고시·발간 근거를 검색했으나 해당 원문과 대상기간을 특정하지 못함.\n남은 확인 사항: 2001.5 인용본의 확정 근거·계획기간·법적 성격과 후속계획 확인\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2001.5 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "P50",
+      "researchId": "P50",
+      "versionId": "P50-research-20261017",
+      "title": "여주 중장기 종합발전계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 비전2025(2014) / 여주비전2030(2019) (확정 근거 확인 필요)",
+      "scopeText": "시 종합 전략",
+      "contentScope": "",
+      "pageEvidence": "여주본두리 p48 / 황학 p62",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 여주비전2030(2019) 기존 인용본의 공식 수립·발간 근거를 검색했으나 확정결재나 최종성과품 동일성을 확인하지 못함. 비전2025와 구분 유지.\n남은 확인 사항: 여주비전2030 인용본의 공식 원문·발간 근거와 동일명 후속본 확인\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 비전2025(2014) / 여주비전2030(2019) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "P51",
+      "researchId": "P51",
+      "versionId": "P51-research-20261017",
+      "title": "천안 장기발전계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2030(2017~2030) (확정 근거 확인 필요)",
+      "scopeText": "시 종합 전략",
+      "contentScope": "",
+      "pageEvidence": "에코밸리 p33",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 천안 장기발전계획2030(2017~2030)의 서지 존재와 확정결재는 구분. 기존본의 공식 채택·결재 근거를 추가로 특정하지 못해 상태 유지.\n남은 확인 사항: 장기발전계획2030(2017~2030) 서지 확인본의 전문·발간 확정 근거 및 동일명 후속본 확인\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2030(2017~2030) (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://dl.nanet.go.kr/detail/MONO12025000031706",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P52",
+      "researchId": "P52",
+      "versionId": "P52-research-20261017",
+      "title": "강원의 비전21",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 과거 고속도로·철도 건설구상 (확정 근거 확인 필요)",
+      "scopeText": "도 장기구상",
+      "contentScope": "",
+      "pageEvidence": "홍제동 p50~51",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 강원도 공식 향토사 자료에서 강원의 비전21(강원도,1996) 발간 언급과 도의회 회의록에서 수립·공개 언급을 확인. 법정계획 승인·고시나 정확한 대상기간은 확인하지 못함.\n남은 확인 사항: 1996 공식 발간 언급을 바탕으로 원문 표지·대상기간·최종 채택 문서 대조. 비법정 비전자료와 강원도종합계획을 구분.\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 과거 고속도로·철도 건설구상 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://state.gwd.go.kr/portal/introduce/gangwon-do/study/folklore10",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://council.gangwon.kr/viewer/minutes.do?uid=12362",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.aurum.re.kr/Legal/LegalSub.aspx?pcode=A05",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P53",
+      "researchId": "P53",
+      "versionId": "P53-research-20261017",
+      "title": "고양 자전거이용시설 기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 재정비2008.10 (확정 근거 확인 필요)",
+      "scopeText": "시 자전거",
+      "contentScope": "",
+      "pageEvidence": "고양창릉 p45",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 고양 자전거이용시설 재정비2008.10 기존 인용본의 고시·확정 원문을 특정하지 못함. 2021 최종보고회 개최자료를 2008 승인 또는 확정공고로 대체하지 않음.\n남은 확인 사항: 기존 시설계획 및 2021 최종보고회 자료의 확정 공고·전문·대상기간 확인\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 재정비2008.10 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://www.goyang.go.kr/news/user/bbs/BD_selectBbs.do?q_bbsCode=1090&q_bbscttSn=20210827171334572&q_estnColumn1=All",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P54",
+      "researchId": "P54",
+      "versionId": "P54-research-20261017",
+      "title": "수도권 BRT 기초조사 및 확충계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2009.12 (확정 근거 확인 필요)",
+      "scopeText": "광역 부문 구 용역",
+      "contentScope": "",
+      "pageEvidence": "고양창릉 p44",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 국가기록원에서 수도권 BRT 기초조사 및 확충계획 용역 관련 2009 과업기간 연장계약 통보 기록 확인. 계약기록은 완료·승인 증거가 아니므로 상태 유지.\n남은 확인 사항: 2009.12 용역 인용본의 최종성과품·대상기간·후속본 확인. 국가BRT계획과 별개\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2009.12 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://archives.go.kr/next/newsearch/showDetailPopup.do?rc_code=1310377&rc_rfile_no=202009654562&rc_ritem_no=000000000007&sitePage=1-2-1",
+          "kind": "공식 근거·자료 페이지"
+        },
+        {
+          "url": "https://www.molit.go.kr/mtc/intro.do",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P55",
+      "researchId": "P55",
+      "versionId": "P55-research-20261017",
+      "title": "수도권 여객 기종점통행량 현행화 공동사업",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "최신 배포차수·기준연도 확인 필요",
+      "scopeText": "교통 DB·조사자료",
+      "contentScope": "",
+      "pageEvidence": "삼양사거리 p67 / 미아중심 HWP 추출문단172",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "장래OD 기준자료이며 법정 상위계획에서 분리 / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "최신 배포차수·기준연도 확인 필요",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "P56",
+      "researchId": "P56",
+      "versionId": "P56-research-20261017",
+      "title": "서울도시계획헌장",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "최신 개정 확인 미실시",
+      "scopeText": "도시계획 원칙",
+      "contentScope": "",
+      "pageEvidence": "삼양사거리 p71",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "교통망 확정사업 근거로 사용하지 않음 / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "최신 개정 확인 미실시",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://urban.seoul.go.kr/view/html/PMNU3010000001",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "P57",
+      "researchId": "P57",
+      "versionId": "P57-research-20261017",
+      "title": "희망강북 4개년 계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 2019~2022, 강북구, 민선7기 (확정 근거 확인 필요)",
+      "scopeText": "구정 운영·정책계획",
+      "contentScope": "",
+      "pageEvidence": "미아중심 HWP 2.3.1 8), 추출문단720·722",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": "[재확인 2026-10-17] 기존본 확인: 민선7기 희망강북4개년2019~2022 기존본의 공식 발간·채택 근거를 특정하지 못함. 현재 임기 공약 페이지를 과거 계획의 확정 근거로 사용하지 않음.\n남은 확인 사항: 민선7기2019~2022 인용본의 발간 근거 및 사업지와의 공간적 관련성 확인. 기간 경과\n조사 범위: 기존 인용본의 승인·고시 근거. 후속 차수의 최종 확정은 이번에 재조사하지 않음. / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 2019~2022, 강북구, 민선7기 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [
+        {
+          "url": "https://child.gangbuk.go.kr/mayor/main/contents.do?menuNo=500032",
+          "kind": "공식 근거·자료 페이지"
+        }
+      ],
+      "summary": null
+    },
+    {
+      "planId": "A02",
+      "researchId": "A02",
+      "versionId": "A02-research-20261017",
+      "title": "지역교통안전기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 경기·여주 구계획이 참고문서에 등장; 대상 지자체 최신본 미확인 (확정 근거 확인 필요)",
+      "scopeText": "도·시 교통 부문",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 경기·여주 구계획이 참고문서에 등장; 대상 지자체 최신본 미확인 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "A04",
+      "researchId": "A04",
+      "versionId": "A04-research-20261017",
+      "title": "지방교통약자 이동편의 증진계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 여주 제5차 지방교통약자 이동편의 증진계획 수립용역: 공고2026-0122(2026-02-27). 최종 확정본 미확인 (확정 근거 확인 필요)",
+      "scopeText": "시·군 교통 부문",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 여주 제5차 지방교통약자 이동편의 증진계획 수립용역: 공고2026-0122(2026-02-27). 최종 확정본 미확인 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "A06",
+      "researchId": "A06",
+      "versionId": "A06-research-20261017",
+      "title": "국가물류기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제5차 국가물류기본계획(2021~2030)",
+      "scopeText": "국가 물류 최상위",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제5차 국가물류기본계획(2021~2030)",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "A10",
+      "researchId": "A10",
+      "versionId": "A10-research-20261017",
+      "title": "보행안전 및 편의증진 기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "참고본: 각 지자체 최신본 확인 필요 (확정 근거 확인 필요)",
+      "scopeText": "시·군·구 교통 부문",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "참고본: 각 지자체 최신본 확인 필요 (확정 근거 확인 필요)",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "A11",
+      "researchId": "A11",
+      "versionId": "A11-research-20261017",
+      "title": "지역 자전거 이용 활성화계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "고양: 2021-08-26 자전거이용활성화 5개년 계획 최종보고회 공식 보도 확인. 후속 개정 및 최종 공고문 미확인",
+      "scopeText": "시·도·시·군·구 교통 부문",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "고양: 2021-08-26 자전거이용활성화 5개년 계획 최종보고회 공식 보도 확인. 후속 개정 및 최종 공고문 미확인",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "A12",
+      "researchId": "A12",
+      "versionId": "A12-research-20261017",
+      "title": "광역교통개선대책 / 연계교통체계 구축대책",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "해당 개발사업의 최종 승인·변경대책",
+      "scopeText": "사업별 교통 실행",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "해당 개발사업의 최종 승인·변경대책",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "A15",
+      "researchId": "A15",
+      "versionId": "A15-research-20261017",
+      "title": "전국 항만기본계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제4차 수정계획(2026~2030), 해양수산부고시2026-80, 2026-07-20",
+      "scopeText": "국가 교통수단 부문",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제4차 수정계획(2026~2030), 해양수산부고시2026-80, 2026-07-20",
+      "checkedAt": "2026-10-16",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    },
+    {
+      "planId": "A16",
+      "researchId": "A16",
+      "versionId": "A16-research-20261017",
+      "title": "공항개발 종합계획",
+      "period": [
+        null,
+        null
+      ],
+      "periodText": "제6차 공항개발 종합계획(2021~2025), 국토교통부고시2021-1111",
+      "scopeText": "국가 교통수단 부문",
+      "contentScope": "",
+      "pageEvidence": "",
+      "coverage": {
+        "kind": "unresolved",
+        "prefixes": []
+      },
+      "status": "확인 필요",
+      "note": " / 자동 추천용 범위·버전 매핑 미검토",
+      "approvalEvidence": "제6차 공항개발 종합계획(2021~2025), 국토교통부고시2021-1111",
+      "checkedAt": "2026-10-17",
+      "modifiedAt": "2026-10-17",
+      "sources": [],
+      "summary": null
+    }
+  ]
+}
