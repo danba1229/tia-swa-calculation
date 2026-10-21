@@ -15,7 +15,7 @@ are tested against the rectangle again on the server. Distances are straight-lin
 - `TAGO_SUBWAY_API_KEY`: subway station identifiers and station timetables.
 - `SEOUL_TDATA_API_KEY`: T-DATA active-route Saturday and holiday intervals.
 - Existing `KAKAO_REST_API_KEY`: subway coordinates (server only).
-- `SEOUL_SUBWAY_API_KEY`: Seoul station registry and day/direction timetables.
+- `SEOUL_SUBWAY_API_KEY`: Seoul station registry and day/direction timetables. The endpoint is HTTP-only, so this key must be dedicated: if it equals any other configured API key, no request is sent (`lib/httpKeyIsolation.js`).
   The user approved server-side HTTP to `openapi.seoul.go.kr:8088`.
   The key travels unencrypted on that upstream connection, never in browser code.
 
