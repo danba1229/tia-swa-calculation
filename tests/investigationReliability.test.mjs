@@ -6,7 +6,8 @@ import { createTransportSearch } from '../lib/client/createTransportSearch.js';
 import { createDevelopmentSearch } from '../lib/client/createDevelopmentSearch.js';
 import { summarizeProjects } from '../lib/tiaScope.js';
 import { tiaDatabaseUrl } from '../lib/tiaDatabase.js';
-import { fetchTiaProjects } from '../lib/tiaApi.js';
+import { fetchTiaProjects, rawProjectKey } from '../lib/tiaApi.js';
+import { collectTiaBusinessPeriod } from '../lib/tiaBusinessSync.js';
 import { createBackgroundSnapshotReader } from '../lib/backgroundSnapshot.js';
 import { busGapSummary } from '../lib/client/transportEnrichment.js';
 import { getSubwaySchedule } from '../lib/subway.js';
@@ -96,6 +97,32 @@ test('development client continues source pages, accumulates unique projects and
     else assert.match(state.developmentResult.error, /반복 페이지/);
   }
   globalThis.fetch = original;
+});
+test('TIA counts facility records separately but rejects a repeated record with only a different row number', async () => {
+  const apartment = { bsnsNo: '', dlbrtNo: '', bsnsNm: '복합개발사업', bsnsLc: '충남 당진시', rno: '1', tyDetail: '아파트', tyStep3: '공동주택', tyStep4: '아파트' };
+  const shop = { ...apartment, rno: '2', tyDetail: '기타', tyStep3: '제1종 근린생활시설', tyStep4: '기타' };
+  assert.notEqual(rawProjectKey(apartment), rawProjectKey(shop));
+  assert.equal(rawProjectKey(apartment), rawProjectKey(Object.fromEntries(Object.entries({ ...apartment, rno: '99' }).reverse())));
+  const names = ['DATA_GO_KR_SERVICE_KEY', 'TIA_SYSTEM_API_BASE_URL', 'TIA_SYSTEM_API_OPERATION_PATH', 'TIA_PROJECT_API_BASE_URL', 'TIA_API_BASE_URL'];
+  const before = names.map(name => process.env[name]), original = globalThis.fetch;
+  process.env.DATA_GO_KR_SERVICE_KEY = 'fixture'; process.env.TIA_SYSTEM_API_BASE_URL = 'https://example.invalid/'; process.env.TIA_SYSTEM_API_OPERATION_PATH = 'businessSearch';
+  delete process.env.TIA_PROJECT_API_BASE_URL; delete process.env.TIA_API_BASE_URL;
+  try {
+    for (const duplicate of [false, true]) {
+      globalThis.fetch = async url => {
+        const page = Number(url.searchParams.get('pageNo'));
+        return Response.json({ totalCount: 2, items: [page === 1 ? apartment : duplicate ? { ...apartment, rno: '2' } : shop] });
+      };
+      const live = await fetchTiaProjects({}), source = live.sourceDiagnostics[0];
+      assert.equal(source.pageInfo.complete, !duplicate);
+      assert.equal(source.rawCount, duplicate ? 1 : 2);
+      assert.equal(live.projects.length, 1, 'facility records still belong to a single candidate project');
+      if (!duplicate) assert.equal(new Set(source.pageInfo.projectKeys).size, 2);
+      const stored = await collectTiaBusinessPeriod({ startDate: '2021-01-01', endDate: '2021-12-31' });
+      assert.equal(stored.complete, !duplicate);
+      assert.equal(stored.projects.length, duplicate ? 1 : 2);
+    }
+  } finally { globalThis.fetch = original; names.forEach((name, i) => { if (before[i] === undefined) delete process.env[name]; else process.env[name] = before[i]; }); }
 });
 test('expired GG snapshot returns before slow refresh and schedules only one background job', async () => {
   const snapshot = { months: [{ month: '2024-12' }] }, jobs = []; let loads = 0;
