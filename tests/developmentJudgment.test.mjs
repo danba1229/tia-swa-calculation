@@ -47,3 +47,8 @@ test('summary counts unjudged projects separately from 참고', () => {
   assert.equal(summary.unjudgedCount, 2);
   assert.equal(summary.referenceCount, 1);
 });
+
+test('stage fields inside merged per-source raw records still count', () => {
+  const merged = { reviewResult: '', raw: { TIA_PROJECT_API: liveRaw, TIA_SYSTEM_API: { bsnsNm: 'x', 추진단계: '착공' } } };
+  assert.equal(judgeReflection(merged, 100, 2000).reflectionStatus, '반영');
+});

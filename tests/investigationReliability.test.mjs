@@ -65,9 +65,10 @@ test('TIA live pagination requests one actual project per page and resumes beyon
   try {
     const first = await fetchTiaProjects({}); const cursor = first.sourceDiagnostics[0].pageInfo;
     assert.equal(cursor.nextPage, 49); assert.equal(cursor.complete, false);
-    assert.equal(first.projects.length, 48); assert.deepEqual(first.errors, []);
+    assert.equal(first.projects.length, 48); assert.equal(cursor.processedCount, 48); assert.deepEqual(first.errors, []);
     const last = await fetchTiaProjects({}, { systemPage: cursor.nextPage });
     assert.equal(last.projects.length, 5); assert.equal(last.sourceDiagnostics[0].pageInfo.complete, true);
+    assert.equal(last.sourceDiagnostics[0].pageInfo.processedCount, 53);
     assert.equal(last.sourceDiagnostics[0].pageInfo.signature, cursor.signature);
     assert.equal(new Set([...first.projects, ...last.projects].map(p => p.id)).size, 53);
     assert.ok(calls.includes(53));
@@ -111,7 +112,8 @@ test('TIA counts facility records separately but rejects a repeated record with 
     for (const duplicate of [false, true]) {
       globalThis.fetch = async url => {
         const page = Number(url.searchParams.get('pageNo'));
-        return Response.json({ totalCount: 2, items: [page === 1 ? apartment : duplicate ? { ...apartment, rno: '2' } : shop] });
+        const rows = [apartment, duplicate ? { ...apartment, rno: '2' } : shop], size = Number(url.searchParams.get('numOfRows'));
+        return Response.json({ totalCount: 2, items: rows.slice((page - 1) * size, page * size) });
       };
       const live = await fetchTiaProjects({}), source = live.sourceDiagnostics[0];
       assert.equal(source.pageInfo.complete, !duplicate);

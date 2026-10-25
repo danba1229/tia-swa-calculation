@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { defaultSyncPeriod, syncTiaBusinessPeriod } from "../../../../lib/tiaBusinessSync";
-import { isTiaDatabaseConfigured } from "../../../../lib/tiaDatabase";
+import { dailySyncPeriods, syncTiaBusinessPeriod } from "../../../../lib/tiaBusinessSync";
+import { isTiaDatabaseConfigured, readTiaSyncTimes } from "../../../../lib/tiaDatabase";
 
 export const maxDuration = 180;
 
@@ -20,12 +20,19 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const period = defaultSyncPeriod();
-    const startDate = searchParams.get("startDate") || period.startDate;
-    const endDate = searchParams.get("endDate") || period.endDate;
     const maxPages = Math.min(1000, Math.max(1, Number(searchParams.get("maxPages")) || 250));
-    const summary = await syncTiaBusinessPeriod({ startDate, endDate, maxPages });
-    return NextResponse.json({ success: summary.complete, summary }, { status: summary.complete ? 200 : 503 });
+    const periods = searchParams.get("startDate") && searchParams.get("endDate")
+      ? [{ startDate: searchParams.get("startDate"), endDate: searchParams.get("endDate") }]
+      : dailySyncPeriods(new Date(), { lastSynced: await readTiaSyncTimes() });
+    const startedAt = Date.now(), summaries = [];
+    for (const period of periods) {
+      // Leave room under maxDuration; skipped months are picked up by later rotations.
+      if (Date.now() - startedAt > 140000) break;
+      try { summaries.push(await syncTiaBusinessPeriod({ ...period, maxPages })); }
+      catch (error) { summaries.push({ ...period, complete: false, error: error.message || "TIA 동기화 실패" }); }
+    }
+    const success = summaries.length === periods.length && summaries.every((summary) => summary.complete);
+    return NextResponse.json({ success, requested: periods.length, summaries }, { status: success ? 200 : 503 });
   } catch (error) {
     console.error("[tia-sync]", error);
     return NextResponse.json(
