@@ -149,7 +149,7 @@ test("station route failure is explicit rather than a fabricated count of zero",
     const result = await searchSeoulBusStopsInScope(scope);
     assert.equal(result.summary.failedStationRoutes, 2);
     assert.equal(result.summary.partial, true);
-    assert.match(result.stations[0].routeError, /응답 오류/);
+    assert.match(result.stations[0].routeError, /자료 없음\(코드 4\)/);
     assert.equal(createBusRouteTableRows(result.stations).length, 1);
   }, (url) => url.pathname.endsWith("/getRouteByStation") ? new Response(xml([], "4")) : undefined);
 });
