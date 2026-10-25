@@ -1,5 +1,7 @@
 "use client";
 
+import { LANDUSE_OTHER_NOTE, ZONING_SOURCE_NOTE } from "../../lib/landuseNotes";
+
 export default function LanduseStep({ rankClass, DEFAULT_STATISTICS_YEAR, STATISTICS_YEAR_OPTIONS, addRow, createZoningRow, exportStep3Excel, form, formatNumber, formatOptionalNumber, formatPercent, formatSquareKilometers, landuseReportRows, landuseSlices, landuseStats, pieBackground, refreshLocalStatisticsOnly, removeRow, setForm, shouldShowStep, updateLanduseArea, updateListItem, updateStatisticsYear, verification, zoningReportRows, zoningSlices, zoningStats }) {
   return (<section className={`panel step-section ${shouldShowStep(3) ? "" : "is-hidden"}`}>
         <div className="panel-header">
@@ -51,6 +53,7 @@ export default function LanduseStep({ rankClass, DEFAULT_STATISTICS_YEAR, STATIS
               <h3>지목별 토지이용현황</h3>
               <p className="subpanel-source">출처: {landuseReportRows[0]?.source || "미입력"}</p>
             </div>
+            <p className="verification-source">{LANDUSE_OTHER_NOTE}</p>
             <div className="table-wrap">
               <table className="data-table report-table horizontal-report-table">
                 <thead>
@@ -101,6 +104,7 @@ export default function LanduseStep({ rankClass, DEFAULT_STATISTICS_YEAR, STATIS
                 <button type="button" className="secondary" onClick={() => addRow("zoningRows", createZoningRow)}>용도지역 추가</button>
               </div>
             </div>
+            <p className="data-warning">{ZONING_SOURCE_NOTE}</p>
             <div className="table-wrap">
               <table className="data-table report-table horizontal-report-table">
                 <thead>
