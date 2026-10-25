@@ -394,3 +394,38 @@ body:has(.research-workspace) { background: #f5f7fb; }
   .signs-detail { grid-template-columns: minmax(0, 1fr); padding-inline: 14px; gap: 12px; }
   .signs-map-frame { height: 580px; }
 }
+
+/* STEP 10 uses its own map; other investigation maps keep their existing layers. */
+.facility-filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; padding:14px 0; }
+.facility-filters button { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px 12px; color:#334155; text-align:left; font-size:13px; }
+.facility-filters button[aria-pressed="true"] { background:#eff6ff; border-color:#93b4de; box-shadow:inset 0 0 0 1px #93b4de; }
+.facility-filters i { flex:0 0 9px; height:9px; border-radius:50%; }
+.facility-filters small { margin-left:auto; color:#526780; font-size:11px; }
+.facility-status { padding:10px 0 16px; color:#526780; font-size:13px; }
+.facility-workbench { display:grid; grid-template-columns:minmax(0,1fr) 310px; border:1px solid #dce4ee; border-radius:10px; overflow:hidden; }
+.facility-details { padding:18px; max-height:900px; overflow:auto; background:white; border-left:1px solid #dce4ee; font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.facility-detail-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.facility-detail-heading h3 { margin:0; white-space:nowrap; }
+.research-workspace .facility-detail-heading button { width:auto; font-size:12px; padding:7px 10px; min-height:34px; }
+.facility-selected-number { font-weight:700; margin-top:20px; }
+.facility-details h4 { margin:8px 0 18px; font-size:17px; }
+.facility-details dl { display:grid; grid-template-columns:86px minmax(0,1fr); gap:8px; }
+.facility-details dt { color:#64748b; }
+.facility-details dd { margin:0; }
+.facility-links { display:flex; gap:15px; margin:18px 0; }
+.facility-source-note,.facility-empty { color:#64748b; line-height:1.7; }
+.facility-coverage { border-top:1px solid #e2e8f0; margin-top:20px; padding-top:16px; }
+.facility-coverage summary { font-weight:700; cursor:pointer; }
+.facility-coverage > div { border-bottom:1px solid #edf2f7; padding:12px 0; }
+.facility-coverage small { font-size:11px; font-weight:500; color:#64748b; margin-left:5px; }
+.facility-coverage p { margin:4px 0 0; color:#64748b; font-size:12px; }
+.facility-callout { pointer-events:auto; cursor:pointer; font-size:12px; }
+.facility-callout:focus rect { stroke:#111827; stroke-width:3; }
+.facility-legend { width:200px; }
+.facility-selected-row td { background:#eff6ff; }
+.facility-pagination { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:16px; padding:16px; font-size:13px; }
+.traffic-facilities > .subpanel-header { margin-top:24px; }
+.traffic-facilities > .table-wrap { max-height:560px; overflow:auto; }
+.facility-table thead th { position:sticky; top:0; z-index:1; background:#f8fafc; }
+@media(max-width:1100px) { .facility-workbench { grid-template-columns:minmax(0,1fr); } .facility-details { max-height:none; border-left:0; border-top:1px solid #dce4ee; } .facility-coverage[open] { display:block; } }
+@media(max-width:650px) { .facility-filters { grid-template-columns:repeat(2,minmax(0,1fr)); } .facility-filters button { padding:9px 6px; font-size:11px; gap:5px; } .facility-filters small { font-size:10px; } .facility-legend { width:174px; } .facility-legend table,.facility-legend th,.facility-legend td { font-size:10px; } }
