@@ -14,7 +14,7 @@ export default function StepNavigation({ items, activeStep, setActiveStep, state
     </button>)}</nav>
     <div className="workspace-nav-footer">
       {children}
-      <details className="workspace-help"><summary>조사 진행 안내</summary><p className="investigation-progress">상단 조사 시작으로 자동 조사 항목과 주소 기반 계획 추천을 함께 실행합니다. 계획의 개별 사업 반영·현재 공사 상태는 수동 확인이며, 사고조사는 별도 반경·연도 조건을 사용합니다. 표지판은 STEP 9에서만 조회·표시합니다.</p></details>
+      <details className="workspace-help"><summary>조사 진행 안내</summary><p className="investigation-progress">상단 조사 시작으로 자동 조사 항목과 주소 기반 계획 추천을 함께 실행합니다. 계획의 개별 사업 반영·현재 공사 상태는 수동 확인이며, 사고조사는 별도 반경·연도 조건을 사용합니다. 표지판은 STEP 9, 교통시설물은 STEP 10에서 각각 조회·표시합니다.</p></details>
     </div>
   </aside>;
 }

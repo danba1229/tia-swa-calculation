@@ -1,0 +1,70 @@
+{
+  "humps.bin": {
+    "url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false",
+    "method": "POST",
+    "parameters": {
+      "infId": "OA-15541",
+      "seqNo": "",
+      "seq": "14",
+      "infSeq": "3"
+    },
+    "sha256": "9a92b15256a0b78c04e5161711922eacd46b3be5a38e97a6388b6573033a5e3f"
+  },
+  "crosswalks.bin": {
+    "url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false",
+    "method": "POST",
+    "parameters": {
+      "infId": "OA-15554",
+      "seqNo": "",
+      "seq": "10",
+      "infSeq": "3"
+    },
+    "sha256": "a99a0e19c0b0c50013ca2261bd885ab91f2cc81a72348dfa9136f8f2167b9cdd"
+  },
+  "intersections.bin": {
+    "url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false",
+    "method": "POST",
+    "parameters": {
+      "infId": "OA-15534",
+      "infSeq": "3",
+      "seq": "12"
+    },
+    "sha256": "a77b4d4fd2886c934d2d097558a52580fa95adb079ba828f1305dfd15f0e0449"
+  },
+  "controllers.bin": {
+    "url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false",
+    "method": "POST",
+    "parameters": {
+      "infId": "OA-15538",
+      "infSeq": "3",
+      "seq": "9"
+    },
+    "sha256": "39c1185668cae5819bc11cef6d341ba4ad6790f130374bce1d8ae3684cfda4c0"
+  },
+  "bridges.bin": {
+    "url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false",
+    "method": "POST",
+    "parameters": {
+      "infId": "OA-22361",
+      "infSeq": "1",
+      "seq": "1"
+    },
+    "sha256": "907ee8b18d9a379a81749ea89f8f583310815570754aa6ea348e55ef7375e94f"
+  },
+  "yangpyeong-file.body": {
+    "url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003567787&fileDetailSn=1&insertDataPrcus=N",
+    "method": "GET",
+    "sha256": "9b9f8df7f942e232da0b07d167ee47488066e1a932092d5a0f6efd6e76b6960c"
+  },
+  "tgis-crosswalks.bin": {
+    "url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false",
+    "method": "POST",
+    "parameters": {
+      "infId": "OA-23081",
+      "seqNo": "",
+      "seq": "1",
+      "infSeq": "1"
+    },
+    "sha256": "1a5db9ea7a1cd58e2d7f2b4246baf099a3e4d5278f2867a1b87f3d50d21541be"
+  }
+}
