@@ -13,6 +13,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@sparticuz/chromium": "153.0.0",
+    "@tarikjabiri/dxf": "2.9.0",
     "@vercel/blob": "^2.3.0",
     "exceljs": "4.4.0",
     "next": "16.4.3",

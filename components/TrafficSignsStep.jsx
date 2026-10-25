@@ -11,6 +11,7 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
   const [mapError, setMapError] = useState(''), [retryMap, setRetryMap] = useState(0);
   const [selectedId, setSelectedId] = useState(''), [source, setSource] = useState('all');
   const [mode, setMode] = useState('police');
+  const [crs, setCrs] = useState('5186'), [exportStatus, setExportStatus] = useState('');
   const isSeoul = mode === 'seoul';
   const [screen, setScreen] = useState(null);
   const container = useRef(null), fit = useRef(null), mapRef = useRef(null), pointsRef = useRef([]), redraw = useRef(null);
@@ -85,6 +86,18 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
   }, [visible, current, loadMaps, retryMap]);
 
   const layout = useMemo(() => screen ? layoutSignLabels(screen.points, screen.width, screen.height, selectedId, [{ x: screen.width - 236, y: screen.height - 272, w: 228, h: 248 }]) : { points: [], labels: [] }, [screen, selectedId]);
+  // Exports exactly the signs shown (current standard and type filter) for overlay on 수치지도.
+  const downloadCad = async kind => {
+    try {
+      const { buildSignDxf } = await import('../lib/signDxf');
+      const { dxf, csv } = buildSignDxf({ points, scope: current.scope, site: { lat: siteLocation.lat, lng: siteLocation.lng }, crs, mode, address: siteLocation.address });
+      const name = `TIA_STEP9_표지판_${String(siteLocation.address || '대상지').replace(/[\\/:*?"<>|\s]+/g, '_')}_EPSG${crs}.${kind}`;
+      const url = URL.createObjectURL(new Blob([kind === 'dxf' ? dxf : csv], { type: kind === 'dxf' ? 'application/dxf' : 'text/csv;charset=utf-8' }));
+      const link = Object.assign(document.createElement('a'), { href: url, download: name });
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportStatus(`${kind === 'dxf' ? 'CAD(DXF)' : '속성 CSV'} 파일을 만들었습니다 · 표지판 ${points.length.toLocaleString('ko-KR')}개 · EPSG:${crs}`);
+    } catch (e) { setExportStatus(`파일을 만들지 못했습니다: ${e.message}`); }
+  };
   const choose = id => {
     setSelectedId(id);
     const point = points.find(p => p.id === id);
@@ -97,6 +110,12 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
     <div className="signs-toolbar">
       <div className="signs-filters" role="group" aria-label="표지판 종류">{[['all', '전체 표지판'], ['S', '안전표지'], ['R', '도로표지']].map(([value, label]) => <button type="button" key={value} aria-pressed={source === value} onClick={() => { setSource(value); setSelectedId(''); }}>{label}{current && <span>{displayPoints.filter(p => value === 'all' || p.source === value).length.toLocaleString('ko-KR')}</span>}</button>)}</div>
       <button type="button" className="secondary" disabled={!screen} onClick={() => fit.current?.()}>조사 범위에 맞추기</button>
+    </div>
+    <div className="signs-toolbar signs-cad-export">
+      <label>CAD 좌표계 <select value={crs} onChange={e => setCrs(e.target.value)}><option value="5186">EPSG:5186 (GRS80 중부원점, 수치지형도 v2)</option><option value="5174">EPSG:5174 (Bessel 중부원점, 구 수치지도)</option></select></label>
+      <button type="button" className="secondary" disabled={!current || !points.length} onClick={() => downloadCad('dxf')}>CAD(DXF) 다운로드</button>
+      <button type="button" className="secondary" disabled={!current || !points.length} onClick={() => downloadCad('csv')}>속성 CSV</button>
+      <span className="muted">지금 보이는 기준·종류의 표지판만 담습니다. 수치지도와 같은 좌표계를 고르세요.{crs === '5174' ? ' Bessel 변환은 수 m 오차가 있을 수 있습니다.' : ''}{exportStatus ? ` · ${exportStatus}` : ''}</span>
     </div>
     <div className="signs-status" role="status">{scopeError || error || (!current ? (visible ? '서울 표지판을 조회하고 있습니다…' : '표지판 단계를 열면 서울 표지판을 조회합니다.') : `${isSeoul ? '서울시 기준' : '경찰청 일람표 기준'} · 범위 내 ${points.length.toLocaleString('ko-KR')}건 · ${current.scope.width.toLocaleString('ko-KR')} × ${current.scope.height.toLocaleString('ko-KR')}m · 전체 추가 확인 필요 · ${isSeoul ? '원본 전체 표시' : `사용자 지정 제외 ${ignoredCount}건`}`)}{current && screen && ` · 현재 화면 번호 ${layout.labels.length}/${layout.points.length}개`}</div>
     <div className="signs-workbench">
