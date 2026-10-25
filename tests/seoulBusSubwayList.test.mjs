@@ -53,3 +53,14 @@ test('a station with no official code no longer makes every station-list refresh
   }
   assert.equal(subwayStationListComplete({ truncated: true, stations: [ok] }), false);
 });
+
+test('details cached with a bare route type code are labelled when read', async () => {
+  await withBusApi(() => xml(0), async () => {
+    const cached = { 'seoul-bus-detail:100100610': { routeType: '15', startStation: '우이동' }, 'seoul-bus-detail:100100033': { routeType: '간선', startStation: '도봉산역' } };
+    const cache = (key, loader) => key in cached ? Promise.resolve(cached[key]) : loader();
+    const { updates } = await fetchBusDetailBatch(['100100610', '100100033'], { cache });
+    assert.equal(updates[0].detail.routeType, '기타(코드 15)');
+    assert.equal(updates[0].detail.startStation, '우이동');
+    assert.equal(updates[1].detail.routeType, '간선');
+  });
+});
