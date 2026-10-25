@@ -35,7 +35,7 @@ test('sync retries missing pages and never marks partial, duplicate or unknown t
         if (page === 2 && (mode === 'missing' || (mode === 'retry' && calls.get(page) === 1))) throw new Error('timeout');
         return Response.json({ totalCount: mode === 'unknown' ? null : 3, items: [{ bsnsNo: String(mode === 'duplicate' ? 1 : page), bsnsNm: 'sample' }] });
       };
-      const result = await collectTiaBusinessPeriod({ startDate: '2026-10-01', endDate: '2026-10-31' });
+      const result = await collectTiaBusinessPeriod({ startDate: '2026-10-01', endDate: '2026-10-31', pageSize: 1 });
       assert.equal(result.complete, ['retry', 'valid'].includes(mode), mode);
       if (mode === 'missing') { assert.deepEqual(result.failedPages, [2]); assert.equal(calls.get(2), 2); }
     }
