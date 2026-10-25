@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
+    "app/api/local-statistics/route.js": {
+      "regions": ["icn1"]
+    },
     "app/api/traffic-volume/gyeonggi/route.js": {
       "maxDuration": 180,
       "regions": ["icn1"]
@@ -21,6 +24,18 @@
     "app/api/indicator/data-url/route.js": {
       "maxDuration": 15,
       "regions": ["icn1"]
+    },
+    "app/api/traffic-volume/gyeonggi/official/route.js": {
+      "maxDuration": 180,
+      "regions": ["icn1"]
+    },
+    "app/api/cron/official-transport-sync/route.js": {
+      "maxDuration": 180,
+      "regions": ["icn1"]
+    },
+    "app/api/cron/gyeonggi-traffic-sync/route.js": {
+      "maxDuration": 180,
+      "regions": ["icn1"]
     }
   },
   "crons": [
@@ -35,6 +50,14 @@
     {
       "path": "/api/cron/tia-sync",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/official-transport-sync",
+      "schedule": "0 20 4 * *"
+    },
+    {
+      "path": "/api/cron/gyeonggi-traffic-sync",
+      "schedule": "30 20 4 * *"
     }
   ]
 }
