@@ -37,6 +37,7 @@ import PublicTransportStep from "./steps/PublicTransportStep";
 import BikeStep from "./steps/BikeStep";
 import PlansStep from "./steps/PlansStep";
 import { formatProjectPeriod } from "../lib/projectPeriod";
+import { LANDUSE_OTHER_CATEGORIES } from "../lib/landuseNotes";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
@@ -51,7 +52,7 @@ const LANDUSE_RAW_ITEMS = {
   하천: "하천",
   학교: "학교용지, 학교",
   공원: "공원",
-  기타: "전체 계 - 주요 항목 합계",
+  기타: `전체 계 - 주요 항목 합계 (${LANDUSE_OTHER_CATEGORIES.join("·")})`,
 };
 const ZONING_DEFAULTS = ["주거지역", "상업지역", "공업지역", "녹지지역", "관리지역", "농림지역", "자연환경보전지역", "미지정지역", "기타"];
 const ZONING_REPORT_LABELS = {
