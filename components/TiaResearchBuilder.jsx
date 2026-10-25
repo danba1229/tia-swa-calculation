@@ -36,6 +36,7 @@ import DevelopmentStep from "./steps/DevelopmentStep";
 import PublicTransportStep from "./steps/PublicTransportStep";
 import BikeStep from "./steps/BikeStep";
 import PlansStep from "./steps/PlansStep";
+import { formatProjectPeriod } from "../lib/projectPeriod";
 
 const STORAGE_KEY = "tia-research-builder-next-v3-kosis";
 const TOPIS_POINT_CACHE_KEY = "tia-topis-point-coordinates-v1";
@@ -78,7 +79,7 @@ const DEFAULT_SCOPE_WIDTH = "2300";
 const DEFAULT_SCOPE_HEIGHT = "3200";
 const ROAD_SAMPLE_INTERVAL_METERS = 180;
 const DEVELOPMENT_PROJECT_TYPES = ["전체", "건축물", "개발사업"];
-const DEVELOPMENT_STATUS_FILTERS = ["전체", "반영", "반영검토", "참고", "제외후보"];
+const DEVELOPMENT_STATUS_FILTERS = ["전체", "반영", "반영검토", "참고", "판정불가", "제외후보"];
 const STEP_NAV_ITEMS = [
   { step: 0, label: "전체 보기" },
   { step: 1, label: "가로망 조사" },
@@ -1273,7 +1274,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
         result.projectType || "-",
         result.facilityType || "-",
         developmentScaleText(result),
-        result.projectPeriod || "-",
+        formatProjectPeriod(result) || "-",
         result.reviewResult || "-",
         formatDevelopmentDistance(result),
         result.reflectionStatus || "-",
@@ -1329,7 +1330,7 @@ export default function TiaResearchBuilder({ kakaoJsKey, embedded = false }) {
     const summary = developmentResult.summary || {};
     const reflect = toNumber(summary.reflectCount);
     const review = toNumber(summary.reviewCount);
-    const reference = toNumber(summary.referenceCount);
+    const reference = toNumber(summary.referenceCount) + toNumber(summary.unjudgedCount);
     const { width, height } = getScopeDimensions(form.basics);
     const text = `사업지 주변 장래 개발계획을 검토한 결과, 가로 ${formatNumber(width)}m, 세로 ${formatNumber(height)}m의 사각형 조사 범위에서 수집된 교통영향평가 관련 사업 ${formatNumber(summary.withinRadiusCount || 0)}건이 확인되었다. 이 중 사업기간, 심의결과 및 위치정보 등을 고려하여 ${formatNumber(reflect)}건은 장래 교통수요 반영 여부를 검토하고, ${formatNumber(review + reference)}건은 참고자료로 검토하였다. 수집자료 및 좌표변환 한계로 사업이 누락될 수 있어 원자료 확인이 필요하다.`;
     await window.navigator.clipboard.writeText(text);

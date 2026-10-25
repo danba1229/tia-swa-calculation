@@ -8,6 +8,7 @@ import { isInsideScope, summarizeProjects } from "../lib/tiaScope.js";
 import { geocodeProject } from "../lib/projectGeocode.js";
 import { kosisAreaM2 } from '../lib/kosisArea.js';
 import { DEFAULT_STATISTICS_YEAR } from '../lib/statisticsYear.js';
+import { formatProjectPeriod } from '../lib/projectPeriod.js';
 import { mergeStoredAndLive } from '../lib/tiaCoverage.js';
 
 test("missing area is not zero and incomplete/negative residual is not invented", () => {
@@ -230,7 +231,7 @@ function getFunction(name) {
 }
 
 test("development CSV and clipboard rows retain original and matched addresses with query trace", () => {
-  const context = vm.createContext({ developmentScaleText: () => "-", formatDevelopmentDistance: () => "584 m" });
+  const context = vm.createContext({ developmentScaleText: () => "-", formatDevelopmentDistance: () => "584 m", formatProjectPeriod });
   vm.runInContext(getFunction("developmentGeocodeText") + "\n" + getFunction("developmentTableRows") + "\n" + getFunction("toCsvText"), context);
   const rows = context.developmentTableRows([{
     location: "서울 서초구 남부순환로 2636", matchedAddress: "서울 서초구 양재동 1-26", geocodeStatus: "success", geocodeMethod: "PARCEL_FALLBACK",

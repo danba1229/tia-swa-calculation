@@ -1,5 +1,7 @@
 "use client";
 
+import { formatProjectPeriod } from "../../lib/projectPeriod";
+
 export default function DevelopmentStep({ DEVELOPMENT_PROJECT_TYPES, DEVELOPMENT_STATUS_FILTERS, copyDevelopmentDraft, copyDevelopmentTable, developmentAdmin, developmentGeocodeText, developmentResult, developmentScaleText, developmentSearch, displayedDevelopmentResults, downloadDevelopmentCsv, form, formatDevelopmentDistance, formatNumber, getScopeDimensions, searchDevelopmentPlans, shouldShowStep, updateDevelopmentSearch }) {
   return (<section className={`panel step-section ${shouldShowStep(4) ? "" : "is-hidden"}`}>
         <div className="panel-header">
@@ -80,6 +82,7 @@ export default function DevelopmentStep({ DEVELOPMENT_PROJECT_TYPES, DEVELOPMENT
             <div><strong>{formatNumber(developmentResult.summary.reflectCount)}</strong><span>반영</span></div>
             <div><strong>{formatNumber(developmentResult.summary.reviewCount)}</strong><span>반영검토</span></div>
             <div><strong>{formatNumber(developmentResult.summary.referenceCount)}</strong><span>참고</span></div>
+            <div><strong>{formatNumber(developmentResult.summary.unjudgedCount || 0)}</strong><span>판정불가</span></div>
             <div><strong>{formatNumber(developmentResult.summary.excludedCount)}</strong><span>제외후보</span></div>
           </div>
         ) : null}
@@ -126,7 +129,7 @@ export default function DevelopmentStep({ DEVELOPMENT_PROJECT_TYPES, DEVELOPMENT
                     <td>{result.projectType || "-"}</td>
                     <td>{result.facilityType || "-"}</td>
                     <td>{developmentScaleText(result)}</td>
-                    <td>{result.projectPeriod || "-"}</td>
+                    <td>{formatProjectPeriod(result) || "-"}</td>
                     <td>{result.reviewResult || "-"}</td>
                     <td>{formatDevelopmentDistance(result)}</td>
                     <td><span className={`status-pill ${result.reflectionStatus || ""}`}>{result.reflectionStatus || "-"}</span></td>
