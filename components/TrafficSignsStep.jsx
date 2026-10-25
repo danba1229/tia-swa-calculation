@@ -90,12 +90,12 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
   const downloadCad = async kind => {
     try {
       const { buildSignDxf } = await import('../lib/signDxf');
-      const { dxf, csv } = buildSignDxf({ points, scope: current.scope, site: { lat: siteLocation.lat, lng: siteLocation.lng }, crs, mode, address: siteLocation.address });
+      const { dxf, csv, spots } = buildSignDxf({ points, scope: current.scope, site: { lat: siteLocation.lat, lng: siteLocation.lng }, crs, mode, address: siteLocation.address });
       const name = `TIA_STEP9_표지판_${String(siteLocation.address || '대상지').replace(/[\\/:*?"<>|\s]+/g, '_')}_EPSG${crs}.${kind}`;
       const url = URL.createObjectURL(new Blob([kind === 'dxf' ? dxf : csv], { type: kind === 'dxf' ? 'application/dxf' : 'text/csv;charset=utf-8' }));
       const link = Object.assign(document.createElement('a'), { href: url, download: name });
       link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setExportStatus(`${kind === 'dxf' ? 'CAD(DXF)' : '속성 CSV'} 파일을 만들었습니다 · 표지판 ${points.length.toLocaleString('ko-KR')}개 · EPSG:${crs}`);
+      setExportStatus(`${kind === 'dxf' ? 'CAD(DXF)' : '속성 CSV'} 파일을 만들었습니다 · 표지판 ${points.length.toLocaleString('ko-KR')}개 · 설치지점 ${spots.toLocaleString('ko-KR')}곳 · EPSG:${crs}`);
     } catch (e) { setExportStatus(`파일을 만들지 못했습니다: ${e.message}`); }
   };
   const choose = id => {
