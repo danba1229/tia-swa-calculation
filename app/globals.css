@@ -1353,6 +1353,11 @@ button.mini-button {
   color: #92400e;
 }
 
+.status-pill.판정불가 {
+  background: rgba(220, 38, 38, 0.1);
+  color: #991b1b;
+}
+
 .status-pill.제외후보 {
   background: rgba(100, 116, 139, 0.16);
   color: #475569;
