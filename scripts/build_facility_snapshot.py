@@ -16,7 +16,7 @@ root = args.input
 sources = {
  'seoul-crosswalks': {'name':'서울시 횡단보도 SHP', 'url':'https://data.seoul.go.kr/dataList/OA-15554/S/1/datasetView.do', 'fileVersion':'2021-08-09', 'region':'서울특별시', 'note':'2021년 공개 파일. 유효하지 않은 도형은 제외하며 현재 설치 현황 전수자료가 아닙니다.'},
  'seoul-humps': {'name':'서울시 험프 SHP', 'url':'https://data.seoul.go.kr/dataList/OA-15541/S/1/datasetView.do', 'fileVersion':'2025-04-17', 'region':'서울특별시', 'note':'공식 종류 001 요철 / 002 이미지. 유효하지 않은 도형은 제외하며 높이·고원식 여부는 추정하지 않습니다.'},
- 'seoul-intersections': {'name':'서울시 교차로 SHP · T-GIS 교차로 및 횡단보도 · 교통신호제어기 SHP', 'url':'https://data.seoul.go.kr/dataList/OA-15534/S/1/datasetView.do', 'relatedUrl':'https://data.seoul.go.kr/dataList/OA-23081/F/1/datasetView.do', 'controllerUrl':'https://data.seoul.go.kr/dataList/OA-15538/S/1/datasetView.do', 'fileVersion':'교차로 2025-08-14 / T-GIS 횡단보도 2026-08-24 / 제어기 2021-08-09', 'region':'서울특별시', 'note':'교차로 대장(단일로 제외)의 신호 구분을 T-GIS 횡단보도 보행등 유무로 판정합니다. 보행등이 하나라도 있으면 신호교차로, 모두 없으면 비신호교차로 후보입니다. 경보(점멸)·자료 상충·T-GIS 미수록은 신호구분 미확인입니다. 대장에 없는 소규모 교차로는 포함하지 않습니다.'},
+ 'seoul-intersections': {'name':'서울시 교차로 SHP · T-GIS 교차로 및 횡단보도 · 교통신호제어기 SHP', 'url':'https://data.seoul.go.kr/dataList/OA-15534/S/1/datasetView.do', 'relatedUrl':'https://data.seoul.go.kr/dataList/OA-23081/F/1/datasetView.do', 'controllerUrl':'https://data.seoul.go.kr/dataList/OA-15538/S/1/datasetView.do', 'fileVersion':'교차로 2025-08-14 / T-GIS 횡단보도 2026-08-24 / 제어기 2021-08-09', 'region':'서울특별시', 'note':'교차로 대장(단일로 제외)의 신호 구분을 T-GIS 횡단보도 보행등 유무로 판정합니다. 보행등이 하나라도 있으면 신호교차로, 경보(점멸) 신호이거나 보행등이 모두 없으면 비신호교차로 후보입니다. 연등 표기·자료 상충·T-GIS 미수록은 신호구분 미확인입니다. 대장에 없는 소규모 교차로는 포함하지 않습니다.'},
  'national-crosswalks': {'name':'전국횡단보도표준데이터', 'url':'https://www.data.go.kr/data/15028201/standard.do', 'fileVersion':checked_at+' 다운로드', 'region':'경기도', 'note':'공식 다운로드 상한 50,000행 중 경기 자료. 일부 시군·기간만 포함하므로 전체 수록으로 간주하지 않습니다.'},
  'seoul-bridges': {'name':'서울시 육교정보', 'url':'https://data.seoul.go.kr/dataList/OA-22361/F/1/datasetView.do', 'fileVersion':'2022-12-31', 'region':'서울특별시', 'note':'대장의 주소를 카카오로 변환한 근사위치입니다. 실제 육교 중심·현재 존치 여부는 현장 확인이 필요합니다.'},
  'yangpyeong-round': {'name':'양평군 회전교차로 설치현황', 'url':'https://www.data.go.kr/data/15140141/fileData.do', 'fileVersion':'2025-12-09', 'region':'경기도', 'note':'양평군만 수록. 공식 주소의 카카오 변환 근사위치이며 실제 교차로 중심은 별도 확인이 필요합니다.'},
@@ -87,10 +87,12 @@ for _,reader,tr in layers((root/'intersections.bin').read_bytes()):
   walks=tgis.get(number,[]) if intersection_numbers[number]==1 else []
   lit=sum(w['signal']=='유' for w in walks)
   controller='2021 차량신호 제어기 연결: '+', '.join(str(c['MGRNU']) for c in normal) if candidate else '2021 차량신호 제어기 연결 없음'
-  if not walks:
+  if any(WARNING_TAG.search(n) for n in [w['name'] for w in walks]+[str(d.get('CSS_NAM') or '')]):
+   # Project rule (owner decision, 2026-10-26): flashing warning signals count as unsignalised,
+   # also when the intersection is missing from T-GIS.
+   kind,basis='unsignal_intersection','경보(점멸) 신호 표기 · 점멸은 비신호로 분류'
+  elif not walks:
    kind,basis=('signal_intersection' if candidate else 'unknown_intersection'),'T-GIS 횡단보도 미수록'
-  elif any(WARNING_TAG.search(n) for n in [w['name'] for w in walks]+[str(d.get('CSS_NAM') or '')]):
-   kind,basis='unknown_intersection','경보(점멸) 신호 표기 · 신호/비신호 판정 보류'
   elif lit:
    kind,basis='signal_intersection',f'2026 T-GIS 횡단보도 {len(walks)}개 중 보행등 {lit}개'
   elif candidate:

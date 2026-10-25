@@ -30,16 +30,18 @@ test('Seocho and Suwon snapshots select only in-scope points and preserve unknow
 test('Seoul intersections are classified from 2026 T-GIS pedestrian signals and keep every basis visible',()=>{
   const seoul=rows.filter(r=>r[7]==='seoul-intersections');
   assert.equal(seoul.length,3563,'the intersection set itself is unchanged; only the classification uses T-GIS');
-  assert.deepEqual([manifest.counts.signal_intersection,manifest.counts.unsignal_intersection,manifest.counts.unknown_intersection],[3088,35,440]);
+  assert.deepEqual([manifest.counts.signal_intersection,manifest.counts.unsignal_intersection,manifest.counts.unknown_intersection],[3088,323,152]);
   assert.deepEqual(manifest.tgisIntersectionLinks,{linked:3403,unlinked:160});
   const basis=r=>r[9].split(' / ')[1];
   assert.ok(seoul.filter(r=>r[1]==='signal_intersection').every(r=>/보행등 [1-9]\d*개$/.test(basis(r))||basis(r)==='T-GIS 횡단보도 미수록'));
-  // Unsignalised only when every crosswalk lacks a pedestrian signal, with no warning/linked tag and no 2021 vehicle controller.
+  // Flashing (경보) is unsignalised by project rule; otherwise unsignalised needs no pedestrian signal, no 연등 tag and no 2021 vehicle controller.
   for(const r of seoul.filter(r=>r[1]==='unsignal_intersection')){
+    if(basis(r).startsWith('경보(점멸)'))continue;
     assert.match(basis(r),/모두 보행등 없음 · 차량신호 여부 현장 확인/);assert.match(r[9],/2021 차량신호 제어기 연결 없음$/);
-    assert.doesNotMatch(r[4],/\((경보\d*|연등)\)/);
+    assert.doesNotMatch(r[4],/\(연등\)/);
   }
-  assert.ok(seoul.filter(r=>/\(경보\d*\)/.test(r[4])).every(r=>r[1]==='unknown_intersection'));
+  assert.ok(seoul.filter(r=>/\(경보\d*\)/.test(r[4])).every(r=>r[1]==='unsignal_intersection'&&basis(r).includes('점멸은 비신호로 분류')));
+  assert.equal(seoul.filter(r=>basis(r).startsWith('경보(점멸)')).length,288);
   assert.ok(seoul.some(r=>r[1]==='unknown_intersection'&&basis(r).startsWith('자료 상충')));
   assert.ok(seoul.some(r=>r[1]==='unknown_intersection'&&basis(r).startsWith('연등 표기')));
   assert.equal(manifest.sources['seoul-intersections'].relatedUrl,'https://data.seoul.go.kr/dataList/OA-23081/F/1/datasetView.do');

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "builtAt": "2026-10-26",
-  "sha256": "f920d9a678a701d8d5d04b9b3af6e44cc53d94ec97ffec252d60df354e1cfa56",
+  "sha256": "7bef7f4d7b3e31e75b218b68a4e667d449df8276ff46a256e1d314c7fe261a45",
   "count": 72988,
   "sources": {
     "seoul-crosswalks": {
@@ -33,7 +33,7 @@
       "controllerUrl": "https://data.seoul.go.kr/dataList/OA-15538/S/1/datasetView.do",
       "fileVersion": "교차로 2025-08-14 / T-GIS 횡단보도 2026-08-24 / 제어기 2021-08-09",
       "region": "서울특별시",
-      "note": "교차로 대장(단일로 제외)의 신호 구분을 T-GIS 횡단보도 보행등 유무로 판정합니다. 보행등이 하나라도 있으면 신호교차로, 모두 없으면 비신호교차로 후보입니다. 경보(점멸)·자료 상충·T-GIS 미수록은 신호구분 미확인입니다. 대장에 없는 소규모 교차로는 포함하지 않습니다.",
+      "note": "교차로 대장(단일로 제외)의 신호 구분을 T-GIS 횡단보도 보행등 유무로 판정합니다. 보행등이 하나라도 있으면 신호교차로, 경보(점멸) 신호이거나 보행등이 모두 없으면 비신호교차로 후보입니다. 연등 표기·자료 상충·T-GIS 미수록은 신호구분 미확인입니다. 대장에 없는 소규모 교차로는 포함하지 않습니다.",
       "count": 3563,
       "checkedAt": "2026-10-26",
       "referenceDate": "",
@@ -91,8 +91,8 @@
     "image_hump": 10937,
     "speed_hump": 6791,
     "signal_intersection": 3088,
-    "unknown_intersection": 440,
-    "unsignal_intersection": 35,
+    "unknown_intersection": 152,
+    "unsignal_intersection": 323,
     "roundabout": 49
   },
   "files": {
