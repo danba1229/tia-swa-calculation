@@ -15,7 +15,7 @@
     "@sparticuz/chromium": "153.0.0",
     "@vercel/blob": "^2.3.0",
     "exceljs": "4.4.0",
-    "next": "16.3.8",
+    "next": "16.4.3",
     "playwright-core": "1.63.0",
     "proj4": "2.22.0",
     "react": "latest",
@@ -25,6 +25,9 @@
   "overrides": {
     "exceljs": {
       "uuid": "11.1.1"
+    },
+    "@vercel/cli-config": {
+      "zod": "4.6.7"
     }
   },
   "devDependencies": {
