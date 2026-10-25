@@ -52,26 +52,28 @@ test('TIA uses an explicit binding first, otherwise the existing survey database
   assert.equal(tiaDatabaseUrl({ SEOUL_BUS_DATABASE_URL: 'bus' }), 'bus');
   assert.equal(tiaDatabaseUrl({}), '');
 });
-test('TIA live pagination requests one actual project per page and resumes beyond the first chunk', async () => {
+test('TIA live pagination requests 100 records per page and resumes beyond the first chunk', async () => {
   const names = ['DATA_GO_KR_SERVICE_KEY', 'TIA_SYSTEM_API_BASE_URL', 'TIA_SYSTEM_API_OPERATION_PATH', 'TIA_PROJECT_API_BASE_URL', 'TIA_API_BASE_URL'];
   const before = names.map(name => process.env[name]); const original = globalThis.fetch;
   process.env.DATA_GO_KR_SERVICE_KEY = 'fixture'; process.env.TIA_SYSTEM_API_BASE_URL = 'https://example.invalid/'; process.env.TIA_SYSTEM_API_OPERATION_PATH = 'businessSearch';
   delete process.env.TIA_PROJECT_API_BASE_URL; delete process.env.TIA_API_BASE_URL;
   const calls = [];
   globalThis.fetch = async url => {
-    assert.equal(url.searchParams.get('numOfRows'), '1'); const page = Number(url.searchParams.get('pageNo')); calls.push(page);
-    return Response.json({ totalCount: 53, items: [{ bsnsNo: String(page), bsnsNm: `사업 ${page}`, bsnsLc: '서울특별시 서초구', reqstDd: '20260101' }] });
+    assert.equal(url.searchParams.get('numOfRows'), '100'); const page = Number(url.searchParams.get('pageNo')); calls.push(page);
+    const ids = Array.from({ length: Math.min(100, 5250 - (page - 1) * 100) }, (_, i) => (page - 1) * 100 + i + 1);
+    return Response.json({ totalCount: 5250, items: ids.map(id => ({ bsnsNo: String(id), bsnsNm: `사업 ${id}`, bsnsLc: '서울특별시 서초구', reqstDd: '20260101' })) });
   };
   try {
     const first = await fetchTiaProjects({}); const cursor = first.sourceDiagnostics[0].pageInfo;
     assert.equal(cursor.nextPage, 49); assert.equal(cursor.complete, false);
-    assert.equal(first.projects.length, 48); assert.deepEqual(first.errors, []);
+    assert.equal(first.projects.length, 4800); assert.equal(cursor.processedCount, 4800); assert.deepEqual(first.errors, []);
     const last = await fetchTiaProjects({}, { systemPage: cursor.nextPage });
-    assert.equal(last.projects.length, 5); assert.equal(last.sourceDiagnostics[0].pageInfo.complete, true);
+    assert.equal(last.projects.length, 450); assert.equal(last.sourceDiagnostics[0].pageInfo.complete, true);
+    assert.equal(last.sourceDiagnostics[0].pageInfo.processedCount, 5250);
     assert.equal(last.sourceDiagnostics[0].pageInfo.signature, cursor.signature);
-    assert.equal(new Set([...first.projects, ...last.projects].map(p => p.id)).size, 53);
+    assert.equal(new Set([...first.projects, ...last.projects].map(p => p.id)).size, 5250);
     assert.ok(calls.includes(53));
-    globalThis.fetch = async () => Response.json({ totalCount: 4, items: [{ bsnsNo: 'same', bsnsNm: '반복' }] });
+    globalThis.fetch = async () => Response.json({ totalCount: 4, items: Array(4).fill({ bsnsNo: 'same', bsnsNm: '반복' }) });
     const broken = await fetchTiaProjects({});
     assert.equal(broken.sourceDiagnostics[0].pageInfo.complete, false); assert.ok(broken.errors.length);
   } finally { globalThis.fetch = original; names.forEach((name, i) => { if (before[i] === undefined) delete process.env[name]; else process.env[name] = before[i]; }); }
@@ -111,7 +113,8 @@ test('TIA counts facility records separately but rejects a repeated record with 
     for (const duplicate of [false, true]) {
       globalThis.fetch = async url => {
         const page = Number(url.searchParams.get('pageNo'));
-        return Response.json({ totalCount: 2, items: [page === 1 ? apartment : duplicate ? { ...apartment, rno: '2' } : shop] });
+        const rows = [apartment, duplicate ? { ...apartment, rno: '2' } : shop], size = Number(url.searchParams.get('numOfRows'));
+        return Response.json({ totalCount: 2, items: rows.slice((page - 1) * size, page * size) });
       };
       const live = await fetchTiaProjects({}), source = live.sourceDiagnostics[0];
       assert.equal(source.pageInfo.complete, !duplicate);
