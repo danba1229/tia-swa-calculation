@@ -62,8 +62,9 @@ try {
   assert.ok(info.tiles>5,'Genuine Kakao tiles loaded');assert.ok(info.dots>20);
   assert.ok(await facilities.getByText('모든 자료는 추가 확인이 필요합니다.',{exact:true}).isVisible());
   const filters=page.getByRole('group',{name:'교통시설물 종류'});
-  assert.ok((await filters.getByRole('button',{name:/비신호교차로/}).textContent()).includes('미연결'));
-  assert.ok((await filters.getByRole('button',{name:/신호교차로 후보/}).textContent()).includes('개 표시'));
+  // Seoul unsignalised candidates come from T-GIS crosswalks, so the filter reports a count, not "미연결".
+  assert.ok((await filters.getByRole('button',{name:/^비신호교차로 후보/}).textContent()).includes('개 표시'));
+  assert.ok((await filters.getByRole('button',{name:/^신호교차로\(보행등 기준\)/}).textContent()).includes('개 표시'));
   await facilities.locator('.facility-table tbody button').first().click();
   assert.ok(await page.locator('.facility-selected-number').isVisible());
   const roadview=await page.locator('.facility-links a').first().getAttribute('href');

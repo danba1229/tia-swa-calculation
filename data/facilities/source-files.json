@@ -55,5 +55,16 @@
     "url": "https://www.data.go.kr/cmm/cmm/fileDownload.do?atchFileId=FILE_000000003567787&fileDetailSn=1&insertDataPrcus=N",
     "method": "GET",
     "sha256": "9b9f8df7f942e232da0b07d167ee47488066e1a932092d5a0f6efd6e76b6960c"
+  },
+  "tgis-crosswalks.bin": {
+    "url": "https://datafile.seoul.go.kr/bigfile/iot/inf/nio_download.do?&useCache=false",
+    "method": "POST",
+    "parameters": {
+      "infId": "OA-23081",
+      "seqNo": "",
+      "seq": "1",
+      "infSeq": "1"
+    },
+    "sha256": "1a5db9ea7a1cd58e2d7f2b4246baf099a3e4d5278f2867a1b87f3d50d21541be"
   }
 }

@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "builtAt": "2026-10-25",
-  "sha256": "9aff66dcb7b8a52cc5eebf6b777bc513321555e83548278bf15afdf8153d7484",
+  "builtAt": "2026-10-26",
+  "sha256": "f920d9a678a701d8d5d04b9b3af6e44cc53d94ec97ffec252d60df354e1cfa56",
   "count": 72988,
   "sources": {
     "seoul-crosswalks": {
@@ -11,7 +11,7 @@
       "region": "서울특별시",
       "note": "2021년 공개 파일. 유효하지 않은 도형은 제외하며 현재 설치 현황 전수자료가 아닙니다.",
       "count": 37109,
-      "checkedAt": "2026-10-25",
+      "checkedAt": "2026-10-26",
       "referenceDate": "",
       "license": "공공데이터 출처표시 / 원문 이용조건 참조"
     },
@@ -22,30 +22,31 @@
       "region": "서울특별시",
       "note": "공식 종류 001 요철 / 002 이미지. 유효하지 않은 도형은 제외하며 높이·고원식 여부는 추정하지 않습니다.",
       "count": 17728,
-      "checkedAt": "2026-10-25",
+      "checkedAt": "2026-10-26",
       "referenceDate": "",
       "license": "공공데이터 출처표시 / 원문 이용조건 참조"
     },
     "seoul-intersections": {
-      "name": "서울시 교차로·교통신호제어기 SHP",
+      "name": "서울시 교차로 SHP · T-GIS 교차로 및 횡단보도 · 교통신호제어기 SHP",
       "url": "https://data.seoul.go.kr/dataList/OA-15534/S/1/datasetView.do",
-      "relatedUrl": "https://data.seoul.go.kr/dataList/OA-15538/S/1/datasetView.do",
-      "fileVersion": "교차로 2025-08-14 / 제어기 2021-08-09",
+      "relatedUrl": "https://data.seoul.go.kr/dataList/OA-23081/F/1/datasetView.do",
+      "controllerUrl": "https://data.seoul.go.kr/dataList/OA-15538/S/1/datasetView.do",
+      "fileVersion": "교차로 2025-08-14 / T-GIS 횡단보도 2026-08-24 / 제어기 2021-08-09",
       "region": "서울특별시",
-      "note": "시점이 다른 과거 제어기 연결은 신호교차로 후보입니다. 단일로 제외. 미연결을 비신호로 판단하지 않습니다.",
+      "note": "교차로 대장(단일로 제외)의 신호 구분을 T-GIS 횡단보도 보행등 유무로 판정합니다. 보행등이 하나라도 있으면 신호교차로, 모두 없으면 비신호교차로 후보입니다. 경보(점멸)·자료 상충·T-GIS 미수록은 신호구분 미확인입니다. 대장에 없는 소규모 교차로는 포함하지 않습니다.",
       "count": 3563,
-      "checkedAt": "2026-10-25",
+      "checkedAt": "2026-10-26",
       "referenceDate": "",
       "license": "공공데이터 출처표시 / 원문 이용조건 참조"
     },
     "national-crosswalks": {
       "name": "전국횡단보도표준데이터",
       "url": "https://www.data.go.kr/data/15028201/standard.do",
-      "fileVersion": "2026-10-25 다운로드",
+      "fileVersion": "2026-10-26 다운로드",
       "region": "경기도",
       "note": "공식 다운로드 상한 50,000행 중 경기 자료. 일부 시군·기간만 포함하므로 전체 수록으로 간주하지 않습니다.",
       "count": 14489,
-      "checkedAt": "2026-10-25",
+      "checkedAt": "2026-10-26",
       "referenceDate": "",
       "license": "공공데이터 출처표시 / 원문 이용조건 참조"
     },
@@ -56,7 +57,7 @@
       "region": "서울특별시",
       "note": "대장의 주소를 카카오로 변환한 근사위치입니다. 실제 육교 중심·현재 존치 여부는 현장 확인이 필요합니다.",
       "count": 50,
-      "checkedAt": "2026-10-25",
+      "checkedAt": "2026-10-26",
       "referenceDate": "2022-12-31",
       "license": "공공데이터 출처표시 / 원문 이용조건 참조"
     },
@@ -67,7 +68,7 @@
       "region": "경기도",
       "note": "양평군만 수록. 공식 주소의 카카오 변환 근사위치이며 실제 교차로 중심은 별도 확인이 필요합니다.",
       "count": 49,
-      "checkedAt": "2026-10-25",
+      "checkedAt": "2026-10-26",
       "referenceDate": "",
       "license": "공공데이터 출처표시 / 원문 이용조건 참조"
     }
@@ -80,23 +81,29 @@
     "yangpyeong-round:geocode": 3,
     "duplicate_id_rows": 17
   },
+  "tgisIntersectionLinks": {
+    "linked": 3403,
+    "unlinked": 160
+  },
   "counts": {
     "crosswalk": 51598,
     "footbridge": 50,
     "image_hump": 10937,
     "speed_hump": 6791,
-    "unknown_intersection": 1255,
-    "signal_intersection": 2308,
+    "signal_intersection": 3088,
+    "unknown_intersection": 440,
+    "unsignal_intersection": 35,
     "roundabout": 49
   },
   "files": {
-    "geocoded-addresses.json": "466262c51499581a2fc13fdf02d9648b9f5d4be3ebdb89d40a625e266896d8af",
-    "controllers.bin": "39c1185668cae5819bc11cef6d341ba4ad6790f130374bce1d8ae3684cfda4c0",
     "bridges.bin": "907ee8b18d9a379a81749ea89f8f583310815570754aa6ea348e55ef7375e94f",
+    "controllers.bin": "39c1185668cae5819bc11cef6d341ba4ad6790f130374bce1d8ae3684cfda4c0",
     "crosswalks.bin": "a99a0e19c0b0c50013ca2261bd885ab91f2cc81a72348dfa9136f8f2167b9cdd",
+    "geocoded-addresses.json": "5397c8f287d347b3bcdc95572df4b0fe2e7a90e230643c63e2227633243098a4",
     "humps.bin": "9a92b15256a0b78c04e5161711922eacd46b3be5a38e97a6388b6573033a5e3f",
     "intersections.bin": "a77b4d4fd2886c934d2d097558a52580fa95adb079ba828f1305dfd15f0e0449",
     "national-crosswalk-records.json": "5e534b932872dea18dfbe72339aadf2dcddb7032facfc7c7a3c7bfd6512e58c6",
+    "tgis-crosswalks.bin": "1a5db9ea7a1cd58e2d7f2b4246baf099a3e4d5278f2867a1b87f3d50d21541be",
     "yangpyeong-file.body": "9b9f8df7f942e232da0b07d167ee47488066e1a932092d5a0f6efd6e76b6960c"
   },
   "gyeonggiCrosswalkDistricts": [

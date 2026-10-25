@@ -11,7 +11,7 @@ for name,m in registry.items():
  if m.get('sha256') and hashlib.sha256(b).hexdigest()!=m['sha256']:raise RuntimeError(f'{name}: official file changed, review before updating snapshot')
  (out/name).write_bytes(b);print(name,len(b),flush=True)
 with urllib.request.urlopen('https://www.data.go.kr/download/columList.json?pk=15028201&ext=JSON',timeout=30) as res:h=json.load(res)
-(out/'crosswalk-header.json').write_text(json.dumps(h,ensure_ascii=False))
+(out/'crosswalk-header.json').write_text(json.dumps(h,ensure_ascii=False),encoding='utf-8')
 params={'publicDataPk':'15028201','colNmList':h['tableVO']['colNmList'],'totalCount':h['totalCount'],'svcTableNm':h['tableVO']['svcTableNm'],'perPage':10000}
 rows=[];seen=set()
 for page in range(1,(min(int(h['totalCount']),50000)+9999)//10000+1):
@@ -21,4 +21,4 @@ for page in range(1,(min(int(h['totalCount']),50000)+9999)//10000+1):
  if not isinstance(data,list) or digest in seen:raise RuntimeError('Unexpected/repeated official export page')
  seen.add(digest);rows.extend(data);print('crosswalk page',page,len(data),flush=True)
 if len(rows)!=min(int(h['totalCount']),50000):raise RuntimeError('Incomplete official export')
-(out/'national-crosswalk-records.json').write_text(json.dumps(rows,ensure_ascii=False))
+(out/'national-crosswalk-records.json').write_text(json.dumps(rows,ensure_ascii=False),encoding='utf-8')

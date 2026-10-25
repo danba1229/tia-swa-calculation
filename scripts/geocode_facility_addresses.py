@@ -14,7 +14,7 @@ for i,r in enumerate(csv.DictReader(io.StringIO((out/'yangpyeong-file.body').rea
  tasks.append({'id':f'yangpyeong-round:{i+1}','kind':'roundabout','name':r['교차로명'],'address':r['교차로위치지번주소'],'date':'','region':'경기도','source':'yangpyeong-round'})
 cache={}
 p=out/'geocoded-addresses.json'
-if p.exists():cache={r['id']:r for r in json.load(p.open())}
+if p.exists():cache={r['id']:r for r in json.load(p.open(encoding='utf-8'))}
 def get(r):
  prior=cache.get(r['id'])
  if prior and 'lat' in prior and all(prior.get(k)==r.get(k) for k in ['address','rawAddress','date','name','source']):return prior
@@ -30,4 +30,4 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
  for r in ex.map(get,tasks):
   rows.append(r)
   if len(rows)%20==0:print('geocoded',len(rows),'/',len(tasks),flush=True)
-p.write_text(json.dumps(rows,ensure_ascii=False,indent=2));print('total',len(rows),'usable',sum('lat' in r for r in rows),flush=True)
+p.write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf-8');print('total',len(rows),'usable',sum('lat' in r for r in rows),flush=True)

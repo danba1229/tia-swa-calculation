@@ -25,9 +25,24 @@ test('Seocho and Suwon snapshots select only in-scope points and preserve unknow
     const result=selectFacilityRows(rows,s);assert.ok(result.some(p=>p.kind==='crosswalk'));
     assert.ok(result.every(p=>p.lat>=s.south&&p.lat<=s.north&&p.lng>=s.west&&p.lng<=s.east));
   }
-  assert.equal(rows.filter(r=>r[1]==='unsignal_intersection').length,0);
   assert.ok(rows.some(r=>r[1]==='unknown_intersection'));
-  assert.ok(rows.filter(r=>r[1]==='signal_intersection').every(r=>r[9].includes('과거 차량신호 제어기 연결')));
+});
+test('Seoul intersections are classified from 2026 T-GIS pedestrian signals and keep every basis visible',()=>{
+  const seoul=rows.filter(r=>r[7]==='seoul-intersections');
+  assert.equal(seoul.length,3563,'the intersection set itself is unchanged; only the classification uses T-GIS');
+  assert.deepEqual([manifest.counts.signal_intersection,manifest.counts.unsignal_intersection,manifest.counts.unknown_intersection],[3088,35,440]);
+  assert.deepEqual(manifest.tgisIntersectionLinks,{linked:3403,unlinked:160});
+  const basis=r=>r[9].split(' / ')[1];
+  assert.ok(seoul.filter(r=>r[1]==='signal_intersection').every(r=>/보행등 [1-9]\d*개$/.test(basis(r))||basis(r)==='T-GIS 횡단보도 미수록'));
+  // Unsignalised only when every crosswalk lacks a pedestrian signal, with no warning/linked tag and no 2021 vehicle controller.
+  for(const r of seoul.filter(r=>r[1]==='unsignal_intersection')){
+    assert.match(basis(r),/모두 보행등 없음 · 차량신호 여부 현장 확인/);assert.match(r[9],/2021 차량신호 제어기 연결 없음$/);
+    assert.doesNotMatch(r[4],/\((경보\d*|연등)\)/);
+  }
+  assert.ok(seoul.filter(r=>/\(경보\d*\)/.test(r[4])).every(r=>r[1]==='unknown_intersection'));
+  assert.ok(seoul.some(r=>r[1]==='unknown_intersection'&&basis(r).startsWith('자료 상충')));
+  assert.ok(seoul.some(r=>r[1]==='unknown_intersection'&&basis(r).startsWith('연등 표기')));
+  assert.equal(manifest.sources['seoul-intersections'].relatedUrl,'https://data.seoul.go.kr/dataList/OA-23081/F/1/datasetView.do');
 });
 test('official physical and painted hump codes cannot be mixed',()=>{
   for(const row of rows.filter(r=>r[7]==='seoul-humps'))assert.ok(row[1]==='speed_hump'?row[9].endsWith('001'):row[1]==='image_hump'&&row[9].endsWith('002'));
@@ -35,7 +50,8 @@ test('official physical and painted hump codes cannot be mixed',()=>{
   assert.equal(manifest.excluded['hump:geometry'],656);
 });
 test('missing source coverage is not a zero-facility claim and geocoded facilities remain approximate',()=>{
-  assert.equal(facilityCoverage('seoul').find(c=>c.key==='unsignal_intersection').status,'unavailable');
+  assert.equal(facilityCoverage('seoul').find(c=>c.key==='unsignal_intersection').status,'partial');
+  assert.equal(facilityCoverage('gyeonggi').find(c=>c.key==='unsignal_intersection').status,'unavailable');
   assert.equal(facilityCoverage('gyeonggi','failed').find(c=>c.key==='bus_stop').status,'failed');
   assert.ok(rows.filter(r=>['footbridge','roundabout'].includes(r[1])).every(r=>r[10]==='주소 변환 근사위치'));
   assert.ok(rows.filter(r=>r[7]==='yangpyeong-round').every(r=>r[8]===''), 'Publication date must not become a field reference date');
