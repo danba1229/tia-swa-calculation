@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
-import { facilityScope, selectFacilityRows, busFacilityPoints, numberFacilityPoints, facilityCoverage, facilityCsv } from '../lib/trafficFacilities.js';
+import { facilityScope, selectFacilityRows, busFacilityPoints, numberFacilityPoints, facilityCoverage, facilityCsv, gyeonggiCrosswalkSupport, unsupportedCrosswalkNotice } from '../lib/trafficFacilities.js';
 const input={lat:37.4836248649455,lng:127.032683002019,width:1000,height:1000,region:'seoul'};
 const scope=facilityScope(input);
 const bytes=readFileSync(new URL('../data/facilities/facilities.json.gz',import.meta.url));
@@ -72,4 +72,20 @@ test('CSV preserves provenance and neutralizes formula cells',()=>{
   const text=facilityCsv(p,{s:{url:'https://www.data.go.kr/',fileVersion:'2026'}});
   assert.ok(text.includes("'=1+1"));assert.ok(text.includes('추가확인필요'));assert.ok(text.includes('https://www.data.go.kr/'));
   assert.equal(text.split('\r\n').length,2);
+});
+test('Gyeonggi crosswalks come from the full Open API pull, not the capped bulk export',()=>{
+  const gg=rows.filter(r=>r[7]==='national-crosswalks');
+  assert.equal(gg.length,16971);assert.equal(manifest.sources['national-crosswalks'].count,16971);
+  assert.ok(gg.every(r=>r[0].startsWith('gg-crosswalk:')&&r[6]==='경기도'));
+  for(const district of ['오산시','의왕시','수원시'])assert.ok(manifest.gyeonggiCrosswalkDistricts.includes(district),district);
+  assert.match(manifest.sources['national-crosswalks'].fileVersion,/Open API/);
+});
+test('Gyeonggi sites outside the crosswalk source are flagged as unsupported, not empty',()=>{
+  const d=manifest.gyeonggiCrosswalkDistricts;
+  for(const a of ['경기 오산시 성호대로 141','경기도 수원시 팔달구 효원로 241','경기 성남시 분당구 성남대로 997','경기 남양주시 경춘로 1037','경기 의정부시 시민로 1'])assert.equal(gyeonggiCrosswalkSupport(a,d).supported,true,a);
+  for(const [a,city] of [['경기 고양시 덕양구 고양시청로 10','고양시'],['경기도 시흥시 시청로 20','시흥시'],['경기 양평군 양평읍 군청앞길 2','양평군'],['경기 군포시 청백리길 6','군포시']]){
+    const s=gyeonggiCrosswalkSupport(a,d);assert.deepEqual(s,{city,supported:false},a);
+    assert.match(unsupportedCrosswalkNotice(s.city),new RegExp(`^${city}는 .*지원하지 않는 지역`));
+  }
+  assert.equal(gyeonggiCrosswalkSupport('',d).supported,true);
 });

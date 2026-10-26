@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FACILITY_TYPES, facilityScope, facilityCsv } from '../lib/trafficFacilities';
+import { FACILITY_TYPES, facilityScope, facilityCsv, gyeonggiCrosswalkSupport, unsupportedCrosswalkNotice } from '../lib/trafficFacilities';
 import { layoutSignLabels } from '../lib/trafficSigns';
 
 const STATUS = { unavailable:'자료 미연결', failed:'조회 실패', candidate:'과거자료 후보', historical:'과거자료', partial:'일부 자료', snapshot:'공개파일', available:'조회 가능', unclassified:'분류 미확인' };
@@ -32,6 +32,9 @@ export default function TrafficFacilitiesStep({ visible, siteLocation, region, w
   },[visible,key,scopeError,siteLocation.lat,siteLocation.lng,region,width,height,onPhase]);
   const points=useMemo(()=>(current?.points||[]).filter(p=>enabled.includes(p.kind)),[current,enabled]);
   const selected=points.find(p=>p.id===selectedId);
+  const crosswalkSupport=current&&region==='gyeonggi'?gyeonggiCrosswalkSupport(siteLocation.address,current.gyeonggiCrosswalkDistricts):null;
+  const unsupportedNotice=crosswalkSupport&&!crosswalkSupport.supported?unsupportedCrosswalkNotice(crosswalkSupport.city):'';
+  const coverage=(current?.coverage||[]).map(c=>c.key==='crosswalk'&&unsupportedNotice?{...c,status:'unavailable',note:`${crosswalkSupport.city} 미지원 · 원본 자료 미제출`}:c);
   useEffect(()=>{pointsRef.current=points;redraw.current?.();},[points]);
   useEffect(()=>{
     if(!visible||!current||!container.current){setScreen(null);return;}
@@ -62,7 +65,8 @@ export default function TrafficFacilitiesStep({ visible, siteLocation, region, w
   return <section className={`panel step-section traffic-facilities ${visible?'':'is-hidden'}`} aria-label="STEP 10 교통시설물">
     <div className="signs-heading"><div><p className="eyebrow">STEP 10 · SEOUL / GYEONGGI</p><h2>교통시설물 위치도</h2><p>사업지 시·도의 시설 대표점을 표시합니다. 번호는 종류별 조사 순번입니다.</p></div><button type="button" className="secondary" disabled={!current||!points.length} onClick={download}>표시 목록 CSV</button></div>
     <p className="signs-review-notice"><strong>모든 자료는 추가 확인이 필요합니다.</strong> 과거자료·일부 지역 자료를 포함하며, 미표시가 시설 없음을 뜻하지 않습니다. 주소 변환 위치와 신호교차로 후보는 현장·로드뷰로 확인하세요.</p>
-    <div className="facility-filters" role="group" aria-label="교통시설물 종류">{FACILITY_TYPES.map(t=>{const c=current?.coverage.find(c=>c.key===t.key),n=current?.points.filter(p=>p.kind===t.key).length;return <button type="button" key={t.key} aria-pressed={enabled.includes(t.key)} onClick={()=>toggle(t.key)}><i style={{background:t.color}}/><span>{t.mapLabel||t.label}</span><small>{c?.status==='unavailable'?'미연결':c?.status==='failed'?'오류':current?`${n}개 표시`:'—'}</small></button>;})}</div>
+    {unsupportedNotice&&<p className="signs-review-notice facility-unsupported-notice" role="status"><strong>지원하지 않는 지역입니다.</strong> {unsupportedNotice}</p>}
+    <div className="facility-filters" role="group" aria-label="교통시설물 종류">{FACILITY_TYPES.map(t=>{const c=coverage.find(c=>c.key===t.key),n=current?.points.filter(p=>p.kind===t.key).length;return <button type="button" key={t.key} aria-pressed={enabled.includes(t.key)} onClick={()=>toggle(t.key)}><i style={{background:t.color}}/><span>{t.mapLabel||t.label}</span><small>{c?.status==='unavailable'?'미연결':c?.status==='failed'?'오류':current?`${n}개 표시`:'—'}</small></button>;})}</div>
     <div className="facility-status" role="status">{scopeError||error||(!current?'시설물 자료를 조회하고 있습니다…':`표시지점 ${points.length.toLocaleString()}개 · ${current.scope.width} × ${current.scope.height}m · 추가 확인 필요`)}{current?.busError&&<span> · {current.busError}</span>}</div>
     <div className="facility-workbench">
       <div className="signs-map-frame">
@@ -79,7 +83,7 @@ export default function TrafficFacilitiesStep({ visible, siteLocation, region, w
       <aside className="facility-details" aria-label="시설물 상세 정보">
         <div className="facility-detail-heading"><h3>선택 시설</h3><button type="button" className="mini-button" onClick={()=>fit.current?.()} disabled={!screen}>범위에 맞추기</button></div>
         {selected?<div aria-live="polite"><p className="facility-selected-number" style={{color:selected.color}}>{selected.label} · {typeOf(selected.kind).mapLabel||typeOf(selected.kind).label}</p><h4>{selected.name||'시설명 미제공'}</h4><dl><dt>사업지와 거리</dt><dd>{selected.distance.toLocaleString()}m</dd><dt>위치 근거</dt><dd>{selected.positionBasis}</dd><dt>자료 기준일</dt><dd>{selected.referenceDate||'미확인'}</dd><dt>파일 버전</dt><dd>{current.sources[selected.sourceId]?.fileVersion||'미확인'}</dd><dt>원본 식별자</dt><dd>{selected.id}</dd></dl>{selected.address&&<p>{selected.address}</p>}<p>{selected.remark}</p><p className="facility-source-note">{current.sources[selected.sourceId]?.note}</p><div className="facility-links"><a href={selected.roadviewUrl} target="_blank" rel="noopener noreferrer">카카오 로드뷰 ↗</a>{current.sources[selected.sourceId]?.url&&<a href={current.sources[selected.sourceId].url} target="_blank" rel="noopener noreferrer">공식 출처 ↗</a>}</div></div>:<p className="facility-empty">지도 번호 또는 아래 목록을 선택하세요. 밀집 구간은 지도를 확대하면 번호를 더 확인할 수 있습니다.</p>}
-        <details open className="facility-coverage"><summary>자료 연결 범위</summary>{(current?.coverage||[]).filter(t=>t.key!=='unknown_intersection').map(t=><div key={t.key}><strong>{t.label} <small>{STATUS[t.status]}</small></strong><p>{t.note}</p></div>)}</details>
+        <details open className="facility-coverage"><summary>자료 연결 범위</summary>{coverage.filter(t=>t.key!=='unknown_intersection').map(t=><div key={t.key}><strong>{t.label} <small>{STATUS[t.status]}</small></strong><p>{t.note}</p></div>)}</details>
       </aside>
     </div>
     {current&&<><div className="subpanel-header"><h3>교통시설물 목록</h3><p className="subpanel-source">시설 대표점 기준 · 전 항목 추가확인필요 · 근사위치는 실제 시설 중심과 다를 수 있음</p></div><div className="table-wrap"><table className="data-table facility-table"><thead><tr><th>번호</th><th>종류</th><th>시설명</th><th>거리</th><th>위치 근거</th><th>자료 기준일</th><th>파일 버전</th><th>확인</th></tr></thead><tbody>{points.slice(page*100,(page+1)*100).map(p=><tr key={p.id} className={p.id===selectedId?'facility-selected-row':''}><td><button className="mini-button" type="button" onClick={()=>select(p.id)}>{p.label}</button></td><td>{typeOf(p.kind).mapLabel||typeOf(p.kind).label}</td><td>{p.name||'수동확인필요'}</td><td>{p.distance.toLocaleString()}m</td><td>{p.positionBasis}</td><td>{p.referenceDate||'수동확인필요'}</td><td>{current.sources[p.sourceId]?.fileVersion||'수동확인필요'}</td><td><a href={p.roadviewUrl} target="_blank" rel="noopener noreferrer">로드뷰 ↗</a></td></tr>)}</tbody></table></div>{!points.length&&<p className="facility-empty">선택한 종류의 표시 가능한 자료가 없습니다. ‘자료 연결 범위’를 확인하세요. 시설이 없다는 판정은 아닙니다.</p>}{points.length>100&&<div className="facility-pagination"><button type="button" disabled={!page} onClick={()=>setPage(v=>v-1)}>이전</button><span>{page+1} / {Math.ceil(points.length/100)} 페이지 · CSV에는 필터 결과 전체 포함</span><button type="button" disabled={(page+1)*100>=points.length} onClick={()=>setPage(v=>v+1)}>다음</button></div>}

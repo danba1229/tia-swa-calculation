@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "builtAt": "2026-10-26",
-  "sha256": "7bef7f4d7b3e31e75b218b68a4e667d449df8276ff46a256e1d314c7fe261a45",
-  "count": 72988,
+  "sha256": "edf3a31aaf6fa817c42caa6ee2549728e23760769339dfac09b436e495abf895",
+  "count": 75470,
   "sources": {
     "seoul-crosswalks": {
       "name": "서울시 횡단보도 SHP",
@@ -42,10 +42,10 @@
     "national-crosswalks": {
       "name": "전국횡단보도표준데이터",
       "url": "https://www.data.go.kr/data/15028201/standard.do",
-      "fileVersion": "2026-10-26 다운로드",
+      "fileVersion": "2026-10-26 Open API 조회",
       "region": "경기도",
-      "note": "공식 다운로드 상한 50,000행 중 경기 자료. 일부 시군·기간만 포함하므로 전체 수록으로 간주하지 않습니다.",
-      "count": 14489,
+      "note": "Open API(시도명=경기도) 전체 조회. 원문에 자료를 제출한 시군만 수록되며 시군 안에서도 전수 수록을 보장하지 않습니다.",
+      "count": 16971,
       "checkedAt": "2026-10-26",
       "referenceDate": "",
       "license": "공공데이터 출처표시 / 원문 이용조건 참조"
@@ -86,7 +86,7 @@
     "unlinked": 160
   },
   "counts": {
-    "crosswalk": 51598,
+    "crosswalk": 54080,
     "footbridge": 50,
     "image_hump": 10937,
     "speed_hump": 6791,
@@ -100,9 +100,9 @@
     "controllers.bin": "39c1185668cae5819bc11cef6d341ba4ad6790f130374bce1d8ae3684cfda4c0",
     "crosswalks.bin": "a99a0e19c0b0c50013ca2261bd885ab91f2cc81a72348dfa9136f8f2167b9cdd",
     "geocoded-addresses.json": "5397c8f287d347b3bcdc95572df4b0fe2e7a90e230643c63e2227633243098a4",
+    "gyeonggi-crosswalk-api.json": "c957f605a292957b74ee3a366fbcc5eb431a2ca91fcb7307c5d0bc1b16f9abfa",
     "humps.bin": "9a92b15256a0b78c04e5161711922eacd46b3be5a38e97a6388b6573033a5e3f",
     "intersections.bin": "a77b4d4fd2886c934d2d097558a52580fa95adb079ba828f1305dfd15f0e0449",
-    "national-crosswalk-records.json": "5e534b932872dea18dfbe72339aadf2dcddb7032facfc7c7a3c7bfd6512e58c6",
     "tgis-crosswalks.bin": "1a5db9ea7a1cd58e2d7f2b4246baf099a3e4d5278f2867a1b87f3d50d21541be",
     "yangpyeong-file.body": "9b9f8df7f942e232da0b07d167ee47488066e1a932092d5a0f6efd6e76b6960c"
   },
@@ -119,6 +119,8 @@
     "수원시",
     "양주시",
     "여주시",
+    "오산시",
+    "의왕시",
     "의정부시",
     "이천시",
     "파주시",
