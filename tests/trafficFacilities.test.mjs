@@ -73,3 +73,10 @@ test('CSV preserves provenance and neutralizes formula cells',()=>{
   assert.ok(text.includes("'=1+1"));assert.ok(text.includes('추가확인필요'));assert.ok(text.includes('https://www.data.go.kr/'));
   assert.equal(text.split('\r\n').length,2);
 });
+test('Gyeonggi crosswalks come from the full Open API pull, not the capped bulk export',()=>{
+  const gg=rows.filter(r=>r[7]==='national-crosswalks');
+  assert.equal(gg.length,16971);assert.equal(manifest.sources['national-crosswalks'].count,16971);
+  assert.ok(gg.every(r=>r[0].startsWith('gg-crosswalk:')&&r[6]==='경기도'));
+  for(const district of ['오산시','의왕시','수원시'])assert.ok(manifest.gyeonggiCrosswalkDistricts.includes(district),district);
+  assert.match(manifest.sources['national-crosswalks'].fileVersion,/Open API/);
+});
