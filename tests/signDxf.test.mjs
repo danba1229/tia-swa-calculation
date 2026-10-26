@@ -93,9 +93,14 @@ test('each spot is a black dot, a leader and a white box with a black border aro
   assert.deepEqual(numbers.map(e => e.text), ['135 224 427', '322']);
   assert.ok(numbers.every(e => e.codes['420'] === '0' && e.codes['72'] === '1' && e.codes['73'] === '2'), 'black, centred');
   assert.ok(numbers[0].x[0] > bx1 && numbers[0].x[0] < bx2, 'number inside its box');
+  // 2.5x the first CAD-checked size; Malgun digits are 0.77 text heights wide, plus a half-height margin each side.
+  assert.ok(numbers.every(e => e.codes['40'] === '2.5'), 'text height 2.5m');
+  assert.ok(Math.abs((by2 - by1) - 4.25) < 0.01, 'box height 2.5x');
+  assert.ok(bx2 - bx1 >= (9 * 0.77 + 2 * 0.49 + 1) * 2.5 - 0.01, 'box fits "135 224 427" with side margins');
+  assert.ok(Math.hypot(lx - pole.x, ly - pole.y) >= 4 * 2.5 - (by2 - by1), 'leader 2.5x');
   assert.equal(on('도로표지_번호')[0].text, '도로표지');
   const roadBox = on('도로표지_박스').find(e => e.type === 'LWPOLYLINE');
-  assert.ok(Math.max(...roadBox.x) - Math.min(...roadBox.x) >= 4 * 1.0, 'box wide enough for four Hangul characters');
+  assert.ok(Math.max(...roadBox.x) - Math.min(...roadBox.x) >= (4 * 1.39 + 1) * 2.5 - 0.01, 'box wide enough for four Hangul characters');
   assert.equal(on('표지판_번호미확인_번호')[0].text, '일방');
   assert.ok(on('도면정보').some(e => /EPSG:5186/.test(e.text)));
   assert.ok(on('도면정보').some(e => /설치지점 4곳/.test(e.text)));
