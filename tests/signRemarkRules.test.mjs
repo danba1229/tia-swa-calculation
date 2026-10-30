@@ -126,3 +126,9 @@ test('photo decisions apply only to the reviewed record and preserve evidence an
     assert.equal(classifySign({ ...p, sourceIndex: '134' }).policeCode, '134');
   }
 });
+test('2026-10-30 small fixes: release with 도심부 context, restriction codes and a bus-lane 331', () => {
+  assert.deepEqual(seoul751RemarkRule('60해제 도심부(시점)')?.codes, ['224', '427']);
+  assert.deepEqual(seoul751RemarkRule('50 해제 도심부(종점)')?.codes, ['224', '427']);
+  for (const [sourceIndex, sourceRemark, code] of [['544', '중량제한 노량대교', '220'], ['611', '내부순환로 10t이상 화물차 진입금지', '203'], ['613', '올림픽대로 10톤이상 화물차량 통행제한', '203'], ['331', '우측차로 버스전용', '330'], ['331', '', '331']])
+    assert.equal(classifySign({ id: 'S:x', source: 'S', label: 'x', lat: 37.5, lng: 127, sourceIndex, sourceRemark }).policeCode, code, `${sourceIndex} ${sourceRemark}`);
+});
