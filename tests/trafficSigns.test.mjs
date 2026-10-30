@@ -47,7 +47,7 @@ test('fixed-code mapping covers 10213 records alongside the approved 514 familie
       if (result.policeCode === '224') speedMapped++;
     }
     else if (source === 'S' && sourceIndex.startsWith('514')) assert.equal(result.ignored, true);
-    else if (source === 'S' && ['544', '611', '613'].includes(sourceIndex)) assert.equal(result.policeCode, sourceIndex === '544' ? '220' : '203');
+    else if (source === 'S' && ['544', '611', '613', '712-1'].includes(sourceIndex)) assert.equal(result.policeCode, { '544': '220', '712-1': '324, 224' }[sourceIndex] || '203');
     else assert.equal(result.policeCode, source === 'S' && POLICE_SIGN_CODES.includes(sourceIndex) && (!sourceIndex.startsWith('4') || ['427', '428'].includes(sourceIndex)) ? sourceIndex : null);
   }
   assert.equal(mapped, 10213);
@@ -188,7 +188,7 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
 });
 
 test('ignored source codes are removed from display only, not raw records or other sources', () => {
-  const points = ['704', '750', '232', '712-1', '540', '543', '532', '534', '559', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex, sourceRemark: '미지정 문구' }));
+  const points = ['704', '750', '232', '540', '543', '532', '534', '559', '751'].map(sourceIndex => ({ source: 'S', sourceIndex, label: sourceIndex, sourceRemark: '미지정 문구' }));
   const original = structuredClone(points);
   assert.deepEqual(visibleSigns(points).map(p => p.sourceIndex), []);
   assert.deepEqual(points, original);
@@ -282,7 +282,7 @@ test('all unmatched safety signs are hidden while retained numbers, labels and r
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.managementId, point.label);
   }
-  assert.deepEqual(counts, {"S:user": 17879, "S:code-match": 149533, "R:unmapped": 12008, "S:excluded": 52463, "S:text": 212});
+  assert.deepEqual(counts, {"S:user": 17920, "S:code-match": 149533, "R:unmapped": 12008, "S:excluded": 52422, "S:text": 212});
   const points = [
     { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
     { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },

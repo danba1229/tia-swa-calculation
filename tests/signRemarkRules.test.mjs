@@ -132,3 +132,7 @@ test('2026-10-30 small fixes: release with 도심부 context, restriction codes 
   for (const [sourceIndex, sourceRemark, code] of [['544', '중량제한 노량대교', '220'], ['611', '내부순환로 10t이상 화물차 진입금지', '203'], ['613', '올림픽대로 10톤이상 화물차량 통행제한', '203'], ['331', '우측차로 버스전용', '330'], ['331', '', '331']])
     assert.equal(classifySign({ id: 'S:x', source: 'S', label: 'x', lat: 37.5, lng: 127, sourceIndex, sourceRemark }).policeCode, code, `${sourceIndex} ${sourceRemark}`);
 });
+test('712-1 protection-zone start plates show 324+224 regardless of remark', () => {
+  for (const sourceRemark of ['[보호구역 시점]30 여기부터 속도를 줄이시오', '', '양면설치'])
+    assert.deepEqual(classifySign({ id: 'S:x', source: 'S', label: 'x', lat: 37.5, lng: 127, sourceIndex: '712-1', sourceRemark }).policeCodes, ['324', '224']);
+});
