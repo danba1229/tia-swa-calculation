@@ -54,8 +54,8 @@ test('unresolved bicycle and crosswalk records are excluded without guessing the
     assert.equal(visibleSigns([point(raw)]).length, 0, raw);
   }
   assert.deepEqual(codes('사고잦은곳 / 속도를 줄이시오'), ['415']);
-  for (const raw of ['자전거주의', '(통합표지) 자전거주의', '전방50m 횡단보도', '주차허용시간 22:00~07:00',
-    '시간제 차량통행제한 여기부터70m 08:00~09:00', '우회전금지,좌일방통행통합판']) {
+  for (const raw of ['횡단보도', '굽은도로', '주차허용시간 22:00~07:00',
+    '시간제 차량통행제한 여기부터70m 08:00~09:00']) {
     const result = classifySign(point(raw));
     assert.equal(result.ignored, true, raw);
     assert.equal(result.label, '?', raw);
@@ -92,7 +92,7 @@ test('approved bicycle types use full phrases without guessing caution or crossw
     ['자전거보행자겸용도로 해제', ['303', '427']], ['자전거및보행자전용도로 해제', ['303', '427']],
     ['연서로 자전거 전용차로', ['318']], ['연세로 자전거 전용차로', ['318']],
   ]) assert.deepEqual(codes(remark), expected, remark);
-  for (const remark of ['자전거주의', '횡단보도', '자전거전용',
+  for (const remark of ['횡단보도', '자전거전용',
     '자전거전용도로해재', '자전거전용도로 / 연서로 이곳에서 1.8km',
     '원동기장치자전거통행금지', '자전거전용도로 아님']) {
     assert.equal(classifySign(point(remark)).label, '?', remark);
@@ -102,12 +102,15 @@ test('approved bicycle types use full phrases without guessing caution or crossw
 
 test('photo decisions apply only to the reviewed record and preserve evidence and raw data', () => {
   const reviewed = [
-    { id: 'S:04-0000386810', sourceRemark: '자전거주의', lat: 37.4983714, lng: 127.1255598, expected: [], ignored: true },
-    { id: 'S:04-0000386695', sourceRemark: '횡단보도', lat: 37.4555957, lng: 127.0637639, expected: ['132'] },
-    { id: 'S:04-0000318429', sourceRemark: '좌로굽은도로', lat: 37.4679511, lng: 126.9468186, expected: ['112'] },
-    { id: 'S:04-0000359126', sourceRemark: '우로굽은길', lat: 37.4697156, lng: 126.9518899, expected: ['111'] },
+    // generic: what the remark rule gives any other record with the same text.
+    { id: 'S:04-0000386810', sourceRemark: '자전거주의', lat: 37.4983714, lng: 127.1255598, expected: [], ignored: true, generic: ['134'] },
+    { id: 'S:04-0000386695', sourceRemark: '횡단보도', lat: 37.4555957, lng: 127.0637639, expected: ['132'], generic: [] },
+    { id: 'S:04-0000318429', sourceRemark: '좌로굽은도로', lat: 37.4679511, lng: 126.9468186, expected: ['112'], generic: ['112'] },
+    { id: 'S:04-0000359126', sourceRemark: '우로굽은길', lat: 37.4697156, lng: 126.9518899, expected: ['111'], generic: ['111'] },
+    { id: 'S:04-0000078766', sourceRemark: '일단정지', lat: 37.5098122, lng: 127.1270113, expected: ['325'], generic: ['227'] },
+    { id: 'S:04-0000356843', sourceRemark: '일단정지', lat: 37.511564, lng: 127.1274311, expected: ['325'], generic: ['227'] },
   ];
-  for (const { expected, ignored = false, ...record } of reviewed) {
+  for (const { expected, ignored = false, generic, ...record } of reviewed) {
     const p = { ...point(record.sourceRemark), ...record }, before = structuredClone(p);
     const result = classifySign(p);
     assert.deepEqual(result.policeCodes, expected);
@@ -119,9 +122,9 @@ test('photo decisions apply only to the reviewed record and preserve evidence an
     assert.deepEqual(classifySign(p).policeCodes, expected);
     for (const change of [{ id: 'S:other' }, { sourceRemark: record.sourceRemark + ' 변경' },
       { lat: record.lat + 0.001 }, { lng: record.lng + 0.001 }, { lat: undefined }, { source: 'R' }]) {
-      const other = classifySign({ ...p, ...change });
-      assert.deepEqual(other.policeCodes, []);
-      assert.equal(other.ignored, change.source !== 'R');
+      const other = classifySign({ ...p, ...change }), codes = change.source === 'R' ? [] : generic;
+      assert.deepEqual(other.policeCodes, codes);
+      assert.equal(other.ignored, change.source !== 'R' && !codes.length);
     }
     assert.equal(classifySign({ ...p, sourceIndex: '134' }).policeCode, '134');
   }
@@ -131,4 +134,19 @@ test('2026-10-30 small fixes: release with 도심부 context, restriction codes 
   assert.deepEqual(seoul751RemarkRule('50 해제 도심부(종점)')?.codes, ['224', '427']);
   for (const [sourceIndex, sourceRemark, code] of [['544', '중량제한 노량대교', '220'], ['611', '내부순환로 10t이상 화물차 진입금지', '203'], ['613', '올림픽대로 10톤이상 화물차량 통행제한', '203'], ['331', '우측차로 버스전용', '330'], ['331', '', '331']])
     assert.equal(classifySign({ id: 'S:x', source: 'S', label: 'x', lat: 37.5, lng: 127, sourceIndex, sourceRemark }).policeCode, code, `${sourceIndex} ${sourceRemark}`);
+});
+test('712-1 protection-zone start plates show 324+224 regardless of remark', () => {
+  for (const sourceRemark of ['[보호구역 시점]30 여기부터 속도를 줄이시오', '', '양면설치'])
+    assert.deepEqual(classifySign({ id: 'S:x', source: 'S', label: 'x', lat: 37.5, lng: 127, sourceIndex: '712-1', sourceRemark }).policeCodes, ['324', '224']);
+});
+test('751 main-sign phrases map for every record; bare crosswalk or curve text stays unmapped', () => {
+  for (const [remark, expected] of [
+    ['자전거주의', ['134']], ['(통합표지) 자전거주의', ['134']], ['우회전시 자전거주의/LED', ['134']],
+    ['전방 50m 횡단보도', ['132']], ['전방90m 횡단보도 / 사고위험 속도를 줄이시오', ['132']], ['잔방 50m 횡단보도 / 사고위험 속도를 줄이시오', ['132']],
+    ['우로굽은도로', ['111']], ['우로굽은길 / 속도를 줄이시오', ['111']], ['좌로굽은도로, 안전속도 50', ['112']],
+    ['우좌로이중굽은도로', ['113']], ['좌우로 이중굽은도로 / 안전속도 60', ['114']], ['우합류도로, 우로굽은도로', ['111']],
+    ['일단정지', ['227']], ['우회전금지,좌일방통행통합판', ['213', '327']], ['좌회전금지,우일방통행통합판', ['214', '326']],
+  ]) assert.deepEqual(codes(remark), expected, remark);
+  for (const remark of ['횡단보도', '굽은도로', '횡단보도까지', '횡단보도에서자전거는타지말고끌고가세요/LED'])
+    assert.equal(classifySign(point(remark)).ignored, true, remark);
 });
