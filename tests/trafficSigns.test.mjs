@@ -47,6 +47,7 @@ test('fixed-code mapping covers 10213 records alongside the approved 514 familie
       if (result.policeCode === '224') speedMapped++;
     }
     else if (source === 'S' && sourceIndex.startsWith('514')) assert.equal(result.ignored, true);
+    else if (source === 'S' && ['544', '611', '613'].includes(sourceIndex)) assert.equal(result.policeCode, sourceIndex === '544' ? '220' : '203');
     else assert.equal(result.policeCode, source === 'S' && POLICE_SIGN_CODES.includes(sourceIndex) && (!sourceIndex.startsWith('4') || ['427', '428'].includes(sourceIndex)) ? sourceIndex : null);
   }
   assert.equal(mapped, 10213);
@@ -265,7 +266,7 @@ test('751 raw remark ingestion reconciles all records with exact mapping and exc
     const key = p.ignored ? 'ignored' : p.label;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, {"111": 1, "112": 1, "132": 1, "220": 112, "221": 15, "224": 4680, "302": 4, "318": 27, "323": 57, "324": 96, "427": 34, "428": 11, "220, 221, 222": 409, "ignored": 13841, "324, 224, 427": 6, "224, 427": 1446, "324, 427": 483, "324, 224": 169, "323, 427": 42, "323, 224": 24, "일방": 47, "221, 222": 7, "302, 427": 28, "303, 427": 2, "220, 221": 3, "323, 224, 427": 1, "220, 222": 1});
+  assert.deepEqual(counts, {"111": 1, "112": 1, "132": 1, "220": 112, "221": 15, "224": 4680, "302": 4, "318": 27, "323": 57, "324": 96, "427": 26, "428": 11, "220, 221, 222": 409, "ignored": 13841, "324, 224, 427": 6, "224, 427": 1454, "324, 427": 483, "324, 224": 169, "323, 427": 42, "323, 224": 24, "일방": 47, "221, 222": 7, "302, 427": 28, "303, 427": 2, "220, 221": 3, "323, 224, 427": 1, "220, 222": 1});
 });
 
 test('all unmatched safety signs are hidden while retained numbers, labels and road signs survive', async () => {
@@ -281,7 +282,7 @@ test('all unmatched safety signs are hidden while retained numbers, labels and r
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.managementId, point.label);
   }
-  assert.deepEqual(counts, {"S:user": 17868, "S:code-match": 149534, "R:unmapped": 12008, "S:excluded": 52473, "S:text": 212});
+  assert.deepEqual(counts, {"S:user": 17879, "S:code-match": 149533, "R:unmapped": 12008, "S:excluded": 52463, "S:text": 212});
   const points = [
     { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
     { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },
