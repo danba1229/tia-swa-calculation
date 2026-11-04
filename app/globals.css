@@ -1797,3 +1797,6 @@ button.mini-button {
 .plan-badge { display: inline-block; background: #e7eee9; color: #264637; border-radius: 6px; padding: 3px 7px; font-size: 12px; font-weight: 700; }
 .plan-source { display: block; margin-bottom: 10px; text-decoration: underline; }
 .plan-warning { color: #934921; }
+
+.signs-match-notice { margin: -4px 0 12px; padding: 0 0 0 18px; color: #475569; font-size: 13px; line-height: 1.6; }
+.signs-match-notice b { color: #18314b; }
