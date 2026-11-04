@@ -34,7 +34,12 @@ test('mixed signs retain main numbers and exceptions without mutating source or 
     assert.equal(result.ignored, false);
     assert.deepEqual(p, original);
   }
-  for (const raw of ['여기부터300m 속도를 줄이시오', '차량운행제한',
+  // A standalone slow-down plate has no chart main sign: shown as a partial match.
+  for (const [raw, expected] of [['여기부터300m 속도를 줄이시오', ['418', '415']], ['여기부터 속도를 줄이시오', ['415']]]) {
+    const result = classifySign(point(raw));
+    assert.deepEqual(result.policeCodes, expected, raw); assert.equal(result.ignored, false); assert.equal(result.matchLevel, 'partial');
+  }
+  for (const raw of ['차량운행제한',
     '우전방50m앞부터', '해제아님', '해제미확인', '지정된차량만주차(무단주차시견인)']) {
     assert.equal(visibleSigns([point(raw)]).length, 0, raw);
   }

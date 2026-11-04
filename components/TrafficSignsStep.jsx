@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { layoutSignLabels, signScope } from '../lib/trafficSigns';
-import { visibleSigns } from '../lib/signClassification';
+import { SIGN_PARTIAL_COLOR, visibleSigns } from '../lib/signClassification';
 import PoliceSignChart from './PoliceSignChart';
 import SeoulSignReference from './SeoulSignReference';
 
@@ -107,6 +107,10 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
     <div className="signs-heading"><div><p className="eyebrow">STEP 09 · SEOUL</p><h2>교통 표지판 위치도</h2><p>같은 서울시 위치자료를 원본 코드 또는 경찰청 일람표 기준으로 확인합니다.</p></div><span className="signs-region">서울시 공식 공개자료</span></div>
     <div className="signs-version-switch signs-filters" role="group" aria-label="표지판 표시 기준">{[['seoul', '서울시 기준'], ['police', '경찰청 일람표 기준']].map(([value, label]) => <button type="button" key={value} aria-pressed={mode === value} onClick={() => { setMode(value); setSelectedId(''); }}>{label}</button>)}</div>
     <p className="signs-review-notice"><strong>모든 자료는 추가 확인이 필요합니다.</strong> 표지의 종류·위치·설치 상태를 현장 또는 촬영일을 확인한 로드뷰로 대조하세요. 파란색은 표지판 위치를 나타냅니다.</p>
+    {!isSeoul && <ul className="signs-match-notice" aria-label="일람표 일치 구분">
+      <li><b>완전 일치</b>: 경찰청 일람표와 서울시 일람표가 완전히 일치하는 경우(글자 검은색)</li>
+      <li><b style={{ color: SIGN_PARTIAL_COLOR }}>일부 일치</b>: 경찰청 일람표와 서울시 일람표가 일치하지 않는 경우(글자 빨간색)</li>
+    </ul>}
     <div className="signs-toolbar">
       <div className="signs-filters" role="group" aria-label="표지판 종류">{[['all', '전체 표지판'], ['S', '안전표지'], ['R', '도로표지']].map(([value, label]) => <button type="button" key={value} aria-pressed={source === value} onClick={() => { setSource(value); setSelectedId(''); }}>{label}{current && <span>{displayPoints.filter(p => value === 'all' || p.source === value).length.toLocaleString('ko-KR')}</span>}</button>)}</div>
       <button type="button" className="secondary" disabled={!screen} onClick={() => fit.current?.()}>조사 범위에 맞추기</button>
@@ -127,14 +131,15 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
         {layout.labels.map(p => <a key={p.id} className="signs-callout" href={p.roadviewUrl || undefined} target="_blank" rel="noopener noreferrer" aria-label={`${p.label} · 관리번호 ${p.managementId} 카카오 로드뷰 새 탭에서 열기`} onClick={() => setSelectedId(p.id)}>
           <title>{p.sourceCodeRemark} · 클릭하면 카카오 로드뷰를 새 탭에서 엽니다.</title>
           <rect x={p.box.x} y={p.box.y} width={p.box.w} height={p.box.h} rx="4" fill={p.id === selectedId ? '#eef2f7' : '#fff'} stroke={p.id === selectedId ? '#172b46' : p.color} />
-          <text x={p.box.x + p.box.w / 2} y={p.box.y + 16} textAnchor="middle" fill="#18314b">{p.label}</text>
+          <text x={p.box.x + p.box.w / 2} y={p.box.y + 16} textAnchor="middle" fill={!isSeoul && p.matchLevel === 'partial' ? SIGN_PARTIAL_COLOR : '#18314b'}>{p.label}</text>
         </a>)}
         <g transform={`translate(${screen.site.x},${screen.site.y})`}><path d="M0 -12L12 0L0 12L-12 0Z" fill="#172b46" stroke="white" strokeWidth="3" /><text y="-18" textAnchor="middle" className="signs-site-label">사업지</text></g>
       </svg>}
       {(!screen || mapError) && <div className="signs-map-message"><strong>{mapError ? '지도 연결 확인이 필요합니다' : current ? '지도를 불러오고 있습니다' : '주소와 조사 범위를 확인해 주세요'}</strong><p>{mapError || scopeError || error || '서울시 표지판 위치를 큰 지도에서 확인합니다.'}</p>{mapError && <button type="button" onClick={() => setRetryMap(v => v + 1)}>지도 다시 연결</button>}</div>}
       <div className="signs-map-legend"><table><caption>범례</caption><thead><tr><th scope="col">표시</th><th scope="col">의미</th></tr></thead><tbody>
         <tr><td><i className="signs-location" aria-label="파란 점" /></td><td>표지판 위치</td></tr>
-        <tr><td>123</td><td>{isSeoul ? '서울시 원본 코드' : '일람표 번호 · 후보/사용자 지정'}</td></tr>
+        <tr><td>123</td><td>{isSeoul ? '서울시 원본 코드' : '일람표 번호 · 완전 일치'}</td></tr>
+        {!isSeoul && <tr><td style={{ color: SIGN_PARTIAL_COLOR }}>123</td><td>일람표 번호 · 일부 일치</td></tr>}
         {!isSeoul && <tr><td>일방</td><td>일방통행 · 방향 미확인</td></tr>}
         <tr><td>?</td><td>{isSeoul ? '서울시 원본 코드 없음' : '도로표지 · 일람표 번호 미확인'}</td></tr>
         <tr><td><i className="signs-site" /></td><td>사업지</td></tr>
@@ -143,7 +148,7 @@ export default function TrafficSignsStep({ visible, siteLocation, width, height,
     </div>
     {visible && (isSeoul ? <SeoulSignReference points={points} /> : <PoliceSignChart />)}
     </div>
-    <p className="signs-hint">{isSeoul ? '서울시 공개자료의 원본 코드와 비고를 그대로 표시합니다. 경찰청 기준에서 제외한 보조·미매핑 안전표지도 포함합니다. 원본 코드가 없는 자료만 ?로 표시하며, 오른쪽 목록에서 범위 내 코드와 비고 예시를 확인할 수 있습니다.' : '번호는 경찰청 일람표의 대응 후보 또는 사용자 지정 매핑입니다. 중량·높이·폭 제한은 수치와 관계없이 220·221·222로 표시합니다. 보조표지는 해제(427)·견인지역(428)만 표시하고, 나머지 보조표지와 미매핑 안전표지는 제외합니다. 복합 표지는 남은 번호를 쉼표로 함께 표시합니다. 방향 미확인 일방통행은 일방, 도로 안내표지는 ?로 표시합니다.'} <strong>코드 클릭: 카카오 로드뷰 새 탭 열기 · 점 클릭: 원본 코드와 비고 확인.</strong> 로드뷰 촬영일과 주변 화면을 확인하세요. 밀집 구간은 확대하거나 아래 목록에서 선택하세요.</p>
+    <p className="signs-hint">{isSeoul ? '서울시 공개자료의 원본 코드와 비고를 그대로 표시합니다. 경찰청 기준에서 제외한 보조·미매핑 안전표지도 포함합니다. 원본 코드가 없는 자료만 ?로 표시하며, 오른쪽 목록에서 범위 내 코드와 비고 예시를 확인할 수 있습니다.' : '번호는 경찰청 일람표의 대응 후보 또는 사용자 지정 매핑입니다. 중량·높이·폭 제한은 수치와 관계없이 220·221·222로 표시합니다. 보조표지는 해제(427)·견인지역(428)과 본표지 없이 단독으로 설치된 감속 안내판(415·418, 일부 일치)만 표시하고, 나머지 보조표지와 미매핑 안전표지는 제외합니다. 복합 표지는 남은 번호를 쉼표로 함께 표시합니다. 방향 미확인 일방통행은 일방, 도로 안내표지는 ?로 표시합니다.'} <strong>코드 클릭: 카카오 로드뷰 새 탭 열기 · 점 클릭: 원본 코드와 비고 확인.</strong> 로드뷰 촬영일과 주변 화면을 확인하세요. 밀집 구간은 확대하거나 아래 목록에서 선택하세요.</p>
     {current && <div className="signs-detail"><label><span>표지판 선택 · 공식 관리번호</span><select value={selected?.id || ''} onChange={e => choose(e.target.value)}><option value="">{points.length ? '관리번호를 선택하세요' : '범위 내 공개자료 없음'}</option>{points.map(p => <option value={p.id} key={p.id}>{p.managementId} · {p.label} · {SOURCE_NAMES[p.source]}</option>)}</select></label>
       <div aria-live="polite">{selected ? <><strong>{isSeoul ? `서울시 원본 코드 ${selected.label}` : selected.policeCode ? `일람표 ${selected.policeCode} · ${selected.mappingBasis === 'user' ? '사용자 지정' : '대응 후보'}` : selected.displayOnly ? `${selected.label} · 방향 미확인 · 사용자 지정` : '수동확인필요'} · 관리번호 {selected.managementId}</strong><p className="signs-source-remark"><b>비고</b> · {selected.sourceCodeRemark}</p>{selected.source === 'S' && <p><b>원본 비고</b> · {selected.sourceRemark || '수동확인필요'}</p>}<p>{selected.reason}</p><p>{SOURCE_NAMES[selected.source]} · 위도 {selected.lat} / 경도 {selected.lng}{selected.source === 'S' && ` · 규격코드 ${selected.specification || '수동확인필요'}`}</p>{selected.roadviewUrl && <a className="signs-roadview-link" href={selected.roadviewUrl} target="_blank" rel="noopener noreferrer">카카오 로드뷰 열기 ↗</a>}</> : <p>지도 위 점 또는 관리번호를 선택하면 서울시 원본 코드가 비고에 표시됩니다.</p>}</div></div>}
     <details className="signs-provenance signs-secondary-sources"><summary>보조 자료 확인</summary>

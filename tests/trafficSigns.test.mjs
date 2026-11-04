@@ -163,12 +163,12 @@ test('751 generalizes speed and release phrases and excludes blank or right-turn
     ['최고속도제한 40 해제', ['224', '427']], ['속도해제(30)', ['224', '427']],
     ['30속도 해제', ['224', '427']], ['50 km 속도제한 해제', ['224', '427']],
     ['30 해제', ['224', '427']], ['30해제 / LED', ['224', '427']],
-    ['여기부터 속도를 줄이시오', []], ['여기부터 속도를줄이시오 / LED', []],
+    ['여기부터 속도를 줄이시오', ['415']], ['여기부터 속도를줄이시오 / LED', ['415']],
     ['어린이보호구역 해제', ['324', '427']], ['어린이보호 해제', ['324', '427']],
     ['30/여기부터속도를줄이시오/LED', ['224']], ['30 여기부터 속도를 줄이시오', ['224']],
     ['어린이보호구역 30', ['324', '224']], ['어린이보호구역/30', ['324', '224']],
     ['30, 여기부터 속도를 줄이시오', ['224']], ['30, 여기부터 속도를 줄이시오 / LED', ['224']],
-    ['여기부터 300m 속도를 줄이시오', []], ['여기부터300m속도를줄이시오/LED', []],
+    ['여기부터 300m 속도를 줄이시오', ['418', '415']], ['여기부터300m속도를줄이시오/LED', ['418', '415']],
     ['어린이보호구역', ['324']], ['어린이 보호구역 / LED', ['324']],
   ]) {
     const result = classifySign({ ...base, sourceRemark });
@@ -266,7 +266,7 @@ test('751 raw remark ingestion reconciles all records with exact mapping and exc
     const key = p.ignored ? 'ignored' : p.label;
     counts[key] = (counts[key] || 0) + 1;
   }
-  assert.deepEqual(counts, {"111": 46, "112": 35, "113": 6, "114": 4, "132": 175, "134": 84, "227": 5, "325": 2, "213, 327": 8, "214, 326": 5, "220": 112, "221": 15, "224": 4680, "302": 4, "318": 27, "323": 57, "324": 96, "427": 26, "428": 11, "220, 221, 222": 409, "ignored": 13474, "324, 224, 427": 6, "224, 427": 1454, "324, 427": 483, "324, 224": 169, "323, 427": 42, "323, 224": 24, "일방": 47, "221, 222": 7, "302, 427": 28, "303, 427": 2, "220, 221": 3, "323, 224, 427": 1, "220, 222": 1});
+  assert.deepEqual(counts, {"111": 46, "112": 35, "113": 6, "114": 4, "132": 175, "134": 84, "227": 5, "325": 2, "213, 327": 8, "214, 326": 5, "220": 112, "221": 15, "224": 4680, "302": 4, "318": 27, "323": 57, "324": 96, "427": 26, "428": 11, "220, 221, 222": 409, "ignored": 11564, "415": 1564, "415, 420": 59, "415, 421": 11, "418, 415": 262, "418, 415, 420": 13, "418, 415, 421": 1, "324, 224, 427": 6, "224, 427": 1454, "324, 427": 483, "324, 224": 169, "323, 427": 42, "323, 224": 24, "일방": 47, "221, 222": 7, "302, 427": 28, "303, 427": 2, "220, 221": 3, "323, 224, 427": 1, "220, 222": 1});
 });
 
 test('all unmatched safety signs are hidden while retained numbers, labels and road signs survive', async () => {
@@ -282,7 +282,7 @@ test('all unmatched safety signs are hidden while retained numbers, labels and r
     assert.equal(result.sourceRemark, sourceRemark);
     assert.equal(result.managementId, point.label);
   }
-  assert.deepEqual(counts, {"S:user": 18287, "S:code-match": 149533, "R:unmapped": 12008, "S:excluded": 52055, "S:text": 212});
+  assert.deepEqual(counts, {"S:user": 20197, "S:code-match": 149533, "R:unmapped": 12008, "S:excluded": 50145, "S:text": 212});
   const points = [
     { source: 'S', sourceIndex: '513', sourceRemark: '미지정 문구' },
     { source: 'S', sourceIndex: '513', sourceRemark: '속도를 줄이시오' },
@@ -347,4 +347,16 @@ test('callouts retain real point locations and never overlap or clip official la
     assert.ok(p.box.x >= 8 && p.box.x + p.box.w <= 858 && p.box.y >= 8 && p.box.y + p.box.h <= 564);
     for (const q of labels) if (p !== q) assert.ok(p.box.x + p.box.w <= q.box.x || q.box.x + q.box.w <= p.box.x || p.box.y + p.box.h <= q.box.y || q.box.y + q.box.h <= p.box.y);
   }
+});
+test('match level: chart number equal to the Seoul code (notation aside) is exact, everything else shown is partial', async () => {
+  const { rows } = await loadSignSnapshot(); const levels = {};
+  for (const [id, lat, lng, sourceIndex, , , sourceRemark] of rows) {
+    const r = classifySign({ id, source: id[0], label: id.slice(2), lat, lng, sourceIndex, sourceRemark: sourceRemark || '' });
+    if (!r.ignored) levels[`${id[0]}:${r.matchLevel}`] = (levels[`${id[0]}:${r.matchLevel}`] || 0) + 1;
+  }
+  assert.deepEqual(levels, { 'S:exact': 149848, 'S:partial': 20094, 'R:null': 12008 });
+  const level = (sourceIndex, sourceRemark = '') => classifySign({ id: 'S:x', source: 'S', label: 'x', lat: 37.5, lng: 127, sourceIndex, sourceRemark }).matchLevel;
+  assert.equal(level('219'), 'exact'); assert.equal(level('205-2'), 'exact');
+  assert.equal(level('219', '주차금지, 견인지역'), 'partial'); assert.equal(level('220-1'), 'partial');
+  assert.equal(level('751', '30'), 'partial'); assert.equal(level('712-1'), 'partial');
 });

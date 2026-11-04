@@ -26,9 +26,9 @@ const cityHall = { lat: 37.566370776634, lng: 126.977918351844 };
 const scope = { north: 37.5679, south: 37.5649, east: 126.9799, west: 126.9759 };
 // Two plates on one pole (≈0.1m apart), one more sign nearby, a road sign and an unmatched sign.
 const signs = [
-  { id: 'S:1', source: 'S', lat: 37.5665000, lng: 126.9780000, label: '224, 427', managementId: '04-001', policeCodes: ['224', '427'], sourceIndex: '224', specification: '002', installedOn: '2020-01-01' },
-  { id: 'S:2', source: 'S', lat: 37.5665008, lng: 126.9780006, label: '135', managementId: '04-002', policeCodes: ['135'], sourceIndex: '135' },
-  { id: 'S:3', source: 'S', lat: 37.5666000, lng: 126.9781000, label: '322', managementId: '04-003', policeCodes: ['322'], sourceIndex: '322' },
+  { id: 'S:1', source: 'S', lat: 37.5665000, lng: 126.9780000, label: '224, 427', managementId: '04-001', matchLevel: 'exact', policeCodes: ['224', '427'], sourceIndex: '224', specification: '002', installedOn: '2020-01-01' },
+  { id: 'S:2', source: 'S', lat: 37.5665008, lng: 126.9780006, label: '135', managementId: '04-002', matchLevel: 'exact', policeCodes: ['135'], sourceIndex: '135' },
+  { id: 'S:3', source: 'S', lat: 37.5666000, lng: 126.9781000, label: '322', managementId: '04-003', matchLevel: 'exact', policeCodes: ['322'], sourceIndex: '322' },
   { id: 'R:1', source: 'R', lat: 37.5668000, lng: 126.9783000, label: '?', managementId: 'WR(서울특별시 중구)-[세종대로]-상-1', policeCodes: [], sourceIndex: '단일노선표지' },
   { id: 'S:4', source: 'S', lat: 37.5667000, lng: 126.9786000, label: '일방', managementId: '04-004', policeCodes: [], sourceIndex: '999' },
 ];
@@ -109,7 +109,7 @@ test('each spot is a black dot, a leader and a white box with a black border aro
   const lines = csv.slice(1).split('\r\n');
   assert.equal(lines.length, 6);
   assert.match(lines[0], /^번호,설치지점,레이어,박스표시,/);
-  assert.match(lines[1], /^1,1,표지판_번호,135 224 427,04-001,안전표지,224,224 427,002,2020-01-01,/);
+  assert.match(lines[1], /^1,1,표지판_번호,135 224 427,04-001,안전표지,224,224 427,완전 일치,002,2020-01-01,/);
   assert.match(lines[2], /^2,1,표지판_번호,135 224 427,04-002,/);
 });
 
@@ -126,4 +126,23 @@ test('dense spots get boxes that do not overlap each other', () => {
   const { overlapping, spots } = buildSignDxf({ points: grid, scope, site: cityHall, crs: '5186' });
   assert.equal(spots, 60);
   assert.equal(overlapping, 0);
+});
+
+test('partial matches get their own layer and red numbers, apart from exact ones on the same pole', () => {
+  const pole = { source: 'S', lat: 37.5665, lng: 126.978 };
+  const points = [
+    { ...pole, id: 'S:e', managementId: 'e', label: '219', policeCodes: ['219'], sourceIndex: '219', matchLevel: 'exact' },
+    { ...pole, id: 'S:p', managementId: 'p', label: '415', policeCodes: ['415'], sourceIndex: '751', matchLevel: 'partial' },
+  ];
+  assert.deepEqual(points.map(p => signKind(p, 'police')), ['일람표', '일부일치']);
+  assert.equal(signKind(points[1], 'seoul'), '서울시코드');
+  const { dxf, csv, counts } = buildSignDxf({ points, scope, site: cityHall, crs: '5186' });
+  assert.deepEqual(counts, { 표지판: 1, 표지판_일부일치: 1 });
+  const list = entities(dxf), on = layer => list.filter(e => e.layer === layer);
+  const [exact] = on('표지판_번호'), [partial] = on('표지판_일부일치_번호');
+  assert.equal(exact.text, '219'); assert.equal(exact.codes['420'], '0');
+  assert.equal(partial.text, '415'); assert.equal(partial.codes['62'], '1', 'red ACI 1');
+  assert.ok(on('표지판_일부일치_박스').some(e => e.type === 'LWPOLYLINE' && e.codes['420'] === '0'), 'box border stays black');
+  assert.ok(on('도면정보').some(e => /빨간색 = 일부 일치/.test(e.text)));
+  assert.ok(csv.includes('일치구분') && csv.includes('완전 일치') && csv.includes('일부 일치'));
 });
